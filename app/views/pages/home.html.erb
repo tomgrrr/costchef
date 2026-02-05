@@ -16,7 +16,8 @@
 
           <% if current_user.admin? %>
             <div class="mb-3">
-              <%= link_to "Administration des utilisateurs", admin_users_path, class: "btn btn-outline-primary" %>
+              <%= link_to "Gestion des utilisateurs", admin_users_path, class: "btn btn-outline-primary" %>
+              <%= link_to "Invitations", admin_invitations_path, class: "btn btn-outline-primary ms-2" %>
             </div>
           <% end %>
 

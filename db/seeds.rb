@@ -56,11 +56,32 @@ user_inactive.assign_attributes(
 user_inactive.save!
 puts "  - Utilisateur inactif: laurent@nouveau.fr (mot de passe: password123)"
 
-puts ""
-puts "Seeds terminés !"
-puts ""
-puts "Pour tester :"
-puts "  1. bin/dev"
-puts "  2. Connectez-vous avec admin@costchef.fr → accès complet + admin"
-puts "  3. Connectez-vous avec christophe@traiteur.fr → accès complet"
-puts "  4. Connectez-vous avec laurent@nouveau.fr → bloqué (page abonnement requis)"
+# Invitation de démonstration (pour tester le workflow)
+puts ''
+puts 'Création d\'une invitation de démonstration...'
+demo_invitation = Invitation.find_or_initialize_by(email: 'demo@example.com')
+if demo_invitation.new_record?
+  demo_invitation.created_by_admin = admin
+  demo_invitation.save!
+  puts "  - Invitation créée pour: demo@example.com"
+  puts "  - Token: #{demo_invitation.token}"
+  puts "  - URL: http://localhost:3000/signup?token=#{demo_invitation.token}"
+else
+  puts "  - Invitation existante pour: demo@example.com"
+end
+
+puts ''
+puts 'Seeds terminés !'
+puts ''
+puts 'Pour tester l\'authentification :'
+puts '  1. bin/dev'
+puts '  2. Connectez-vous avec admin@costchef.fr → accès complet + admin'
+puts '  3. Connectez-vous avec christophe@traiteur.fr → accès complet'
+puts '  4. Connectez-vous avec laurent@nouveau.fr → bloqué (page abonnement requis)'
+puts ''
+puts 'Pour tester le workflow d\'invitation :'
+puts '  1. Connectez-vous en tant qu\'admin (admin@costchef.fr)'
+puts '  2. Allez sur /admin/invitations'
+puts '  3. Créez une nouvelle invitation'
+puts '  4. L\'email est envoyé (visible dans les logs en dev)'
+puts '  5. Utilisez le lien /signup?token=xxx pour créer le compte'

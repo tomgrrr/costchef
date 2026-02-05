@@ -36,10 +36,16 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
+  # ActionMailer configuration pour développement
   config.action_mailer.raise_delivery_errors = false
-
   config.action_mailer.perform_caching = false
+
+  # URL par défaut pour les liens dans les emails
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+  # Mode test : les emails sont stockés dans ActionMailer::Base.deliveries
+  # et affichés dans les logs
+  config.action_mailer.delivery_method = :test
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

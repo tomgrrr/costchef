@@ -1,7 +1,10 @@
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Administration des utilisateurs</h1>
-    <%= link_to "Retour", root_path, class: "btn btn-outline-secondary" %>
+    <h1>Gestion des utilisateurs</h1>
+    <div>
+      <%= link_to "Invitations", admin_invitations_path, class: "btn btn-outline-primary" %>
+      <%= link_to "Retour", root_path, class: "btn btn-outline-secondary ms-2" %>
+    </div>
   </div>
 
   <% if flash[:notice] %>
