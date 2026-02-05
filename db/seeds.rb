@@ -1,9 +1,66 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+# frozen_string_literal: true
+
+# =============================================================================
+# Seeds pour CostChef - Module 1 : Authentification
+# =============================================================================
+# Exécution : bin/rails db:seed
+# =============================================================================
+
+puts "Création des utilisateurs de test..."
+
+# Utilisateur Admin avec abonnement actif
+admin = User.find_or_initialize_by(email: "admin@costchef.fr")
+admin.assign_attributes(
+  password: "password123",
+  password_confirmation: "password123",
+  first_name: "Admin",
+  last_name: "CostChef",
+  company_name: "CostChef SAS",
+  subscription_active: true,
+  subscription_started_at: Date.today,
+  subscription_expires_at: 1.year.from_now,
+  admin: true
+)
+admin.save!
+puts "  - Admin: admin@costchef.fr (mot de passe: password123)"
+
+# Utilisateur avec abonnement actif
+user_active = User.find_or_initialize_by(email: "christophe@traiteur.fr")
+user_active.assign_attributes(
+  password: "password123",
+  password_confirmation: "password123",
+  first_name: "Christophe",
+  last_name: "Dupont",
+  company_name: "Traiteur Dupont",
+  subscription_active: true,
+  subscription_started_at: Date.today,
+  subscription_expires_at: 1.year.from_now,
+  admin: false
+)
+user_active.save!
+puts "  - Utilisateur actif: christophe@traiteur.fr (mot de passe: password123)"
+
+# Utilisateur sans abonnement actif (pour tester le gating)
+user_inactive = User.find_or_initialize_by(email: "laurent@nouveau.fr")
+user_inactive.assign_attributes(
+  password: "password123",
+  password_confirmation: "password123",
+  first_name: "Laurent",
+  last_name: "Martin",
+  company_name: "Nouveau Traiteur",
+  subscription_active: false,
+  subscription_started_at: nil,
+  subscription_expires_at: nil,
+  admin: false
+)
+user_inactive.save!
+puts "  - Utilisateur inactif: laurent@nouveau.fr (mot de passe: password123)"
+
+puts ""
+puts "Seeds terminés !"
+puts ""
+puts "Pour tester :"
+puts "  1. bin/dev"
+puts "  2. Connectez-vous avec admin@costchef.fr → accès complet + admin"
+puts "  3. Connectez-vous avec christophe@traiteur.fr → accès complet"
+puts "  4. Connectez-vous avec laurent@nouveau.fr → bloqué (page abonnement requis)"
