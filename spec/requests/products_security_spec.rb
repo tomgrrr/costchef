@@ -79,8 +79,9 @@ RSpec.describe 'Products Security', type: :request do
   describe 'cross-user data isolation' do
     it 'User B cannot see count of User A products' do
       get products_path
-      # User B should only see their own product count
-      expect(assigns(:products).count).to eq(1)
+      # User B should only see their own product (1 product)
+      expect(response.body).to include('1 produit')
+      expect(response.body).not_to include('2 produits')
     end
 
     it 'prevents accessing product by guessing ID' do
