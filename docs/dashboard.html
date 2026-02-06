@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - CostChef</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-calculator"></i> CostChef
+            </a>
+            <button class="navbar-toggler" type="button">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-box-seam"></i> Référentiel Produits
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-journal-text"></i> Recettes
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text text-white me-3">
+                        <i class="bi bi-person-circle"></i> Christophe Dubois
+                    </span>
+                    <button class="btn btn-outline-light btn-sm">Déconnexion</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero / Bienvenue -->
+    <div class="bg-light py-4">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="bi bi-house-door"></i> Bonjour, Christophe !</h2>
+                    <p class="text-muted mb-0">
+                        Bienvenue sur votre tableau de bord. Voici un aperçu de vos données.
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-secondary fs-6">
+                        <i class="bi bi-calendar3"></i> Lundi 26 janvier 2026
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="container-fluid mt-4">
+        <!-- Cartes statistiques -->
+        <div class="row g-4 mb-4">
+            <!-- Produits -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-2">Produits</h6>
+                                <h2 class="mb-0 fw-bold text-primary">147</h2>
+                                <p class="text-muted small mb-0 mt-2">
+                                    <i class="bi bi-arrow-up text-success"></i> +3 ce mois-ci
+                                </p>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 rounded p-3">
+                                <i class="bi bi-box-seam fs-1 text-primary"></i>
+                            </div>
+                        </div>
+                        <hr>
+                        <a href="#" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-eye"></i> Voir les produits
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recettes -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-2">Recettes</h6>
+                                <h2 class="mb-0 fw-bold text-success">68</h2>
+                                <p class="text-muted small mb-0 mt-2">
+                                    <i class="bi bi-arrow-up text-success"></i> +5 ce mois-ci
+                                </p>
+                            </div>
+                            <div class="bg-success bg-opacity-10 rounded p-3">
+                                <i class="bi bi-journal-text fs-1 text-success"></i>
+                            </div>
+                        </div>
+                        <hr>
+                        <a href="#" class="btn btn-sm btn-outline-success w-100">
+                            <i class="bi bi-eye"></i> Voir les recettes
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coût moyen -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-2">Coût moyen / recette</h6>
+                                <h2 class="mb-0 fw-bold text-warning">14,82 €</h2>
+                                <p class="text-muted small mb-0 mt-2">
+                                    <i class="bi bi-arrow-down text-danger"></i> -2% ce mois-ci
+                                </p>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 rounded p-3">
+                                <i class="bi bi-calculator fs-1 text-warning"></i>
+                            </div>
+                        </div>
+                        <hr>
+                        <a href="#" class="btn btn-sm btn-outline-warning w-100">
+                            <i class="bi bi-bar-chart"></i> Voir les statistiques
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Recettes récentes -->
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recettes récemment modifiées</h5>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Recette</th>
+                                        <th>Ingrédients</th>
+                                        <th class="text-end">Coût matière</th>
+                                        <th>Modification</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Verrine saumon-avocat</strong></td>
+                                        <td><span class="badge bg-light text-dark">6</span></td>
+                                        <td class="text-end"><span class="badge bg-success">9,87 €</span></td>
+                                        <td><small class="text-muted">15 janv. 2026</small></td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tiramisu aux framboises</strong></td>
+                                        <td><span class="badge bg-light text-dark">8</span></td>
+                                        <td class="text-end"><span class="badge bg-success">12,45 €</span></td>
+                                        <td><small class="text-muted">10 janv. 2026</small></td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tartare de bœuf classique</strong></td>
+                                        <td><span class="badge bg-light text-dark">11</span></td>
+                                        <td class="text-end"><span class="badge bg-success">18,90 €</span></td>
+                                        <td><small class="text-muted">8 janv. 2026</small></td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Foie gras mi-cuit au torchon</strong></td>
+                                        <td><span class="badge bg-light text-dark">4</span></td>
+                                        <td class="text-end"><span class="badge bg-warning text-dark">48,50 €</span></td>
+                                        <td><small class="text-muted">5 janv. 2026</small></td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tarte aux fraises</strong></td>
+                                        <td><span class="badge bg-light text-dark">7</span></td>
+                                        <td class="text-end"><span class="badge bg-success">11,20 €</span></td>
+                                        <td><small class="text-muted">3 janv. 2026</small></td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides & Astuces -->
+            <div class="col-md-4">
+                <!-- Actions rapides -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Nouvelle Recette
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="bi bi-box-seam"></i> Nouveau Produit
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary">
+                                <i class="bi bi-search"></i> Rechercher
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Astuce du jour -->
+                <div class="card shadow-sm border-info">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h6 class="mb-0 text-info">
+                            <i class="bi bi-lightbulb"></i> Astuce du jour
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Gagnez du temps :</strong> Utilisez la fonction "Dupliquer" pour créer rapidement des variantes de vos recettes existantes.
+                        </p>
+                        <small class="text-muted">
+                            Toutes les quantités et calculs seront copiés automatiquement !
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Top 3 produits les plus utilisés -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="bi bi-trophy"></i> Top produits utilisés</h6>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Beurre doux AOP</strong>
+                                <br><small class="text-muted">9,50 € / kg</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">42 recettes</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Farine T55</strong>
+                                <br><small class="text-muted">1,20 € / kg</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">31 recettes</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Crème liquide 35%</strong>
+                                <br><small class="text-muted">3,20 € / L</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">24 recettes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

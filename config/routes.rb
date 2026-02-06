@@ -19,6 +19,17 @@ Rails.application.routes.draw do
     resources :invitations, only: %i[index new create]
   end
 
+  # PRD Module 2 : CRUD Produits (scoped par current_user)
+  resources :products
+
+  # PRD Module 3 : CRUD Recettes avec gestion des ingrédients
+  resources :recipes do
+    resources :recipe_ingredients, only: %i[create destroy]
+    member do
+      post :duplicate
+    end
+  end
+
   # Health check
   get 'up' => 'rails/health#show', as: :rails_health_check
 

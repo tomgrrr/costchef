@@ -84,7 +84,7 @@ RSpec.describe 'Recipes Security', type: :request do
       it "raises RecordNotFound when POST to another user's recipe ingredients" do
         expect {
           post recipe_recipe_ingredients_path(recipe_a),
-               params: { recipe_ingredient: { product_id: product_a.id, quantity: 0.5 } }
+               params: { product_id: product_a.id, quantity: 0.5 }
         }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
@@ -95,7 +95,7 @@ RSpec.describe 'Recipes Security', type: :request do
         # This should either raise RecordNotFound or reject the product
         expect {
           post recipe_recipe_ingredients_path(recipe_b),
-               params: { recipe_ingredient: { product_id: product_a.id, quantity: 0.5 } }
+               params: { product_id: product_a.id, quantity: 0.5 }
         }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
@@ -104,8 +104,9 @@ RSpec.describe 'Recipes Security', type: :request do
   describe 'cross-user data isolation' do
     it 'User B cannot see count of User A recipes' do
       get recipes_path
-      # User B should only see their own recipe count
-      expect(assigns(:recipes).count).to eq(1)
+      # User B should only see their own recipe (1 recipe)
+      expect(response.body).to include('1 recette')
+      expect(response.body).not_to include('2 recettes')
     end
 
     it 'prevents accessing recipe by guessing ID' do

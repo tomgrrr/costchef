@@ -1,0 +1,88 @@
+<%= form_with(model: product, local: true) do |form| %>
+  <% if product.errors.any? %>
+    <div class="alert alert-danger">
+      <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Erreur(s) :</h6>
+      <ul class="mb-0">
+        <% product.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Nom du produit -->
+  <div class="mb-4">
+    <%= form.label :name, class: "form-label fw-bold" do %>
+      Nom du produit <span class="text-danger">*</span>
+    <% end %>
+    <%= form.text_field :name,
+        class: "form-control form-control-lg #{'is-invalid' if product.errors[:name].any?}",
+        placeholder: "Ex: Saumon fumé Écosse",
+        required: true %>
+    <div class="form-text">
+      <i class="bi bi-info-circle"></i> Nom clair et précis pour faciliter la recherche
+    </div>
+  </div>
+
+  <!-- Prix moyen d'achat -->
+  <div class="mb-4">
+    <%= form.label :price, class: "form-label fw-bold" do %>
+      Prix moyen d'achat <span class="text-danger">*</span>
+    <% end %>
+    <div class="input-group input-group-lg">
+      <%= form.number_field :price,
+          class: "form-control #{'is-invalid' if product.errors[:price].any?}",
+          placeholder: "0.00",
+          step: "0.01",
+          min: "0.01",
+          required: true %>
+      <span class="input-group-text">&euro;</span>
+    </div>
+    <div class="form-text">
+      <i class="bi bi-info-circle"></i> Prix par unité de mesure (ex: prix au kg, au litre...)
+    </div>
+  </div>
+
+  <!-- Unité de mesure -->
+  <div class="mb-4">
+    <%= form.label :unit, class: "form-label fw-bold" do %>
+      Unité de mesure <span class="text-muted">(optionnel)</span>
+    <% end %>
+    <%= form.select :unit,
+        options_for_select([
+          ["-- Sélectionnez une unité --", ""],
+          ["Kilogramme (kg)", "kg"],
+          ["Litre (L)", "L"],
+          ["Pièce", "pièce"],
+          ["Autre", "autre"]
+        ], product.unit),
+        {},
+        class: "form-select form-select-lg" %>
+    <div class="form-text">
+      <i class="bi bi-info-circle"></i> Aide à clarifier les calculs dans vos recettes
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <!-- Exemple de calcul -->
+  <div class="alert alert-light border" role="alert">
+    <h6 class="alert-heading">
+      <i class="bi bi-lightbulb text-warning"></i> Exemple d'utilisation
+    </h6>
+    <p class="mb-0">
+      Si vous achetez du <strong>Saumon fumé Écosse</strong> à <strong>45,00 &euro; / kg</strong>,
+      une recette utilisant <strong>0,15 kg</strong> coûtera automatiquement
+      <strong class="text-primary">6,75 &euro;</strong> en matière première.
+    </p>
+  </div>
+
+  <!-- Boutons d'action -->
+  <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+    <%= link_to products_path, class: "btn btn-outline-secondary btn-lg" do %>
+      <i class="bi bi-arrow-left"></i> Annuler
+    <% end %>
+    <%= form.submit product.persisted? ? "Mettre à jour le produit" : "Enregistrer le produit",
+        class: "btn btn-primary btn-lg" %>
+  </div>
+<% end %>

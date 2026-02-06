@@ -6,8 +6,26 @@ class PagesController < ApplicationController
   skip_before_action :ensure_subscription!, only: [:subscription_required]
 
   # GET /
-  # Page d'accueil temporaire (sera remplacée par le dashboard)
+  # Dashboard avec statistiques
   def home
+    @products_count = current_user.products.count
+    @recipes_count = current_user.recipes.count
+    @recent_recipes = current_user.recipes
+                                  .includes(:recipe_ingredients)
+                                  .order(updated_at: :desc)
+                                  .limit(5)
+
+    # Calcul du coût moyen des recettes
+    recipes_with_cost = current_user.recipes.where.not(cached_total_cost: nil)
+    @average_cost = recipes_with_cost.any? ? recipes_with_cost.average(:cached_total_cost).round(2) : 0
+
+    # Top produits utilisés
+    @top_products = current_user.products
+                                .joins(:recipe_ingredients)
+                                .group('products.id')
+                                .order('COUNT(recipe_ingredients.id) DESC')
+                                .limit(3)
+                                .select('products.*, COUNT(recipe_ingredients.id) as recipes_count')
   end
 
   # GET /subscription_required

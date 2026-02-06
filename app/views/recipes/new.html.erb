@@ -1,0 +1,39 @@
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><%= link_to "Accueil", root_path %></li>
+    <li class="breadcrumb-item"><%= link_to "Recettes", recipes_path %></li>
+    <li class="breadcrumb-item active">Nouvelle Recette</li>
+  </ol>
+</nav>
+
+<!-- En-tête -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <h2><i class="bi bi-plus-circle"></i> Nouvelle Recette</h2>
+    <p class="text-muted">Créez une recette et calculez automatiquement son coût matière</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations générales</h5>
+      </div>
+      <div class="card-body">
+        <%= render "form", recipe: @recipe %>
+      </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+      <i class="bi bi-lightbulb"></i>
+      <strong>Prochaine étape :</strong> Après avoir créé la recette, vous pourrez ajouter des ingrédients
+      depuis votre référentiel produits.
+    </div>
+
+    <p class="text-muted text-center mt-3">
+      <small><span class="text-danger">*</span> Champs obligatoires</small>
+    </p>
+  </div>
+</div>

@@ -1,31 +1,213 @@
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow">
-        <div class="card-body text-center py-5">
-          <h1 class="card-title mb-4">CostChef</h1>
-          <p class="lead text-muted mb-4">
-            Calcul de coût de revient matières pour traiteurs
-          </p>
+<!-- Hero / Bienvenue -->
+<div class="bg-light py-4 mb-4" style="margin: -1.5rem -0.75rem 1.5rem -0.75rem;">
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2><i class="bi bi-house-door"></i> Bonjour<%= ", #{current_user.first_name}" if current_user.first_name.present? %> !</h2>
+        <p class="text-muted mb-0">
+          Bienvenue sur votre tableau de bord. Voici un aperçu de vos données.
+        </p>
+      </div>
+      <div class="col-md-4 text-end">
+        <span class="badge bg-secondary fs-6">
+          <i class="bi bi-calendar3"></i> <%= l(Date.current, format: :long) %>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
 
-          <hr class="my-4">
-
-          <p class="text-muted mb-4">
-            Bienvenue <strong><%= current_user.email %></strong>
-          </p>
-
-          <% if current_user.admin? %>
-            <div class="mb-3">
-              <%= link_to "Gestion des utilisateurs", admin_users_path, class: "btn btn-outline-primary" %>
-              <%= link_to "Invitations", admin_invitations_path, class: "btn btn-outline-primary ms-2" %>
-            </div>
-          <% end %>
-
-          <div class="d-grid gap-2 col-6 mx-auto">
-            <%= button_to "Se déconnecter", destroy_user_session_path, method: :delete, class: "btn btn-outline-secondary" %>
+<!-- Cartes statistiques -->
+<div class="row g-4 mb-4">
+  <!-- Produits -->
+  <div class="col-md-4">
+    <div class="card shadow-sm border-primary">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="text-muted text-uppercase mb-2">Produits</h6>
+            <h2 class="mb-0 fw-bold text-primary"><%= @products_count %></h2>
           </div>
+          <div class="bg-primary bg-opacity-10 rounded p-3">
+            <i class="bi bi-box-seam fs-1 text-primary"></i>
+          </div>
+        </div>
+        <hr>
+        <%= link_to products_path, class: "btn btn-sm btn-outline-primary w-100" do %>
+          <i class="bi bi-eye"></i> Voir les produits
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recettes -->
+  <div class="col-md-4">
+    <div class="card shadow-sm border-success">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="text-muted text-uppercase mb-2">Recettes</h6>
+            <h2 class="mb-0 fw-bold text-success"><%= @recipes_count %></h2>
+          </div>
+          <div class="bg-success bg-opacity-10 rounded p-3">
+            <i class="bi bi-journal-text fs-1 text-success"></i>
+          </div>
+        </div>
+        <hr>
+        <%= link_to recipes_path, class: "btn btn-sm btn-outline-success w-100" do %>
+          <i class="bi bi-eye"></i> Voir les recettes
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coût moyen -->
+  <div class="col-md-4">
+    <div class="card shadow-sm border-warning">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="text-muted text-uppercase mb-2">Coût moyen / recette</h6>
+            <h2 class="mb-0 fw-bold text-warning">
+              <% if @average_cost > 0 %>
+                <%= number_to_currency(@average_cost, unit: "€", format: "%n %u") %>
+              <% else %>
+                -
+              <% end %>
+            </h2>
+          </div>
+          <div class="bg-warning bg-opacity-10 rounded p-3">
+            <i class="bi bi-calculator fs-1 text-warning"></i>
+          </div>
+        </div>
+        <hr>
+        <%= link_to recipes_path, class: "btn btn-sm btn-outline-warning w-100" do %>
+          <i class="bi bi-bar-chart"></i> Voir les statistiques
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Recettes récentes -->
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recettes récemment modifiées</h5>
+        <%= link_to recipes_path, class: "btn btn-sm btn-outline-primary" do %>
+          Voir tout
+        <% end %>
+      </div>
+      <div class="card-body p-0">
+        <% if @recent_recipes.empty? %>
+          <div class="text-center py-4">
+            <p class="text-muted mb-0">Aucune recette pour le moment.</p>
+            <%= link_to new_recipe_path, class: "btn btn-primary mt-3" do %>
+              <i class="bi bi-plus-circle"></i> Créer une recette
+            <% end %>
+          </div>
+        <% else %>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Recette</th>
+                  <th>Ingrédients</th>
+                  <th class="text-end">Coût matière</th>
+                  <th>Modification</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @recent_recipes.each do |recipe| %>
+                  <tr>
+                    <td><strong><%= recipe.name %></strong></td>
+                    <td><span class="badge bg-light text-dark"><%= recipe.recipe_ingredients.count %></span></td>
+                    <td class="text-end">
+                      <% if recipe.cached_total_cost.present? && recipe.cached_total_cost > 0 %>
+                        <span class="badge <%= recipe.cached_total_cost > 30 ? 'bg-warning text-dark' : 'bg-success' %>">
+                          <%= number_to_currency(recipe.cached_total_cost, unit: "€", format: "%n %u") %>
+                        </span>
+                      <% else %>
+                        <span class="badge bg-light text-dark">-</span>
+                      <% end %>
+                    </td>
+                    <td><small class="text-muted"><%= l(recipe.updated_at, format: :short) %></small></td>
+                    <td class="text-end">
+                      <%= link_to recipe_path(recipe), class: "btn btn-sm btn-outline-primary" do %>
+                        <i class="bi bi-eye"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions rapides & Top produits -->
+  <div class="col-md-4">
+    <!-- Actions rapides -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-lightning"></i> Actions rapides</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <%= link_to new_recipe_path, class: "btn btn-primary" do %>
+            <i class="bi bi-plus-circle"></i> Nouvelle Recette
+          <% end %>
+          <%= link_to new_product_path, class: "btn btn-outline-primary" do %>
+            <i class="bi bi-box-seam"></i> Nouveau Produit
+          <% end %>
+          <% if current_user.admin? %>
+            <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
+              <i class="bi bi-people"></i> Gestion Utilisateurs
+            <% end %>
+          <% end %>
         </div>
       </div>
     </div>
+
+    <!-- Astuce du jour -->
+    <div class="card shadow-sm border-info mb-4">
+      <div class="card-header bg-info bg-opacity-10">
+        <h6 class="mb-0 text-info">
+          <i class="bi bi-lightbulb"></i> Astuce du jour
+        </h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-2">
+          <strong>Gagnez du temps :</strong> Utilisez la fonction "Dupliquer" pour créer rapidement des variantes de vos recettes existantes.
+        </p>
+        <small class="text-muted">
+          Toutes les quantités et calculs seront copiés automatiquement !
+        </small>
+      </div>
+    </div>
+
+    <!-- Top produits utilisés -->
+    <% if @top_products.any? %>
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h6 class="mb-0"><i class="bi bi-trophy"></i> Top produits utilisés</h6>
+        </div>
+        <div class="list-group list-group-flush">
+          <% @top_products.each do |product| %>
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong><%= product.name %></strong>
+                <br><small class="text-muted"><%= number_to_currency(product.price, unit: "€", format: "%n %u") %> / <%= product.unit || 'unité' %></small>
+              </div>
+              <span class="badge bg-primary rounded-pill"><%= product.recipes_count %> recettes</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>
