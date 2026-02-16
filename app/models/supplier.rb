@@ -1,21 +1,65 @@
-class Supplier < ApplicationRecord
-  belongs_to :user
-  has_many :product_purchases
-  # Note: dependent: :destroy n'est pas mis ici car la suppression est conditionnelle (voir check_purchases)
+# frozen_string_literal: true
 
+class Supplier < ApplicationRecord
+  # ============================================
+  # PRD Section 6.4 : Table SUPPLIERS
+  # D8: Désactivation (soft delete) ET Suppression (hard delete)
+  # ============================================
+
+  # ============================================
+  # Associations
+  # ============================================
+  belongs_to :user
+
+  # PRD: RESTRICT par défaut, CASCADE si "Forcer la suppression"
+  # La gestion du force delete se fait dans le controller
+  has_many :product_purchases, dependent: :restrict_with_error
+
+  # ============================================
+  # Scopes
+  # ============================================
+  scope :active, -> { where(active: true) }
+  scope :inactive, -> { where(active: false) }
+
+  # ============================================
+  # Validations (PRD Section 8.3)
+  # ============================================
   validates :name, presence: true, uniqueness: { scope: :user_id }
 
-  # Section 8.4 & D8 : Suppression bloquée si des lignes d'achat existent
-  before_destroy :check_purchases_before_destroy
+  # ============================================
+  # Instance Methods
+  # ============================================
 
-  private
+  # Désactive le fournisseur (soft delete)
+  def deactivate!
+    update!(active: false)
+  end
 
-  def check_purchases_before_destroy
-    if product_purchases.exists?
-      # Le controller devra gérer le "Forcer la suppression" en supprimant
-      # d'abord les product_purchases manuellement avant de rappeler destroy sur le supplier.
-      errors.add(:base, "Impossible de supprimer : des lignes d'achat existent.")
-      throw(:abort)
+  # Réactive le fournisseur
+  def activate!
+    update!(active: true)
+  end
+
+  # Vérifie si le fournisseur a des achats
+  def has_purchases?
+    product_purchases.exists?
+  end
+
+  # Suppression forcée avec cascade + recalcul
+  # Appelé par le controller après confirmation
+  def force_destroy!
+    transaction do
+      # Collecter les produits impactés AVANT suppression
+      impacted_product_ids = product_purchases.pluck(:product_id).uniq
+
+      # Supprimer les achats en cascade
+      product_purchases.destroy_all
+
+      # Supprimer le fournisseur
+      destroy!
+
+      # Retourner les IDs pour recalcul par le Dispatcher
+      impacted_product_ids
     end
   end
 end
