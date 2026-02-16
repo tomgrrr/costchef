@@ -1,16 +1,72 @@
+# frozen_string_literal: true
+
 class ProductPurchase < ApplicationRecord
+  # ============================================
+  # PRD Section 6.5 : Table PRODUCT_PURCHASES
+  # Conditionnements d'achat avec flag actif
+  # ============================================
+
+  # ============================================
+  # Associations
+  # ============================================
   belongs_to :product
   belongs_to :supplier
 
-  # Validations
-  validates :package_quantity, presence: true, numericality: { greater_than: 0 }
-  validates :package_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :package_unit, presence: true, inclusion: { in: %w[kg g l cl ml piece] }
-
-  # Champs calculés stockés
-  validates :package_quantity_kg, presence: true, numericality: { greater_than: 0 }
-  validates :price_per_kg, presence: true, numericality: { greater_than_or_equal_to: 0 }
-
-  # Scope pour le calcul de moyenne (D13)
+  # ============================================
+  # Scopes (PRD D13)
+  # ============================================
   scope :active, -> { where(active: true) }
+  scope :inactive, -> { where(active: false) }
+
+  # ============================================
+  # Validations (PRD Section 6.5 & 8.3)
+  # ============================================
+
+  # Quantité conditionnement > 0
+  validates :package_quantity,
+            presence: true,
+            numericality: { greater_than: 0 }
+
+  # Prix >= 0 (peut être gratuit)
+  validates :package_price,
+            presence: true,
+            numericality: { greater_than_or_equal_to: 0 }
+
+  # Unité de saisie : kg, g, l, cl, ml, piece
+  validates :package_unit,
+            presence: true,
+            inclusion: { in: %w[kg g l cl ml piece] }
+
+  # Champs calculés (remplis par le service PricePerKgCalculator)
+  validates :package_quantity_kg,
+            presence: true,
+            numericality: { greater_than: 0 }
+
+  validates :price_per_kg,
+            presence: true,
+            numericality: { greater_than_or_equal_to: 0 }
+
+  # ============================================
+  # Validations personnalisées
+  # ============================================
+  validate :supplier_belongs_to_same_user
+
+  # ============================================
+  # Instance Methods
+  # ============================================
+
+  def toggle_active!
+    update!(active: !active)
+  end
+
+  private
+
+  # Le fournisseur doit appartenir au même utilisateur que le produit
+  def supplier_belongs_to_same_user
+    return unless product && supplier
+
+    if product.user_id != supplier.user_id
+      errors.add(:supplier, "doit appartenir au même utilisateur que le produit")
+    end
+  end
 end
