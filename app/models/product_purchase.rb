@@ -38,13 +38,19 @@ class ProductPurchase < ApplicationRecord
             inclusion: { in: %w[kg g l cl ml piece] }
 
   # Champs calculés (remplis par le service PricePerKgCalculator)
+  # allow_nil: true car ces champs sont calculés APRÈS la saisie utilisateur
+  # Le contrôleur appelle le service qui remplit ces valeurs avant save
   validates :package_quantity_kg,
-            presence: true,
-            numericality: { greater_than: 0 }
+            numericality: { greater_than: 0 },
+            allow_nil: true
 
   validates :price_per_kg,
-            presence: true,
-            numericality: { greater_than_or_equal_to: 0 }
+            numericality: { greater_than_or_equal_to: 0 },
+            allow_nil: true
+
+  # Validation de présence des champs calculés uniquement sur update
+  # (après passage par le service de calcul lors de la création)
+  validate :calculated_fields_present, on: :update
 
   # ============================================
   # Validations personnalisées
@@ -67,6 +73,16 @@ class ProductPurchase < ApplicationRecord
 
     if product.user_id != supplier.user_id
       errors.add(:supplier, "doit appartenir au même utilisateur que le produit")
+    end
+  end
+
+  # Vérifie que les champs calculés sont présents après le premier save
+  def calculated_fields_present
+    if package_quantity_kg.nil?
+      errors.add(:package_quantity_kg, "doit être calculé")
+    end
+    if price_per_kg.nil?
+      errors.add(:price_per_kg, "doit être calculé")
     end
   end
 end

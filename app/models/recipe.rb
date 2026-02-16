@@ -24,6 +24,16 @@ class Recipe < ApplicationRecord
            dependent: :restrict_with_error
 
   # ============================================
+  # Associations helpers (PRD Section 6.6)
+  # ============================================
+
+  # Accès direct aux produits utilisés dans cette recette
+  has_many :products,
+           through: :recipe_components,
+           source: :component,
+           source_type: 'Product'
+
+  # ============================================
   # Scopes
   # ============================================
 
@@ -108,6 +118,41 @@ class Recipe < ApplicationRecord
   def subrecipe_components
     recipe_components.where(component_type: 'Recipe')
   end
+
+  # ============================================
+  # Méthodes de calcul (utilisées par le service Recalculator)
+  # ============================================
+
+  # Poids brut total (somme des quantity_kg de tous les composants)
+  def calculated_raw_weight
+    recipe_components.sum(:quantity_kg)
+  end
+
+  # Poids total après cuisson (avec perte)
+  def calculated_total_weight
+    raw = calculated_raw_weight
+    return BigDecimal('0') if raw.zero?
+
+    loss_pct = cooking_loss_percentage || 0
+    raw * (1 - loss_pct / BigDecimal('100'))
+  end
+
+  # Coût total (somme des line_cost de tous les composants)
+  def calculated_total_cost
+    recipe_components.includes(:component).sum(&:line_cost)
+  end
+
+  # Coût au kilo
+  def calculated_cost_per_kg
+    weight = calculated_total_weight
+    return BigDecimal('0') if weight.zero?
+
+    calculated_total_cost / weight
+  end
+
+  # ============================================
+  # Prix de vente
+  # ============================================
 
   # Prix de vente conseillé (PRD Section 8.1)
   # Sans barquette: cost_per_kg * coefficient
