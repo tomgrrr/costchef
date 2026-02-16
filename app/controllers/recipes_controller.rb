@@ -5,9 +5,7 @@ class RecipesController < ApplicationController
 
   # GET /recipes
   def index
-    @recipes = current_user.recipes
-                           .includes(:recipe_ingredients, :products)
-                           .order(:name)
+    @recipes = current_user.recipes.includes(:recipe_ingredients, :products).order(:name)
   end
 
   # GET /recipes/:id
