@@ -1,26 +1,31 @@
 # frozen_string_literal: true
 
 class Recipe < ApplicationRecord
-  # Relations
   belongs_to :user
-  has_many :recipe_ingredients, dependent: :destroy
-  has_many :products, through: :recipe_ingredients
+  belongs_to :tray_size, optional: true
+
+  # Composants de CETTE recette (ingrédients)
+  has_many :recipe_components, foreign_key: :parent_recipe_id, dependent: :destroy
+
+  # Endroits où CETTE recette est utilisée comme sous-recette (inverse du polymorphisme)
+  has_many :parent_recipe_components, as: :component, class_name: 'RecipeComponent', dependent: :restrict_with_error
 
   # Validations
   validates :name, presence: true, uniqueness: { scope: :user_id }
+  validates :cooking_loss_percentage, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
 
-  # Recalcule les coûts cached de la recette
-  def recalculate_costs
-    total_cost = recipe_ingredients.joins(:product)
-                                   .sum("recipe_ingredients.quantity * products.price")
-    total_weight = recipe_ingredients.sum(:quantity)
+  # Validations des champs cachés (Section 6.6)
+  validates :cached_total_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :cached_cost_per_kg, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-    cost_per_kg = total_weight.positive? ? (total_cost / total_weight).round(2) : 0
+  # Validation Barquette
+  validate :tray_size_consistency
 
-    update_columns(
-      cached_total_cost: total_cost.round(2),
-      cached_total_weight: total_weight.round(3),
-      cached_cost_per_kg: cost_per_kg
-    )
+  private
+
+  def tray_size_consistency
+    if has_tray && tray_size_id.nil?
+      errors.add(:tray_size_id, "doit être sélectionné si l'option barquette est active")
+    end
   end
 end
