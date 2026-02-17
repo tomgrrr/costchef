@@ -60,6 +60,6 @@ class ProductsController < ApplicationController
 
   # Strong parameters - JAMAIS permettre :user_id
   def product_params
-    params.require(:product).permit(:name, :price, :unit)
+    params.require(:product).permit(:name, :base_unit, :unit_weight_kg)
   end
 end

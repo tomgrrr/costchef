@@ -42,22 +42,18 @@
       </div>
       <div class="card-body">
         <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-          <span class="text-muted">Prix unitaire</span>
-          <strong class="text-primary fs-4"><%= number_to_currency(@product.price, unit: "€", format: "%n %u") %></strong>
+          <span class="text-muted">Prix moyen / kg</span>
+          <strong class="text-primary fs-4"><%= number_to_currency(@product.avg_price_per_kg, unit: "€", format: "%n %u") %></strong>
         </div>
         <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-          <span class="text-muted">Unité</span>
+          <span class="text-muted">Unité de base</span>
           <strong>
-            <% if @product.unit.present? %>
-              <span class="badge bg-info"><%= @product.unit %></span>
-            <% else %>
-              <span class="text-muted">Non spécifiée</span>
-            <% end %>
+            <span class="badge bg-info"><%= @product.base_unit %></span>
           </strong>
         </div>
         <div class="d-flex justify-content-between">
           <span class="text-muted">Utilisé dans</span>
-          <strong><%= @product.recipes.count %> recette(s)</strong>
+          <strong><%= @product.recipe_components.count %> recette(s)</strong>
         </div>
       </div>
     </div>
@@ -74,7 +70,7 @@
         <h5 class="mb-0"><i class="bi bi-journal-text"></i> Recettes utilisant ce produit</h5>
       </div>
       <div class="card-body">
-        <% if @product.recipes.any? %>
+        <% if @product.recipe_components.any? %>
           <div class="table-responsive">
             <table class="table table-hover mb-0">
               <thead class="table-light">
@@ -86,21 +82,21 @@
                 </tr>
               </thead>
               <tbody>
-                <% @product.recipe_ingredients.includes(:recipe).each do |ri| %>
+                <% @product.recipe_components.includes(:parent_recipe).each do |rc| %>
                   <tr>
-                    <td><strong><%= ri.recipe.name %></strong></td>
+                    <td><strong><%= rc.parent_recipe.name %></strong></td>
                     <td class="text-center">
                       <span class="badge bg-light text-dark">
-                        <%= number_with_precision(ri.quantity, precision: 3) %> <%= @product.unit %>
+                        <%= number_with_precision(rc.quantity_kg, precision: 3) %> <%= @product.base_unit %>
                       </span>
                     </td>
                     <td class="text-end">
                       <strong class="text-primary">
-                        <%= number_to_currency(ri.quantity * @product.price, unit: "€", format: "%n %u") %>
+                        <%= number_to_currency(rc.line_cost, unit: "€", format: "%n %u") %>
                       </strong>
                     </td>
                     <td class="text-end">
-                      <%= link_to recipe_path(ri.recipe), class: "btn btn-sm btn-outline-primary" do %>
+                      <%= link_to recipe_path(rc.parent_recipe), class: "btn btn-sm btn-outline-primary" do %>
                         <i class="bi bi-eye"></i>
                       <% end %>
                     </td>

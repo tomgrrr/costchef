@@ -5,7 +5,7 @@ class RecipesController < ApplicationController
 
   # GET /recipes
   def index
-    @recipes = current_user.recipes.includes(:recipe_ingredients, :products).order(:name)
+    @recipes = current_user.recipes.includes(:recipe_components, :products).order(:name)
   end
 
   # GET /recipes/:id
@@ -65,11 +65,11 @@ class RecipesController < ApplicationController
     end
 
     if new_recipe.save
-      # Dupliquer les ingrédients
-      @recipe.recipe_ingredients.each do |ri|
-        new_recipe.recipe_ingredients.create!(
-          product: ri.product,
-          quantity: ri.quantity
+      # Dupliquer les composants
+      @recipe.recipe_components.each do |rc|
+        new_recipe.recipe_components.create!(
+          component: rc.component,
+          quantity_kg: rc.quantity_kg
         )
       end
 
@@ -88,6 +88,6 @@ class RecipesController < ApplicationController
 
   # Strong parameters - JAMAIS permettre :user_id
   def recipe_params
-    params.require(:recipe).permit(:name, :description)
+    params.require(:recipe).permit(:name, :description, :cooking_loss_percentage, :sellable_as_component, :has_tray, :tray_size_id)
   end
 end

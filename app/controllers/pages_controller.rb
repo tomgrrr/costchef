@@ -11,7 +11,7 @@ class PagesController < ApplicationController
     @products_count = current_user.products.count
     @recipes_count = current_user.recipes.count
     @recent_recipes = current_user.recipes
-                                  .includes(:recipe_ingredients)
+                                  .includes(:recipe_components)
                                   .order(updated_at: :desc)
                                   .limit(5)
 
@@ -21,11 +21,11 @@ class PagesController < ApplicationController
 
     # Top produits utilisés
     @top_products = current_user.products
-                                .joins(:recipe_ingredients)
+                                .joins(:recipe_components)
                                 .group('products.id')
-                                .order('COUNT(recipe_ingredients.id) DESC')
+                                .order('COUNT(recipe_components.id) DESC')
                                 .limit(3)
-                                .select('products.*, COUNT(recipe_ingredients.id) as recipes_count')
+                                .select('products.*, COUNT(recipe_components.id) as recipes_count')
   end
 
   # GET /subscription_required

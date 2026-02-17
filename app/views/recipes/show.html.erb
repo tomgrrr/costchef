@@ -66,7 +66,7 @@
       <div class="card-body">
         <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
           <span class="text-muted">Nombre d'ingrédients</span>
-          <strong><%= @recipe.recipe_ingredients.count %></strong>
+          <strong><%= @recipe.recipe_components.count %></strong>
         </div>
         <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
           <span class="text-muted">Poids total</span>
@@ -116,21 +116,22 @@
             <%= link_to "Créer un produit", new_product_path, class: "alert-link" %> pour pouvoir ajouter des ingrédients.
           </div>
         <% else %>
-          <%= form_with url: recipe_recipe_ingredients_path(@recipe), method: :post, local: true do |f| %>
+          <%= form_with url: recipe_recipe_components_path(@recipe), method: :post, local: true do |f| %>
             <div class="row g-3">
               <!-- Sélection du produit -->
               <div class="col-md-6">
                 <label class="form-label fw-bold">Produit <span class="text-danger">*</span></label>
-                <%= f.select :product_id,
-                    options_for_select(@available_products.map { |p| ["#{p.name} - #{number_to_currency(p.price, unit: '€', format: '%n %u')} / #{p.unit || 'unité'}", p.id] }),
+                <%= f.select :component_id,
+                    options_for_select(@available_products.map { |p| ["#{p.name} - #{number_to_currency(p.avg_price_per_kg, unit: '€', format: '%n %u')} / #{p.base_unit}", p.id] }),
                     { prompt: "-- Sélectionnez un produit --" },
                     class: "form-select", required: true %>
+                <%= f.hidden_field :component_type, value: "Product" %>
               </div>
 
               <!-- Quantité -->
               <div class="col-md-4">
                 <label class="form-label fw-bold">Quantité <span class="text-danger">*</span></label>
-                <%= f.number_field :quantity,
+                <%= f.number_field :quantity_kg,
                     class: "form-control",
                     placeholder: "0.000",
                     step: "0.001",
@@ -155,7 +156,7 @@
         <h5 class="mb-0"><i class="bi bi-list-check"></i> Composition détaillée</h5>
       </div>
       <div class="card-body">
-        <% if @recipe.recipe_ingredients.empty? %>
+        <% if @recipe.recipe_components.empty? %>
           <div class="text-center py-4">
             <i class="bi bi-basket text-muted" style="font-size: 3rem;"></i>
             <p class="text-muted mt-3 mb-0">
@@ -175,29 +176,29 @@
                 </tr>
               </thead>
               <tbody>
-                <% @recipe.recipe_ingredients.includes(:product).each do |ri| %>
+                <% @recipe.recipe_components.includes(:component).each do |rc| %>
                   <tr>
                     <td>
-                      <strong><%= ri.product.name %></strong>
+                      <strong><%= rc.component.name %></strong>
                       <br><small class="text-muted">Source : référentiel produits</small>
                     </td>
                     <td class="text-center">
                       <span class="badge bg-light text-dark">
-                        <%= number_with_precision(ri.quantity, precision: 3) %> <%= ri.product.unit %>
+                        <%= number_with_precision(rc.quantity_kg, precision: 3) %> <%= rc.component.base_unit %>
                       </span>
                     </td>
                     <td class="text-center">
                       <span class="badge bg-secondary">
-                        <%= number_to_currency(ri.product.price, unit: "€", format: "%n %u") %> / <%= ri.product.unit || 'unité' %>
+                        <%= number_to_currency(rc.component.avg_price_per_kg, unit: "€", format: "%n %u") %> / <%= rc.component.base_unit %>
                       </span>
                     </td>
                     <td class="text-end">
                       <strong class="text-primary fs-5">
-                        <%= number_to_currency(ri.quantity * ri.product.price, unit: "€", format: "%n %u") %>
+                        <%= number_to_currency(rc.line_cost, unit: "€", format: "%n %u") %>
                       </strong>
                     </td>
                     <td class="text-center">
-                      <%= button_to recipe_recipe_ingredient_path(@recipe, ri),
+                      <%= button_to recipe_recipe_component_path(@recipe, rc),
                           method: :delete,
                           class: "btn btn-sm btn-outline-danger",
                           title: "Supprimer",
