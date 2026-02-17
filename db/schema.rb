@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_16_141550) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_17_101241) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -89,18 +89,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_16_141550) do
     t.check_constraint "quantity_kg > 0::numeric", name: "quantity_kg_positive"
   end
 
-  create_table "recipe_ingredients", force: :cascade do |t|
-    t.bigint "recipe_id", null: false
-    t.bigint "product_id", null: false
-    t.decimal "quantity", precision: 10, scale: 3, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["product_id"], name: "index_recipe_ingredients_on_product_id"
-    t.index ["recipe_id", "product_id"], name: "index_recipe_ingredients_on_recipe_id_and_product_id"
-    t.index ["recipe_id"], name: "index_recipe_ingredients_on_recipe_id"
-    t.check_constraint "quantity > 0::numeric", name: "quantity_positive"
-  end
-
   create_table "recipes", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "name", null: false
@@ -174,8 +162,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_16_141550) do
   add_foreign_key "product_purchases", "suppliers", on_delete: :restrict
   add_foreign_key "products", "users", on_delete: :cascade
   add_foreign_key "recipe_components", "recipes", column: "parent_recipe_id", on_delete: :cascade
-  add_foreign_key "recipe_ingredients", "products", on_delete: :restrict
-  add_foreign_key "recipe_ingredients", "recipes", on_delete: :cascade
   add_foreign_key "recipes", "tray_sizes", on_delete: :nullify
   add_foreign_key "recipes", "users", on_delete: :cascade
   add_foreign_key "suppliers", "users", on_delete: :cascade
