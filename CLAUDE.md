@@ -11,7 +11,7 @@ CostChef is a Ruby on Rails SaaS application for catering businesses to calculat
 ## Development Commands
 
 ```bash
-# Start development server (web + CSS watcher)
+# Start development server (web + CSS watcher via foreman)
 bin/dev
 
 # Setup environment
@@ -23,7 +23,7 @@ bin/rails db:migrate      # Run migrations
 bin/rails db:seed         # Load seed data
 
 # Testing
-bin/rails test            # Run test suite
+bundle exec rspec         # Run test suite
 
 # Code quality
 rubocop -a                # Lint and auto-fix Ruby
@@ -36,34 +36,64 @@ yarn watch:css            # Watch mode (included in bin/dev)
 bin/rails console         # Interactive Ruby shell
 ```
 
+**Seed users:** `admin@costchef.fr`, `christophe@traiteur.fr`, `laurent@nouveau.fr` (all `password123`)
+
 ## Architecture
 
 ### Data Model (Multi-tenant with user isolation)
 
-- **Users** - Authentication via Devise, subscription management
-- **Products** - Ingredient library (name, price, unit) scoped to user
-- **Recipes** - Cost calculations with cached metrics (total_cost, total_weight, cost_per_kg)
-- **RecipeIngredients** - Join table with quantities
+- **User** — Owns everything. `markup_coefficient` (default 1.0). Auth via Devise.
+- **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required.
+- **ProductPurchase** — Price history. Purchase units: `[kg, g, l, cl, ml, piece]`. `active` boolean filters obsolete prices.
+- **Recipe** — Cost calculations with cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_total_cost_with_loss`). `cooking_loss_percentage` (0-100). `sellable_as_component` controls sub-recipe eligibility.
+- **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). **Max 1 level of sub-recipe depth.**
+- **Supplier** — Linked to ProductPurchases. Soft-delete via `active` flag.
+- **TraySize** — Optional recipe association. Nullified on delete.
+- **DailySpecial** — Independent history (meat/fish/side).
+- **Invitation** — Signup by invitation only.
 
 Key relationships:
-- User `has_many` Products, Recipes (cascade delete)
-- Product `has_many` RecipeIngredients (restrict delete if in use)
-- Recipe `has_many` RecipeIngredients, Products (through)
+- User `has_many` Products, Recipes, Suppliers, TraySizes, DailySpecials (cascade delete)
+- Product `has_many` ProductPurchases (cascade), RecipeComponents (restrict delete if in use)
+- Supplier `has_many` ProductPurchases (restrict delete)
+- Recipe `has_many` RecipeComponents, Products (through)
+- TraySize `has_many` Recipes (nullify on delete)
 
-### Cost Calculation Flow
+### Coding Rules
 
-1. Product prices are stored per user
-2. RecipeIngredients link products to recipes with quantities
-3. When product price or recipe ingredient changes, recipe cached costs auto-recalculate via callbacks
-4. `cached_cost_per_kg` is the key comparison metric
+- **Short methods:** Max 10 lines per method. Decompose into private sub-methods.
+- **Single Responsibility (SRP):** One service = one action.
+- **Zero ActiveRecord callbacks** for business logic/calculations — everything goes through Services.
+- **Fail Fast:** Validate inputs at service entry, raise explicit errors.
+
+### Service Layer & Calculation Cascade
+
+Convention: `app/services/{domain}/{action}.rb` → `Domain::ActionName.call(obj)`
+
+Calculation chain (imperative order):
+
+1. `ProductPurchases::PricePerKgCalculator.call(purchase)` — converts purchase to price/kg
+2. `Products::AvgPriceRecalculator.call(product)` — weighted average of active purchases
+3. `Recipes::Recalculator.call(recipe)` — recalculates 4 cached fields
+4. `Recalculations::Dispatcher` — cascades to parent recipes if sub-recipes are affected
+
+Test each service with a dedicated RSpec before integrating into controllers.
+
+### Deletion Rules
+
+- **Product:** Block deletion if used in a RecipeComponent.
+- **Supplier:** Block deletion if ProductPurchases exist (unless force=true).
+- **TraySize:** Nullify `tray_size_id` in recipes (no recipe destruction).
 
 ### Frontend Architecture
 
-- **CSS:** Sass compiled via `cssbundling-rails` → `/app/assets/builds/application.css`
-- **JS:** Stimulus controllers in `/app/javascript/controllers/`
+- **CSS:** Sass compiled via `cssbundling-rails` → `app/assets/builds/application.css`
+- **JS:** Stimulus controllers in `app/javascript/controllers/`
 - **Views:** ERB templates with Bootstrap 5 components
-- **Entry point:** `/app/assets/stylesheets/application.bootstrap.scss`
+- **Entry point:** `app/assets/stylesheets/application.bootstrap.scss`
 
-## Current Status
+### Auth & Access
 
-This is an MVP bootstrap. The scaffold exists but models, migrations, routes, controllers, and Devise configuration need to be implemented. See `PRD.md` for full requirements and database schema.
+- **Devise** for authentication, signup by invitation only.
+- **Subscription gate** (`ensure_subscription!`) — redirects to `/subscription_required` if inactive.
+- **Admin namespace** (`/admin`) with `admin?` check, exempt from subscription gate.

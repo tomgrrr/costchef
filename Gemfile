@@ -80,7 +80,8 @@ group :development do
   gem 'binding_of_caller'
 
   # Qualité de code
-  gem 'rubocop-rails', require: false
+  gem 'rubocop', '~> 1.68', require: false
+  gem 'rubocop-rails', '~> 2.27', require: false
 
   # Détection N+1 queries
   gem 'bullet'
@@ -106,4 +107,3 @@ group :test do
   # Nettoyage DB entre tests
   gem 'database_cleaner-active_record'
 end
-
