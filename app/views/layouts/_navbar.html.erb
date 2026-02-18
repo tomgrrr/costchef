@@ -25,6 +25,11 @@
             <i class="bi bi-journal-text"></i> Recettes
           <% end %>
         </li>
+        <li class="nav-item">
+          <%= link_to daily_specials_path, class: "nav-link #{'active' if controller_name == 'daily_specials'}" do %>
+            <i class="bi bi-calendar-event"></i> Plats du Jour
+          <% end %>
+        </li>
       </ul>
 
       <% if user_signed_in? %>

@@ -1,0 +1,67 @@
+<%= form_with(model: daily_special, local: true) do |form| %>
+  <% if daily_special.errors.any? %>
+    <div class="alert alert-danger">
+      <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Erreur(s) :</h6>
+      <ul class="mb-0">
+        <% daily_special.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row g-3 align-items-end">
+    <!-- Nom du plat -->
+    <div class="col-md-3">
+      <%= form.label :item_name, class: "form-label fw-bold" do %>
+        Nom du plat <span class="text-danger">*</span>
+      <% end %>
+      <%= form.text_field :item_name,
+          class: "form-control #{'is-invalid' if daily_special.errors[:item_name].any?}",
+          placeholder: "Ex: Filet mignon de porc",
+          required: true %>
+    </div>
+
+    <!-- Date -->
+    <div class="col-md-2">
+      <%= form.label :entry_date, class: "form-label fw-bold" do %>
+        Date <span class="text-danger">*</span>
+      <% end %>
+      <%= form.date_field :entry_date,
+          class: "form-control #{'is-invalid' if daily_special.errors[:entry_date].any?}",
+          required: true %>
+    </div>
+
+    <!-- Coût au kg -->
+    <div class="col-md-2">
+      <%= form.label :cost_per_kg, class: "form-label fw-bold" do %>
+        Coût/kg <span class="text-danger">*</span>
+      <% end %>
+      <div class="input-group">
+        <%= form.number_field :cost_per_kg,
+            class: "form-control #{'is-invalid' if daily_special.errors[:cost_per_kg].any?}",
+            step: 0.01, min: 0.01,
+            placeholder: "0.00",
+            required: true %>
+        <span class="input-group-text">&euro;/kg</span>
+      </div>
+    </div>
+
+    <!-- Catégorie -->
+    <div class="col-md-3">
+      <%= form.label :category, class: "form-label fw-bold" do %>
+        Catégorie <span class="text-danger">*</span>
+      <% end %>
+      <%= form.select :category,
+          [["Viande", "meat"], ["Poisson", "fish"], ["Accompagnement", "side"]],
+          { prompt: "Choisir..." },
+          class: "form-select #{'is-invalid' if daily_special.errors[:category].any?}",
+          required: true %>
+    </div>
+
+    <!-- Bouton -->
+    <div class="col-md-2">
+      <%= form.submit "Ajouter", class: "btn btn-primary w-100" %>
+    </div>
+  </div>
+<% end %>
