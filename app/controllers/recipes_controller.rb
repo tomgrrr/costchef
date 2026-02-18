@@ -37,7 +37,16 @@ class RecipesController < ApplicationController
   end
 
   # PATCH/PUT /recipes/:id
+  #
+  # Cas de recalcul (via Dispatcher.recipe_changed) :
+  #   1. Modifier uniquement name/description/sellable_as_component → pas de recalcul
+  #   2. Modifier cooking_loss_percentage → recalcul déclenché
+  #   3. Modifier has_tray → recalcul déclenché
+  #   4. Modifier tray_size_id → recalcul déclenché
+  #
   def update
+    clear_tray_size_if_no_tray
+
     if @recipe.update(recipe_params)
       Recalculations::Dispatcher.recipe_changed(@recipe) if calculation_fields_changed?
       redirect_to recipe_path(@recipe), notice: 'Recette mise à jour avec succès.'
@@ -101,6 +110,13 @@ class RecipesController < ApplicationController
   # Charge la recette uniquement via current_user (isolation multi-tenant)
   def set_recipe
     @recipe = current_user.recipes.find(params[:id])
+  end
+
+  # Si has_tray passe à false, forcer tray_size_id à nil pour cohérence
+  def clear_tray_size_if_no_tray
+    return unless %w[0 false].include?(params.dig(:recipe, :has_tray))
+
+    params[:recipe][:tray_size_id] = nil
   end
 
   def calculation_fields_changed?

@@ -23,12 +23,15 @@ module Recalculations
     #
     # Appelé après create/update/destroy/toggle d'un ProductPurchase
     #
+    # Convention : le controller appelant est responsable de calculer les champs
+    # de l'achat (PricePerKgCalculator) et de sauvegarder AVANT d'invoquer le Dispatcher.
+    # Le Dispatcher ne recalcule jamais l'achat lui-même.
+    #
     # Ordre strict (PRD Section 7.4) :
-    # 1. PricePerKgCalculator.call(purchase) si l'achat existe encore
-    # 2. AvgPriceRecalculator.call(purchase.product)
-    # 3. Trouver les recettes impactées via recipe_components
-    # 4. Recalculator.call(recipe) pour chaque recette impactée
-    # 5. Propager aux recettes parentes (1 niveau)
+    # 1. AvgPriceRecalculator.call(purchase.product)
+    # 2. Trouver les recettes impactées via recipe_components
+    # 3. Recalculator.call(recipe) pour chaque recette impactée
+    # 4. Propager aux recettes parentes (1 niveau)
     #
     def self.product_purchase_changed(purchase, product: nil)
       new.product_purchase_changed(purchase, product: product)
@@ -39,16 +42,10 @@ module Recalculations
       target_product = product || purchase&.product
       return unless target_product
 
-      # Étape 1 : Recalculer les champs de l'achat (si pas détruit)
-      if purchase&.persisted?
-        ProductPurchases::PricePerKgCalculator.call(purchase)
-        purchase.save! if purchase.changed?
-      end
-
-      # Étape 2 : Recalculer le prix moyen du produit
+      # Étape 1 : Recalculer le prix moyen du produit
       Products::AvgPriceRecalculator.call(target_product)
 
-      # Étapes 3-5 : Recalculer les recettes impactées
+      # Étapes 2-4 : Recalculer les recettes impactées
       recalculate_recipes_using_product(target_product)
     end
 
