@@ -1,0 +1,35 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Nouvelle invitation</h4>
+  <%= link_to "← Retour", admin_invitations_path %>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <% if @invitation.errors.any? %>
+          <div class="alert alert-danger">
+            <% @invitation.errors.full_messages.each do |message| %>
+              <p class="mb-0"><%= message %></p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <%= form_with(model: [:admin, @invitation]) do |f| %>
+          <div class="mb-3">
+            <%= f.label :email, "Adresse email", class: "form-label" %>
+            <%= f.email_field :email, class: "form-control", placeholder: "chef@restaurant.fr", autofocus: true %>
+            <div class="form-text">
+              Un email d'invitation sera envoyé automatiquement. Le lien sera valable 7 jours.
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <%= f.submit "Envoyer l'invitation", class: "btn btn-primary" %>
+            <%= link_to "Annuler", admin_invitations_path, class: "btn btn-link text-decoration-none" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

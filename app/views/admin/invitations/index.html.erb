@@ -1,0 +1,46 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Invitations</h4>
+  <%= link_to new_admin_invitation_path, class: "btn btn-primary" do %>
+    <i class="bi bi-plus-lg"></i> Nouvelle invitation
+  <% end %>
+</div>
+
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Statut</th>
+      <th>Créée le</th>
+      <th>Expire le</th>
+      <th>Utilisée le</th>
+      <th>Envoyée par</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if @invitations.empty? %>
+      <tr>
+        <td colspan="6" class="text-center text-muted">Aucune invitation pour le moment.</td>
+      </tr>
+    <% else %>
+      <% @invitations.each do |invitation| %>
+        <tr>
+          <td><%= invitation.email %></td>
+          <td>
+            <% case invitation.status %>
+            <% when :pending %>
+              <span class="badge bg-success">En attente</span>
+            <% when :expired %>
+              <span class="badge bg-secondary">Expirée</span>
+            <% when :used %>
+              <span class="badge bg-primary">Utilisée</span>
+            <% end %>
+          </td>
+          <td><%= l(invitation.created_at, format: :short) %></td>
+          <td><%= l(invitation.expires_at, format: :short) %></td>
+          <td><%= invitation.used_at ? l(invitation.used_at, format: :short) : "—" %></td>
+          <td><%= invitation.created_by_admin.email %></td>
+        </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>
