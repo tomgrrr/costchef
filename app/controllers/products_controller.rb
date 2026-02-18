@@ -10,7 +10,8 @@ class ProductsController < ApplicationController
 
   # GET /products/:id
   def show
-    # @product déjà chargé via before_action
+    @suppliers = current_user.suppliers.active.order(:name)
+    @product_purchase = @product.product_purchases.build
   end
 
   # GET /products/new

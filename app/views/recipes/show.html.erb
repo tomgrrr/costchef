@@ -109,23 +109,41 @@
         <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Ajouter un ingrédient</h6>
       </div>
       <div class="card-body">
-        <% if @available_products.empty? %>
+        <% if @available_products.empty? && @available_subrecipes.empty? %>
           <div class="alert alert-warning mb-0">
             <i class="bi bi-exclamation-triangle"></i>
             Vous n'avez pas encore de produits dans votre référentiel.
             <%= link_to "Créer un produit", new_product_path, class: "alert-link" %> pour pouvoir ajouter des ingrédients.
           </div>
         <% else %>
-          <%= form_with url: recipe_recipe_components_path(@recipe), method: :post, local: true do |f| %>
+          <%= form_with url: recipe_recipe_components_path(@recipe), scope: :recipe_component, method: :post, local: true do |f| %>
             <div class="row g-3">
-              <!-- Sélection du produit -->
+              <!-- Sélection du composant (produit ou sous-recette) -->
               <div class="col-md-6">
-                <label class="form-label fw-bold">Produit <span class="text-danger">*</span></label>
-                <%= f.select :component_id,
-                    options_for_select(@available_products.map { |p| ["#{p.name} - #{number_to_currency(p.avg_price_per_kg, unit: '€', format: '%n %u')} / #{p.base_unit}", p.id] }),
-                    { prompt: "-- Sélectionnez un produit --" },
-                    class: "form-select", required: true %>
-                <%= f.hidden_field :component_type, value: "Product" %>
+                <label class="form-label fw-bold">Ingrédient <span class="text-danger">*</span></label>
+                <select name="recipe_component[component_id]" id="recipe_component_component_id" class="form-select" required
+                        data-controller="component-select" data-action="change->component-select#updateType">
+                  <option value="">-- Sélectionnez un ingrédient --</option>
+                  <% if @available_products.any? %>
+                    <optgroup label="Produits">
+                      <% @available_products.each do |p| %>
+                        <option value="<%= p.id %>" data-type="Product">
+                          <%= p.name %> - <%= number_to_currency(p.avg_price_per_kg, unit: '€', format: '%n %u') %> / <%= p.base_unit %>
+                        </option>
+                      <% end %>
+                    </optgroup>
+                  <% end %>
+                  <% if @available_subrecipes.any? %>
+                    <optgroup label="Sous-recettes">
+                      <% @available_subrecipes.each do |r| %>
+                        <option value="<%= r.id %>" data-type="Recipe">
+                          <%= r.name %> - <%= number_to_currency(r.cached_cost_per_kg || 0, unit: '€', format: '%n %u') %> / kg
+                        </option>
+                      <% end %>
+                    </optgroup>
+                  <% end %>
+                </select>
+                <%= f.hidden_field :component_type, value: "Product", data: { "component-select-target": "typeField" } %>
               </div>
 
               <!-- Quantité -->
@@ -180,16 +198,24 @@
                   <tr>
                     <td>
                       <strong><%= rc.component.name %></strong>
-                      <br><small class="text-muted">Source : référentiel produits</small>
+                      <% if rc.product_component? %>
+                        <br><small class="text-muted">Produit</small>
+                      <% else %>
+                        <br><small class="text-muted"><i class="bi bi-journal-text"></i> Sous-recette</small>
+                      <% end %>
                     </td>
                     <td class="text-center">
                       <span class="badge bg-light text-dark">
-                        <%= number_with_precision(rc.quantity_kg, precision: 3) %> <%= rc.component.base_unit %>
+                        <%= number_with_precision(rc.quantity_kg, precision: 3) %> <%= rc.product_component? ? rc.component.base_unit : 'kg' %>
                       </span>
                     </td>
                     <td class="text-center">
                       <span class="badge bg-secondary">
-                        <%= number_to_currency(rc.component.avg_price_per_kg, unit: "€", format: "%n %u") %> / <%= rc.component.base_unit %>
+                        <% if rc.product_component? %>
+                          <%= number_to_currency(rc.component.avg_price_per_kg, unit: "€", format: "%n %u") %> / <%= rc.component.base_unit %>
+                        <% else %>
+                          <%= number_to_currency(rc.component.cached_cost_per_kg || 0, unit: "€", format: "%n %u") %> / kg
+                        <% end %>
                       </span>
                     </td>
                     <td class="text-end">

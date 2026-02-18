@@ -1,0 +1,150 @@
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><%= link_to "Accueil", root_path %></li>
+    <li class="breadcrumb-item"><%= link_to "Fournisseurs", suppliers_path %></li>
+    <li class="breadcrumb-item active"><%= @supplier.name %></li>
+  </ol>
+</nav>
+
+<!-- En-tête -->
+<div class="row mb-4">
+  <div class="col-md-8">
+    <h2><i class="bi bi-truck"></i> <%= @supplier.name %></h2>
+    <div class="d-flex gap-2 mt-2">
+      <% if @supplier.active? %>
+        <span class="badge bg-success">Actif</span>
+      <% else %>
+        <span class="badge bg-warning text-dark">Inactif</span>
+      <% end %>
+      <span class="badge bg-info"><i class="bi bi-clock"></i> Créé le <%= l(@supplier.created_at, format: :long) %></span>
+      <% if @supplier.updated_at != @supplier.created_at %>
+        <span class="badge bg-secondary"><i class="bi bi-pencil"></i> Modifié le <%= l(@supplier.updated_at, format: :long) %></span>
+      <% end %>
+    </div>
+  </div>
+  <div class="col-md-4 text-end">
+    <div class="btn-group" role="group">
+      <%= link_to edit_supplier_path(@supplier), class: "btn btn-primary" do %>
+        <i class="bi bi-pencil"></i> Modifier
+      <% end %>
+      <%= button_to deactivate_supplier_path(@supplier),
+          method: :patch,
+          class: "btn btn-warning" do %>
+        <i class="bi bi-<%= @supplier.active? ? 'pause-circle' : 'play-circle' %>"></i>
+        <%= @supplier.active? ? 'Désactiver' : 'Réactiver' %>
+      <% end %>
+      <% if @supplier.has_purchases? %>
+        <%= button_to force_destroy_supplier_path(@supplier),
+            method: :delete,
+            class: "btn btn-danger",
+            form: { data: { turbo_confirm: "Attention : cela supprimera le fournisseur ET tous ses achats. Les prix seront recalculés. Continuer ?" } } do %>
+          <i class="bi bi-trash"></i> Supprimer (forcé)
+        <% end %>
+      <% else %>
+        <%= button_to supplier_path(@supplier),
+            method: :delete,
+            class: "btn btn-danger",
+            form: { data: { turbo_confirm: "Êtes-vous sûr de vouloir supprimer ce fournisseur ?" } } do %>
+          <i class="bi bi-trash"></i> Supprimer
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Colonne gauche : Informations -->
+  <div class="col-md-4">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+          <span class="text-muted">Nom</span>
+          <strong><%= @supplier.name %></strong>
+        </div>
+        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+          <span class="text-muted">Statut</span>
+          <strong>
+            <% if @supplier.active? %>
+              <span class="badge bg-success">Actif</span>
+            <% else %>
+              <span class="badge bg-warning text-dark">Inactif</span>
+            <% end %>
+          </strong>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Nombre d'achats</span>
+          <strong><%= @product_purchases.count %></strong>
+        </div>
+      </div>
+    </div>
+
+    <%= link_to suppliers_path, class: "btn btn-outline-secondary w-100" do %>
+      <i class="bi bi-arrow-left"></i> Retour à la liste
+    <% end %>
+  </div>
+
+  <!-- Colonne droite : Achats -->
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-cart"></i> Achats</h5>
+      </div>
+      <div class="card-body">
+        <% if @product_purchases.any? %>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Produit</th>
+                  <th class="text-center">Conditionnement</th>
+                  <th class="text-end">Prix</th>
+                  <th class="text-end">Prix / kg</th>
+                  <th class="text-center">Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @product_purchases.each do |pp| %>
+                  <tr class="<%= 'table-secondary' unless pp.active? %>">
+                    <td>
+                      <strong><%= link_to pp.product.name, product_path(pp.product) %></strong>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-light text-dark">
+                        <%= number_with_precision(pp.package_quantity, precision: 2) %> <%= pp.package_unit %>
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <%= number_to_currency(pp.package_price, unit: "\u20AC", format: "%n %u") %>
+                    </td>
+                    <td class="text-end">
+                      <strong class="text-primary">
+                        <%= number_to_currency(pp.price_per_kg, unit: "\u20AC", format: "%n %u") %> / kg
+                      </strong>
+                    </td>
+                    <td class="text-center">
+                      <% if pp.active? %>
+                        <span class="badge bg-success">Actif</span>
+                      <% else %>
+                        <span class="badge bg-warning text-dark">Inactif</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="text-center py-4">
+            <p class="text-muted mb-0">
+              <i class="bi bi-info-circle"></i> Aucun achat enregistré pour ce fournisseur.
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

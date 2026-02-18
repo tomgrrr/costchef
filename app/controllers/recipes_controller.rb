@@ -11,6 +11,7 @@ class RecipesController < ApplicationController
   # GET /recipes/:id
   def show
     @available_products = current_user.products.order(:name)
+    @available_subrecipes = current_user.recipes.usable_as_subrecipe.where.not(id: @recipe.id).order(:name)
   end
 
   # GET /recipes/new
