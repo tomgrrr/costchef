@@ -24,42 +24,38 @@
     </div>
   </div>
 
-  <!-- Prix moyen d'achat -->
+  <!-- Unité de base -->
   <div class="mb-4">
-    <%= form.label :price, class: "form-label fw-bold" do %>
-      Prix moyen d'achat <span class="text-danger">*</span>
+    <%= form.label :base_unit, class: "form-label fw-bold" do %>
+      Unité de base <span class="text-danger">*</span>
     <% end %>
-    <div class="input-group input-group-lg">
-      <%= form.number_field :price,
-          class: "form-control #{'is-invalid' if product.errors[:price].any?}",
-          placeholder: "0.00",
-          step: "0.01",
-          min: "0.01",
-          required: true %>
-      <span class="input-group-text">&euro;</span>
-    </div>
+    <%= form.select :base_unit,
+        options_for_select([
+          ["Kilogramme (kg)", "kg"],
+          ["Litre (l)", "l"],
+          ["Pièce", "piece"]
+        ], product.base_unit),
+        {},
+        class: "form-select form-select-lg #{'is-invalid' if product.errors[:base_unit].any?}",
+        required: true,
+        data: { controller: "product-unit", action: "change->product-unit#toggle" } %>
     <div class="form-text">
-      <i class="bi bi-info-circle"></i> Prix par unité de mesure (ex: prix au kg, au litre...)
+      <i class="bi bi-info-circle"></i> Unité de référence pour les calculs de coût
     </div>
   </div>
 
-  <!-- Unité de mesure -->
-  <div class="mb-4">
-    <%= form.label :unit, class: "form-label fw-bold" do %>
-      Unité de mesure <span class="text-muted">(optionnel)</span>
+  <!-- Poids unitaire (affiché seulement si pièce) -->
+  <div class="mb-4" id="unit-weight-field" style="<%= 'display: none;' unless product.base_unit == 'piece' %>">
+    <%= form.label :unit_weight_kg, class: "form-label fw-bold" do %>
+      Poids unitaire (kg) <span class="text-danger">*</span>
     <% end %>
-    <%= form.select :unit,
-        options_for_select([
-          ["-- Sélectionnez une unité --", ""],
-          ["Kilogramme (kg)", "kg"],
-          ["Litre (L)", "L"],
-          ["Pièce", "pièce"],
-          ["Autre", "autre"]
-        ], product.unit),
-        {},
-        class: "form-select form-select-lg" %>
+    <%= form.number_field :unit_weight_kg,
+        class: "form-control form-control-lg #{'is-invalid' if product.errors[:unit_weight_kg].any?}",
+        placeholder: "0.000",
+        step: "0.001",
+        min: "0.001" %>
     <div class="form-text">
-      <i class="bi bi-info-circle"></i> Aide à clarifier les calculs dans vos recettes
+      <i class="bi bi-info-circle"></i> Poids d'une pièce en kg (ex: 0.200 pour un avocat de 200g)
     </div>
   </div>
 

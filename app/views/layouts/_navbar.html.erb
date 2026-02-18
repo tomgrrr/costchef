@@ -16,8 +16,18 @@
           <% end %>
         </li>
         <li class="nav-item">
+          <%= link_to suppliers_path, class: "nav-link #{'active' if controller_name == 'suppliers'}" do %>
+            <i class="bi bi-truck"></i> Fournisseurs
+          <% end %>
+        </li>
+        <li class="nav-item">
           <%= link_to recipes_path, class: "nav-link #{'active' if controller_name == 'recipes'}" do %>
             <i class="bi bi-journal-text"></i> Recettes
+          <% end %>
+        </li>
+        <li class="nav-item">
+          <%= link_to daily_specials_path, class: "nav-link #{'active' if controller_name == 'daily_specials'}" do %>
+            <i class="bi bi-calendar-event"></i> Plats du Jour
           <% end %>
         </li>
       </ul>

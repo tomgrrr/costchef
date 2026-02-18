@@ -123,7 +123,7 @@
                 <% @recent_recipes.each do |recipe| %>
                   <tr>
                     <td><strong><%= recipe.name %></strong></td>
-                    <td><span class="badge bg-light text-dark"><%= recipe.recipe_ingredients.count %></span></td>
+                    <td><span class="badge bg-light text-dark"><%= recipe.recipe_components.count %></span></td>
                     <td class="text-end">
                       <% if recipe.cached_total_cost.present? && recipe.cached_total_cost > 0 %>
                         <span class="badge <%= recipe.cached_total_cost > 30 ? 'bg-warning text-dark' : 'bg-success' %>">
@@ -201,7 +201,7 @@
             <div class="list-group-item d-flex justify-content-between align-items-center">
               <div>
                 <strong><%= product.name %></strong>
-                <br><small class="text-muted"><%= number_to_currency(product.price, unit: "€", format: "%n %u") %> / <%= product.unit || 'unité' %></small>
+                <br><small class="text-muted"><%= number_to_currency(product.avg_price_per_kg, unit: "€", format: "%n %u") %> / <%= product.base_unit %></small>
               </div>
               <span class="badge bg-primary rounded-pill"><%= product.recipes_count %> recettes</span>
             </div>

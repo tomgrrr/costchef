@@ -10,7 +10,8 @@ class ProductsController < ApplicationController
 
   # GET /products/:id
   def show
-    # @product déjà chargé via before_action
+    @suppliers = current_user.suppliers.active.order(:name)
+    @product_purchase = @product.product_purchases.build
   end
 
   # GET /products/new
@@ -60,6 +61,6 @@ class ProductsController < ApplicationController
 
   # Strong parameters - JAMAIS permettre :user_id
   def product_params
-    params.require(:product).permit(:name, :price, :unit)
+    params.require(:product).permit(:name, :base_unit, :unit_weight_kg)
   end
 end

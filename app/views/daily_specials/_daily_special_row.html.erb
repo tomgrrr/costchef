@@ -1,0 +1,57 @@
+<tr data-controller="inline-edit">
+  <!-- Mode affichage -->
+  <td data-inline-edit-target="display"><%= daily_special.item_name %></td>
+  <td data-inline-edit-target="display"><%= l(daily_special.entry_date, format: :long) rescue daily_special.entry_date.strftime('%d/%m/%Y') %></td>
+  <td data-inline-edit-target="display"><%= number_to_currency(daily_special.cost_per_kg, unit: '€', format: '%n %u') %>/kg</td>
+  <td data-inline-edit-target="display" class="text-end">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="inline-edit#toggle" title="Modifier">
+      <i class="bi bi-pencil"></i>
+    </button>
+    <%= button_to daily_special_path(daily_special),
+        method: :delete,
+        class: "btn btn-sm btn-outline-danger",
+        title: "Supprimer",
+        form: { data: { turbo_confirm: "Supprimer ce plat du jour ?" } } do %>
+      <i class="bi bi-trash"></i>
+    <% end %>
+  </td>
+
+  <!-- Mode édition (masqué par défaut) -->
+  <td colspan="4" data-inline-edit-target="edit" class="d-none">
+    <%= form_with(model: daily_special, local: true) do |form| %>
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3">
+          <%= form.text_field :item_name,
+              class: "form-control form-control-sm",
+              required: true %>
+        </div>
+        <div class="col-md-2">
+          <%= form.date_field :entry_date,
+              class: "form-control form-control-sm",
+              required: true %>
+        </div>
+        <div class="col-md-2">
+          <div class="input-group input-group-sm">
+            <%= form.number_field :cost_per_kg,
+                class: "form-control",
+                step: 0.01, min: 0.01,
+                required: true %>
+            <span class="input-group-text">&euro;/kg</span>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <%= form.select :category,
+              [["Viande", "meat"], ["Poisson", "fish"], ["Accompagnement", "side"]],
+              {},
+              class: "form-select form-select-sm" %>
+        </div>
+        <div class="col-md-3 text-end">
+          <%= form.submit "Sauvegarder", class: "btn btn-sm btn-success" %>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-action="inline-edit#cancel">
+            Annuler
+          </button>
+        </div>
+      </div>
+    <% end %>
+  </td>
+</tr>
