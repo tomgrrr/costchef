@@ -1,0 +1,37 @@
+<div class="row mt-5">
+  <div class="col-md-4 offset-md-4">
+    <div class="card">
+      <div class="card-header text-center">
+        <h4>Créer votre compte</h4>
+      </div>
+      <div class="card-body">
+        <% if @user.errors.any? %>
+          <div class="alert alert-danger">
+            <% @user.errors.full_messages.each do |message| %>
+              <p class="mb-0"><%= message %></p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <%= form_for @user, url: signup_path(token: @invitation.token), method: :post do |f| %>
+          <div class="mb-3">
+            <%= f.label :email, "Email", class: "form-label" %>
+            <input type="email" class="form-control" value="<%= @invitation.email %>" readonly disabled>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :password, "Mot de passe", class: "form-label" %>
+            <%= f.password_field :password, autocomplete: "new-password", class: "form-control" %>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :password_confirmation, "Confirmation du mot de passe", class: "form-label" %>
+            <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+          </div>
+
+          <%= f.submit "Créer mon compte", class: "btn btn-success w-100" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
