@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_17_101241) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -82,11 +82,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_17_101241) do
     t.decimal "quantity_kg", precision: 10, scale: 3, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "quantity_unit", default: "kg", null: false
     t.index ["component_type", "component_id"], name: "index_recipe_components_on_component_type_and_component_id"
     t.index ["parent_recipe_id", "component_type", "component_id"], name: "index_recipe_components_uniqueness", unique: true
     t.index ["parent_recipe_id"], name: "index_recipe_components_on_parent_recipe_id"
     t.check_constraint "component_type::text = ANY (ARRAY['Product'::character varying, 'Recipe'::character varying]::text[])", name: "valid_component_type"
     t.check_constraint "quantity_kg > 0::numeric", name: "quantity_kg_positive"
+    t.check_constraint "quantity_unit::text = ANY (ARRAY['kg'::character varying, 'g'::character varying, 'l'::character varying, 'cl'::character varying, 'ml'::character varying, 'piece'::character varying]::text[])", name: "valid_quantity_unit"
   end
 
   create_table "recipes", force: :cascade do |t|
