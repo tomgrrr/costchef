@@ -70,12 +70,15 @@ Key relationships:
 
 Convention: `app/services/{domain}/{action}.rb` → `Domain::ActionName.call(obj)`
 
-Calculation chain (imperative order):
+Services (5 total):
 
-1. `ProductPurchases::PricePerKgCalculator.call(purchase)` — converts purchase to price/kg
-2. `Products::AvgPriceRecalculator.call(product)` — weighted average of active purchases
-3. `Recipes::Recalculator.call(recipe)` — recalculates 4 cached fields
-4. `Recalculations::Dispatcher` — cascades to parent recipes if sub-recipes are affected
+0. `Units::Converter` — Source unique de vérité pour conversions d'unités vers kg.
+   Expose `to_kg(quantity, unit, product:)` et `to_display_unit(quantity_kg, unit, product:)`.
+   Règles : 1L=1kg, piece→unit_weight_kg, unités valides: kg/g/l/cl/ml/piece.
+1. `ProductPurchases::PricePerKgCalculator.call(purchase)` — Calcule price_per_kg. Délègue conversion à Units::Converter.
+2. `Products::AvgPriceRecalculator.call(product)` — Moyenne pondérée des achats actifs.
+3. `Recipes::Recalculator.call(recipe)` — Recalcule les 4 champs cached_*.
+4. `Recalculations::Dispatcher` — Orchestre la cascade et propage aux recettes parentes.
 
 Test each service with a dedicated RSpec before integrating into controllers.
 
