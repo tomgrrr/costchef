@@ -39,6 +39,7 @@ class RecipesController < ApplicationController
   # PATCH/PUT /recipes/:id
   def update
     if @recipe.update(recipe_params)
+      Recalculations::Dispatcher.recipe_changed(@recipe) if calculation_fields_changed?
       redirect_to recipe_path(@recipe), notice: 'Recette mise à jour avec succès.'
     else
       @available_products = current_user.products.order(:name)
@@ -102,8 +103,21 @@ class RecipesController < ApplicationController
     @recipe = current_user.recipes.find(params[:id])
   end
 
+  def calculation_fields_changed?
+    @recipe.saved_change_to_cooking_loss_percentage? ||
+      @recipe.saved_change_to_has_tray? ||
+      @recipe.saved_change_to_tray_size_id?
+  end
+
   # Strong parameters - JAMAIS permettre :user_id
   def recipe_params
-    params.require(:recipe).permit(:name, :description)
+    params.require(:recipe).permit(
+      :name,
+      :description,
+      :cooking_loss_percentage,
+      :sellable_as_component,
+      :has_tray,
+      :tray_size_id
+    )
   end
 end
