@@ -1,0 +1,35 @@
+<%= form_with(model: supplier, local: true) do |form| %>
+  <% if supplier.errors.any? %>
+    <div class="alert alert-danger">
+      <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Erreur(s) :</h6>
+      <ul class="mb-0">
+        <% supplier.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Nom du fournisseur -->
+  <div class="mb-4">
+    <%= form.label :name, class: "form-label fw-bold" do %>
+      Nom du fournisseur <span class="text-danger">*</span>
+    <% end %>
+    <%= form.text_field :name,
+        class: "form-control form-control-lg #{'is-invalid' if supplier.errors[:name].any?}",
+        placeholder: "Ex: Metro, Promocash, Transgourmet",
+        required: true %>
+    <div class="form-text">
+      <i class="bi bi-info-circle"></i> Nom clair pour identifier facilement le fournisseur
+    </div>
+  </div>
+
+  <!-- Boutons d'action -->
+  <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+    <%= link_to suppliers_path, class: "btn btn-outline-secondary btn-lg" do %>
+      <i class="bi bi-arrow-left"></i> Annuler
+    <% end %>
+    <%= form.submit supplier.persisted? ? "Mettre à jour le fournisseur" : "Enregistrer le fournisseur",
+        class: "btn btn-primary btn-lg" %>
+  </div>
+<% end %>
