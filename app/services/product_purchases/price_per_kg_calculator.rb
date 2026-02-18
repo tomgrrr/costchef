@@ -11,15 +11,7 @@ module ProductPurchases
   # Il est appelé par le Dispatcher avant la sauvegarde d'un achat.
   #
   class PricePerKgCalculator
-    # Conversions supportées (PRD Section 7.1 & Module 6)
-    UNIT_CONVERSIONS = {
-      'kg' => ->(qty, _product) { qty },
-      'g' => ->(qty, _product) { qty / 1000.0 },
-      'l' => ->(qty, _product) { qty }, # 1L = 1kg (D2)
-      'cl' => ->(qty, _product) { qty / 100.0 },
-      'ml' => ->(qty, _product) { qty / 1000.0 },
-      'piece' => ->(qty, product) { qty * (product&.unit_weight_kg || 0) }
-    }.freeze
+    # Conversion d'unités déléguée à Units::Converter (source unique de vérité)
 
     def self.call(purchase)
       new(purchase).call
@@ -42,19 +34,14 @@ module ProductPurchases
 
     private
 
-    # Convertit la quantité saisie en kg
+    # Convertit la quantité saisie en kg via Units::Converter
     def calculate_quantity_kg
-      unit = @purchase.package_unit&.downcase || 'kg'
+      unit = @purchase.package_unit || 'kg'
       quantity = @purchase.package_quantity || 0
-      product = @purchase.product
 
-      converter = UNIT_CONVERSIONS[unit]
-      @purchase.package_quantity_kg = if converter
-                                        converter.call(quantity, product)
-                                      else
-                                        # Unité inconnue : on assume kg
-                                        quantity
-                                      end
+      @purchase.package_quantity_kg = Units::Converter.to_kg(
+        quantity, unit, product: @purchase.product
+      )
 
       # Sécurité : jamais négatif ou zéro pour éviter division par zéro
       @purchase.package_quantity_kg = 0.001 if @purchase.package_quantity_kg <= 0
