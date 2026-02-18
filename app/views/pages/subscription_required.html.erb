@@ -1,0 +1,8 @@
+<div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+  <div class="text-center">
+    <i class="bi bi-lock fs-1 text-secondary mb-3 d-block"></i>
+    <h2>Votre abonnement n'est pas actif</h2>
+    <p class="text-muted">Contactez l'administrateur pour activer votre compte.</p>
+    <%= link_to "Se déconnecter", destroy_user_session_path, data: { turbo_method: :delete }, class: "btn btn-outline-secondary mt-3" %>
+  </div>
+</div>
