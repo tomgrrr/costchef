@@ -55,31 +55,47 @@ class RecipesController < ApplicationController
   # POST /recipes/:id/duplicate
   def duplicate
     new_recipe = @recipe.dup
-    new_recipe.name = "#{@recipe.name} (copie)"
+    new_recipe.name = generate_unique_copy_name(@recipe.name)
+    reset_cached_fields(new_recipe)
 
-    # S'assurer que le nom est unique
-    counter = 1
-    while current_user.recipes.exists?(name: new_recipe.name)
-      counter += 1
-      new_recipe.name = "#{@recipe.name} (copie #{counter})"
+    ActiveRecord::Base.transaction do
+      new_recipe.save!
+      duplicate_components(new_recipe)
+      Recalculations::Dispatcher.recipe_component_changed(new_recipe)
     end
 
-    if new_recipe.save
-      # Dupliquer les ingrédients
-      @recipe.recipe_ingredients.each do |ri|
-        new_recipe.recipe_ingredients.create!(
-          product: ri.product,
-          quantity: ri.quantity
-        )
-      end
-
-      redirect_to recipe_path(new_recipe), notice: 'Recette dupliquée avec succès.'
-    else
-      redirect_to recipe_path(@recipe), alert: 'Erreur lors de la duplication de la recette.'
-    end
+    redirect_to recipe_path(new_recipe), notice: 'Recette dupliquée avec succès.'
+  rescue ActiveRecord::RecordInvalid
+    redirect_to recipe_path(@recipe), alert: 'Erreur lors de la duplication de la recette.'
   end
 
   private
+
+  def generate_unique_copy_name(original_name)
+    name = "#{original_name} (copie)"
+    counter = 1
+    while current_user.recipes.exists?(name: name)
+      counter += 1
+      name = "#{original_name} (copie #{counter})"
+    end
+    name
+  end
+
+  def reset_cached_fields(recipe)
+    recipe.cached_total_cost = nil
+    recipe.cached_total_weight = nil
+    recipe.cached_cost_per_kg = nil
+    recipe.cached_total_cost_with_loss = nil
+  end
+
+  def duplicate_components(new_recipe)
+    @recipe.recipe_components.each do |rc|
+      new_recipe.recipe_components.create!(
+        component: rc.component,
+        quantity_kg: rc.quantity_kg
+      )
+    end
+  end
 
   # Charge la recette uniquement via current_user (isolation multi-tenant)
   def set_recipe
