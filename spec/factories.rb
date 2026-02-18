@@ -102,11 +102,24 @@ FactoryBot.define do
 
   factory :recipe_component do
     quantity_kg { 0.5 }
+    quantity_unit { 'kg' }
     association :parent_recipe, factory: :recipe
     association :component, factory: :product
 
     trait :with_subrecipe do
       association :component, factory: %i[recipe subrecipe]
+    end
+
+    trait :in_grams do
+      quantity_unit { 'g' }
+    end
+
+    trait :in_liters do
+      quantity_unit { 'l' }
+    end
+
+    trait :in_pieces do
+      quantity_unit { 'piece' }
     end
   end
 end
