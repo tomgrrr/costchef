@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_19_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_19_102017) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -71,6 +71,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_19_000002) do
     t.decimal "avg_price_per_kg", precision: 10, scale: 4, default: "0.0", null: false
     t.index ["user_id", "name"], name: "index_products_on_user_id_and_name", unique: true
     t.index ["user_id"], name: "index_products_on_user_id"
+    t.check_constraint "base_unit::text = 'piece'::text AND unit_weight_kg IS NOT NULL AND unit_weight_kg > 0::numeric OR base_unit::text <> 'piece'::text AND unit_weight_kg IS NULL", name: "unit_weight_kg_piece_consistency"
   end
 
   create_table "recipe_components", force: :cascade do |t|
