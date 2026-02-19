@@ -91,22 +91,22 @@ class ProductPurchasesController < ApplicationController
       turbo_stream.replace("product_#{@product.id}",
                            partial: "products/product_card",
                            locals: { product: @product }),
-      turbo_stream.replace("purchases_#{@product.id}",
-                           partial: "product_purchases/purchases_section",
-                           locals: { product: @product,
-                                     purchases: @product.product_purchases.order(:created_at),
-                                     new_purchase: @new_purchase || ProductPurchase.new,
-                                     suppliers: active_suppliers })
+      turbo_stream.update("purchases_#{@product.id}",
+                          partial: "product_purchases/purchases_section",
+                          locals: { product: @product,
+                                    purchases: @product.product_purchases.order(:created_at),
+                                    new_purchase: @new_purchase || ProductPurchase.new,
+                                    suppliers: active_suppliers })
     ]
   end
 
   def render_purchases_stream
-    render turbo_stream: turbo_stream.replace("purchases_#{@product.id}",
-                                              partial: "product_purchases/purchases_section",
-                                              locals: { product: @product,
-                                                        purchases: @product.product_purchases.order(:created_at),
-                                                        new_purchase: @new_purchase,
-                                                        suppliers: active_suppliers })
+    render turbo_stream: turbo_stream.update("purchases_#{@product.id}",
+                                             partial: "product_purchases/purchases_section",
+                                             locals: { product: @product,
+                                                       purchases: @product.product_purchases.order(:created_at),
+                                                       new_purchase: @new_purchase,
+                                                       suppliers: active_suppliers })
   end
 
   def render_streams_for(product)
@@ -114,12 +114,12 @@ class ProductPurchasesController < ApplicationController
       turbo_stream.replace("product_#{product.id}",
                            partial: "products/product_card",
                            locals: { product: product }),
-      turbo_stream.replace("purchases_#{product.id}",
-                           partial: "product_purchases/purchases_section",
-                           locals: { product: product,
-                                     purchases: product.product_purchases.order(:created_at),
-                                     new_purchase: ProductPurchase.new,
-                                     suppliers: active_suppliers })
+      turbo_stream.update("purchases_#{product.id}",
+                          partial: "product_purchases/purchases_section",
+                          locals: { product: product,
+                                    purchases: product.product_purchases.order(:created_at),
+                                    new_purchase: ProductPurchase.new,
+                                    suppliers: active_suppliers })
     ]
   end
 
