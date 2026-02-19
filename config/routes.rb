@@ -16,10 +16,10 @@ Rails.application.routes.draw do
     resources :invitations, only: %i[index new create]
   end
 
-  resources :suppliers do
+  resources :suppliers, except: [:show] do
     member do
-      patch  :deactivate
-      delete :force_destroy
+      post :activate
+      post :deactivate
     end
   end
 

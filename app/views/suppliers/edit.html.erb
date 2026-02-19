@@ -1,0 +1,5 @@
+<%= link_to '← Fournisseurs', suppliers_path, class: 'text-decoration-none d-inline-block mb-3' %>
+
+<h1 class="mb-4">Modifier <%= @supplier.name %></h1>
+
+<%= render 'form', supplier: @supplier %>
