@@ -95,7 +95,8 @@ class ProductPurchasesController < ApplicationController
                            partial: "product_purchases/purchases_section",
                            locals: { product: @product,
                                      purchases: @product.product_purchases.order(:created_at),
-                                     new_purchase: @new_purchase || ProductPurchase.new })
+                                     new_purchase: @new_purchase || ProductPurchase.new,
+                                     suppliers: active_suppliers })
     ]
   end
 
@@ -104,7 +105,8 @@ class ProductPurchasesController < ApplicationController
                                               partial: "product_purchases/purchases_section",
                                               locals: { product: @product,
                                                         purchases: @product.product_purchases.order(:created_at),
-                                                        new_purchase: @new_purchase })
+                                                        new_purchase: @new_purchase,
+                                                        suppliers: active_suppliers })
   end
 
   def render_streams_for(product)
@@ -116,7 +118,12 @@ class ProductPurchasesController < ApplicationController
                            partial: "product_purchases/purchases_section",
                            locals: { product: product,
                                      purchases: product.product_purchases.order(:created_at),
-                                     new_purchase: ProductPurchase.new })
+                                     new_purchase: ProductPurchase.new,
+                                     suppliers: active_suppliers })
     ]
+  end
+
+  def active_suppliers
+    current_user.suppliers.active.order(:name)
   end
 end
