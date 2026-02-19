@@ -1,6 +1,4 @@
 module Units
-  VALID_UNITS = %w[kg g l cl ml piece].freeze
-
   class Converter
     def self.to_kg(quantity, unit, product: nil)
       new(quantity, unit, product).to_kg

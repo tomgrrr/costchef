@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_19_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,9 +47,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
     t.bigint "supplier_id", null: false
     t.decimal "package_quantity", precision: 10, scale: 3, null: false
     t.string "package_unit", default: "kg", null: false
-    t.decimal "package_quantity_kg", precision: 10, scale: 3, null: false
+    t.decimal "package_quantity_kg", precision: 10, scale: 3
     t.decimal "package_price", precision: 10, scale: 2, null: false
-    t.decimal "price_per_kg", precision: 10, scale: 4, null: false
+    t.decimal "price_per_kg", precision: 10, scale: 4
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -59,8 +59,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
     t.index ["supplier_id"], name: "index_product_purchases_on_supplier_id"
     t.check_constraint "package_price >= 0::numeric", name: "package_price_positive"
     t.check_constraint "package_quantity > 0::numeric", name: "package_quantity_positive"
-    t.check_constraint "package_quantity_kg > 0::numeric", name: "package_quantity_kg_positive"
-    t.check_constraint "price_per_kg >= 0::numeric", name: "price_per_kg_positive"
   end
 
   create_table "products", force: :cascade do |t|
@@ -71,7 +69,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
     t.string "base_unit", default: "kg", null: false
     t.decimal "unit_weight_kg", precision: 10, scale: 4
     t.decimal "avg_price_per_kg", precision: 10, scale: 4, default: "0.0", null: false
-    t.index ["name"], name: "index_products_on_name"
+    t.index ["user_id", "name"], name: "index_products_on_user_id_and_name", unique: true
     t.index ["user_id"], name: "index_products_on_user_id"
   end
 

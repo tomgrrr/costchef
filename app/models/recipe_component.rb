@@ -23,6 +23,11 @@ class RecipeComponent < ApplicationRecord
             presence: true,
             numericality: { greater_than: 0 }
 
+  # Unité de saisie : doit être dans Units::VALID_UNITS
+  validates :quantity_unit,
+            presence: true,
+            inclusion: { in: Units::VALID_UNITS }
+
   # Type de composant valide
   validates :component_type,
             presence: true,
