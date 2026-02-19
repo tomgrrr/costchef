@@ -122,4 +122,25 @@ FactoryBot.define do
       quantity_unit { 'piece' }
     end
   end
+
+  factory :invitation do
+    email { 'invite@test.fr' }
+    token { SecureRandom.urlsafe_base64(32) }
+    expires_at { 7.days.from_now }
+    used_at { nil }
+    association :created_by_admin, factory: :user
+
+    trait :expired do
+      expires_at { 1.day.ago }
+    end
+
+    trait :used do
+      used_at { 1.hour.ago }
+    end
+
+    trait :pending do
+      used_at { nil }
+      expires_at { 7.days.from_now }
+    end
+  end
 end

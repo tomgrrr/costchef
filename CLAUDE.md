@@ -98,5 +98,33 @@ Test each service with a dedicated RSpec before integrating into controllers.
 ### Auth & Access
 
 - **Devise** for authentication, signup by invitation only.
-- **Subscription gate** (`ensure_subscription!`) — redirects to `/subscription_required` if inactive.
-- **Admin namespace** (`/admin`) with `admin?` check, exempt from subscription gate.
+- **Subscription gate** (`ensure_subscription!`) in `ApplicationController` — redirects to `/subscription_required` if `subscription_active == false`.
+- **Admin namespace** (`/admin`) inherits from `Admin::BaseController` with `require_admin!` check + `skip_before_action :ensure_subscription!`.
+- **SignupsController** — skips both `authenticate_user!` and `ensure_subscription!`. Validates invitation token (`valid_for_signup?`: not used + not expired). On success: creates user, calls `invitation.mark_as_used!`, auto sign-in.
+- **PagesController** — `home` (root, requires auth + subscription), `subscription_required` (requires auth only, `skip_before_action :ensure_subscription!`).
+
+### Invitation System
+
+- **Model:** `Invitation` belongs_to `created_by_admin` (User). Fields: `email`, `token`, `expires_at`, `used_at`. Auto-generates token + sets 7-day expiration via `before_validation` callbacks. Validates email uniqueness + not already registered as User.
+- **Lifecycle:** `valid_for_signup?` → `used_at.nil? && expires_at > Time.current`. `mark_as_used!` → sets `used_at` to now. `status` returns `:pending`, `:expired`, or `:used`.
+- **Admin flow:** `Admin::InvitationsController` — index/new/create. On create, sends `InvitationMailer.invite_user(@invitation).deliver_later`.
+- **Signup flow:** `GET /signup?token=xxx` → form. `POST /signup` with `token` param + `user[password]` + `user[password_confirmation]`.
+
+### Test Suite (93 specs, 0 failures)
+
+**Setup:**
+- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, invitation).
+- `spec/support/devise.rb` — Includes `Devise::Test::IntegrationHelpers` for request specs.
+- `spec/support/database_cleaner.rb` + `spec/support/factory_bot.rb` — Standard config.
+
+**Conventions:**
+- Request specs use `sign_in user` (Devise helper), `before(:each)` only (no `before(:all)`).
+- Use `let!` (eager) for invitation in POST specs where `expect { }.to change(User, :count)` — avoids counting the admin user created by the invitation factory.
+- Product factory has a uniqueness constraint on `name` per user — use distinct names when creating multiple products (not `create_list`).
+
+**Spec files:**
+- `spec/services/` — 5 service specs (Units::Converter, PricePerKgCalculator, AvgPriceRecalculator, Recalculator, Dispatcher). 46 examples.
+- `spec/requests/pages_spec.rb` — 8 examples. Covers `GET /` (auth, subscription gate, counters) + `GET /subscription_required`.
+- `spec/requests/signups_spec.rb` — 17 examples. Covers `GET /signup` (no token, invalid, expired, used, valid) + `POST /signup` (success, short password, mismatch, expired token).
+- `spec/requests/admin/invitations_spec.rb` — 13 examples. Covers index/new/create with auth (non-connected, user, admin) + email validation + `have_enqueued_mail`.
+- `spec/requests/admin/users_spec.rb` — 9 examples. Covers index (auth, user list, subscription badges) + update (subscription_active, subscription_notes, non-admin blocked).

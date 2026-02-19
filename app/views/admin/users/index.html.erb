@@ -1,0 +1,128 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Supervision des utilisateurs</h4>
+  <div class="d-flex gap-2">
+    <span class="badge bg-secondary fs-6">Total : <%= @users.count %></span>
+    <span class="badge bg-success fs-6">Abonnés : <%= @users.count(&:subscription_active?) %></span>
+    <span class="badge bg-warning text-dark fs-6">Non abonnés : <%= @users.count { !_1.subscription_active? } %></span>
+  </div>
+</div>
+
+<% if @users.empty? %>
+  <div class="text-center text-muted mt-4">
+    Aucun utilisateur enregistré.
+  </div>
+<% else %>
+  <table class="table table-bordered table-hover table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Rôle</th>
+        <th>Abonnement</th>
+        <th>Début</th>
+        <th>Expiration</th>
+        <th>Notes</th>
+        <th>Créé le</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td>
+            <%= user.email %>
+            <% if user == current_user %>
+              <span class="badge bg-light text-dark border">Vous</span>
+            <% end %>
+          </td>
+          <td>
+            <% if user.admin? %>
+              <span class="badge bg-danger">Admin</span>
+            <% else %>
+              <span class="badge bg-secondary">Utilisateur</span>
+            <% end %>
+          </td>
+          <td>
+            <% if user.subscription_active? %>
+              <span class="badge bg-success">Actif</span>
+            <% else %>
+              <span class="badge bg-warning text-dark">Inactif</span>
+            <% end %>
+          </td>
+          <td>
+            <% if user.subscription_started_at %>
+              <%= l(user.subscription_started_at, format: :short) %>
+            <% else %>
+              <span class="text-muted">—</span>
+            <% end %>
+          </td>
+          <td>
+            <% if user.subscription_expires_at %>
+              <%= l(user.subscription_expires_at, format: :short) %>
+            <% else %>
+              <span class="text-muted">—</span>
+            <% end %>
+          </td>
+          <td>
+            <% if user.subscription_notes.present? %>
+              <span title="<%= user.subscription_notes %>"><%= truncate(user.subscription_notes, length: 40) %></span>
+            <% else %>
+              <span class="text-muted">—</span>
+            <% end %>
+          </td>
+          <td><%= l(user.created_at, format: :short) %></td>
+          <td>
+            <% if user != current_user %>
+              <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-user-<%= user.id %>">
+                <i class="bi bi-pencil"></i> Modifier
+              </button>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% @users.each do |user| %>
+    <% next if user == current_user %>
+    <div class="modal fade" id="modal-user-<%= user.id %>" tabindex="-1" aria-labelledby="modal-user-<%= user.id %>-label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <%= form_with(model: [:admin, user], method: :patch) do |f| %>
+            <div class="modal-header">
+              <h5 class="modal-title" id="modal-user-<%= user.id %>-label">Modifier <%= user.email %></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <%= f.check_box :subscription_active, class: "form-check-input", role: "switch", id: "sub_active_#{user.id}" %>
+                  <%= f.label :subscription_active, "Abonnement actif", class: "form-check-label", for: "sub_active_#{user.id}" %>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col">
+                  <%= f.label :subscription_started_at, "Début", class: "form-label" %>
+                  <%= f.date_field :subscription_started_at, class: "form-control", value: user.subscription_started_at&.strftime('%Y-%m-%d') %>
+                </div>
+                <div class="col">
+                  <%= f.label :subscription_expires_at, "Expiration", class: "form-label" %>
+                  <%= f.date_field :subscription_expires_at, class: "form-control", value: user.subscription_expires_at&.strftime('%Y-%m-%d') %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :subscription_notes, "Notes internes", class: "form-label" %>
+                <%= f.text_area :subscription_notes, class: "form-control", rows: 3, placeholder: "Notes visibles uniquement par les admins..." %>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <%= f.submit "Enregistrer", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
