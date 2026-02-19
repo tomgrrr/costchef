@@ -64,13 +64,15 @@
                           toggle_active_product_purchase_path(purchase),
                           method: :post,
                           params: { product_id: product.id },
+                          form: { data: { turbo_frame: "purchases_#{product.id}" } },
                           class: "btn btn-sm #{purchase.active? ? 'btn-warning' : 'btn-success'}" %>
 
                     <%# Supprimer %>
                     <%= button_to product_purchase_path(purchase),
                           method: :delete,
                           params: { product_id: product.id },
-                          form: { data: { turbo_confirm: "Supprimer ce conditionnement ?" } },
+                          form: { data: { turbo_confirm: "Supprimer ce conditionnement ?",
+                                          turbo_frame: "purchases_#{product.id}" } },
                           class: "btn btn-sm btn-outline-danger" do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
