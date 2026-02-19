@@ -1,0 +1,61 @@
+<% if product.errors.any? %>
+  <div class="alert alert-danger">
+    <% product.errors.full_messages.each do |msg| %>
+      <div><i class="bi bi-x-circle"></i> <%= msg %></div>
+    <% end %>
+  </div>
+<% end %>
+
+<%= form_with model: product do |f| %>
+  <div data-controller="unit-select">
+
+    <%# Nom %>
+    <div class="mb-3">
+      <%= f.label :name, "Nom du produit", class: "form-label fw-semibold" %>
+      <%= f.text_field :name,
+            class: "form-control #{'is-invalid' if product.errors[:name].any?}",
+            autofocus: true,
+            placeholder: "Ex: Farine T55" %>
+      <% if product.errors[:name].any? %>
+        <div class="invalid-feedback"><%= product.errors[:name].first %></div>
+      <% end %>
+    </div>
+
+    <%# Unité de base %>
+    <div class="mb-3">
+      <%= f.label :base_unit, "Unité de saisie", class: "form-label fw-semibold" %>
+      <%= f.select :base_unit,
+            [["Kilogramme (kg)", "kg"], ["Litre (l)", "l"], ["Pièce", "piece"]],
+            {},
+            class: "form-select",
+            data: { unit_select_target: "unitSelect",
+                    action: "change->unit-select#toggle" } %>
+      <div class="form-text">
+        Unité utilisée lors de la saisie des quantités dans les recettes.
+      </div>
+    </div>
+
+    <%# Poids unitaire (visible uniquement si piece) %>
+    <div class="mb-3" data-unit-select-target="weightField">
+      <%= f.label :unit_weight_kg,
+            "Poids unitaire (kg/pièce)",
+            class: "form-label fw-semibold" %>
+      <%= f.number_field :unit_weight_kg,
+            step: "0.001", min: "0.001",
+            class: "form-control #{'is-invalid' if product.errors[:unit_weight_kg].any?}",
+            placeholder: "Ex: 0.060" %>
+      <div class="form-text">Ex: 0.060 pour un œuf de 60g, 0.250 pour une pomme.</div>
+      <% if product.errors[:unit_weight_kg].any? %>
+        <div class="invalid-feedback">
+          <%= product.errors[:unit_weight_kg].first %>
+        </div>
+      <% end %>
+    </div>
+
+  </div><%# fin data-controller %>
+
+  <div class="d-flex gap-2 mt-4">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Annuler", products_path, class: "btn btn-link text-decoration-none" %>
+  </div>
+<% end %>

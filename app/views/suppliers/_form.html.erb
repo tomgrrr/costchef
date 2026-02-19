@@ -1,0 +1,27 @@
+<div class="row">
+  <div class="col-md-6 mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <%= form_with(model: supplier) do |f| %>
+          <% if supplier.errors.any? %>
+            <div class="alert alert-danger">
+              <% supplier.errors.full_messages.each do |message| %>
+                <p class="mb-0"><%= message %></p>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div class="mb-3">
+            <%= f.label :name, 'Nom', class: 'form-label' %>
+            <%= f.text_field :name, class: 'form-control', autofocus: true %>
+          </div>
+
+          <div class="d-flex gap-2">
+            <%= f.submit class: 'btn btn-primary' %>
+            <%= link_to 'Annuler', suppliers_path, class: 'btn btn-outline-secondary' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
