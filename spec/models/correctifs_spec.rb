@@ -82,6 +82,7 @@ RSpec.describe Supplier, type: :model do
     before do
       create(:product_purchase, product: product, supplier: supplier,
                                 package_quantity_kg: 10.0, price_per_kg: 2.0)
+      Products::AvgPriceRecalculator.call(product)
     end
 
     it 'supprime le fournisseur et ses achats' do
@@ -90,9 +91,10 @@ RSpec.describe Supplier, type: :model do
         .and change(ProductPurchase, :count).by(-1)
     end
 
-    it 'retourne les product_ids impactés' do
-      impacted_ids = supplier.force_destroy!
-      expect(impacted_ids).to contain_exactly(product.id)
+    it 'recalcule le avg_price_per_kg du produit impacté à 0' do
+      expect(product.reload.avg_price_per_kg.to_f).to eq(2.0)
+      supplier.force_destroy!
+      expect(product.reload.avg_price_per_kg.to_f).to eq(0.0)
     end
   end
 end

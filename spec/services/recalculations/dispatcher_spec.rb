@@ -21,10 +21,6 @@ RSpec.describe Recalculations::Dispatcher do
       end
 
       it 'recalculates the full chain: purchase → product → recipe' do
-        # Le controller est responsable de calculer et sauvegarder l'achat avant le Dispatcher
-        ProductPurchases::PricePerKgCalculator.call(purchase)
-        purchase.save!
-
         described_class.product_purchase_changed(purchase)
 
         purchase.reload

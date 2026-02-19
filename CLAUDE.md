@@ -44,17 +44,17 @@ bin/rails console         # Interactive Ruby shell
 
 - **User** — Owns everything. `markup_coefficient` (default 1.0). Auth via Devise.
 - **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required.
-- **ProductPurchase** — Price history. Purchase units: `[kg, g, l, cl, ml, piece]`. `active` boolean filters obsolete prices.
+- **ProductPurchase** — Price history. Purchase units: `Units::VALID_UNITS`. `package_quantity_kg` and `price_per_kg` are nullable (calculated by service). `active` boolean filters obsolete prices.
 - **Recipe** — Cost calculations with cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_total_cost_with_loss`). `cooking_loss_percentage` (0-100). `sellable_as_component` controls sub-recipe eligibility.
-- **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). **Max 1 level of sub-recipe depth.**
+- **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). `quantity_unit` validated against `Units::VALID_UNITS`. **Max 1 level of sub-recipe depth.**
 - **Supplier** — Linked to ProductPurchases. Soft-delete via `active` flag.
 - **TraySize** — Optional recipe association. Nullified on delete.
-- **DailySpecial** — Independent history (meat/fish/side).
+- **DailySpecial** — Independent history (meat/fish/side). Class methods `meat_average`, `fish_average`, `side_average` (scoped via `user.daily_specials`).
 - **Invitation** — Signup by invitation only.
 
 Key relationships:
 - User `has_many` Products, Recipes, Suppliers, TraySizes, DailySpecials (cascade delete)
-- Product `has_many` ProductPurchases (cascade), RecipeComponents (restrict delete if in use)
+- Product `has_many` ProductPurchases (cascade), RecipeComponents (restrict delete if in use). Unique index on `[user_id, name]`.
 - Supplier `has_many` ProductPurchases (restrict delete)
 - Recipe `has_many` RecipeComponents, Products (through)
 - TraySize `has_many` Recipes (nullify on delete)
@@ -72,9 +72,10 @@ Convention: `app/services/{domain}/{action}.rb` → `Domain::ActionName.call(obj
 
 Services (5 total):
 
-0. `Units::Converter` — Source unique de vérité pour conversions d'unités vers kg.
+0. `Units` module (`app/services/units.rb`) — Définit `VALID_UNITS = %w[kg g l cl ml piece]`.
+   `Units::Converter` (`app/services/units/converter.rb`) — Source unique de vérité pour conversions d'unités vers kg.
    Expose `to_kg(quantity, unit, product:)` et `to_display_unit(quantity_kg, unit, product:)`.
-   Règles : 1L=1kg, piece→unit_weight_kg, unités valides: kg/g/l/cl/ml/piece.
+   Règles : 1L=1kg, piece→unit_weight_kg.
 1. `ProductPurchases::PricePerKgCalculator.call(purchase)` — Calcule price_per_kg. Délègue conversion à Units::Converter.
 2. `Products::AvgPriceRecalculator.call(product)` — Moyenne pondérée des achats actifs.
 3. `Recipes::Recalculator.call(recipe)` — Recalcule les 4 champs cached_*.
@@ -85,7 +86,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 ### Deletion Rules
 
 - **Product:** Block deletion if used in a RecipeComponent.
-- **Supplier:** Block deletion if ProductPurchases exist (unless force=true).
+- **Supplier:** Block deletion if ProductPurchases exist (unless force=true). `force_destroy!` uses `delete_all` (direct SQL, no callbacks per PRD D15).
 - **TraySize:** Nullify `tray_size_id` in recipes (no recipe destruction).
 
 ### Frontend Architecture
@@ -110,10 +111,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Admin flow:** `Admin::InvitationsController` — index/new/create. On create, sends `InvitationMailer.invite_user(@invitation).deliver_later`.
 - **Signup flow:** `GET /signup?token=xxx` → form. `POST /signup` with `token` param + `user[password]` + `user[password_confirmation]`.
 
-### Test Suite (93 specs, 0 failures)
+### Test Suite (105 specs, 0 failures)
 
 **Setup:**
-- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, invitation).
+- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation).
 - `spec/support/devise.rb` — Includes `Devise::Test::IntegrationHelpers` for request specs.
 - `spec/support/database_cleaner.rb` + `spec/support/factory_bot.rb` — Standard config.
 
@@ -128,3 +129,4 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/requests/signups_spec.rb` — 17 examples. Covers `GET /signup` (no token, invalid, expired, used, valid) + `POST /signup` (success, short password, mismatch, expired token).
 - `spec/requests/admin/invitations_spec.rb` — 13 examples. Covers index/new/create with auth (non-connected, user, admin) + email validation + `have_enqueued_mail`.
 - `spec/requests/admin/users_spec.rb` — 9 examples. Covers index (auth, user list, subscription badges) + update (subscription_active, subscription_notes, non-admin blocked).
+- `spec/models/correctifs_spec.rb` — 12 examples. Covers RecipeComponent quantity_unit validation, ProductPurchase calculated fields + package_unit validation, Supplier#force_destroy!, DailySpecial category averages with user isolation.
