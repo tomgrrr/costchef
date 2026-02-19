@@ -16,7 +16,19 @@ class DailySpecial < ApplicationRecord
   scope :fishes, -> { where(category: 'fish') }
   scope :sides, -> { where(category: 'side') }
 
-  scope :meat_average, -> { meats.average(:cost_per_kg) || 0 }
-  scope :fish_average, -> { fishes.average(:cost_per_kg) || 0 }
-  scope :side_average, -> { sides.average(:cost_per_kg) || 0 }
+  def self.average_cost_per_kg_for(category)
+    where(category: category).average(:cost_per_kg)&.round(2) || 0
+  end
+
+  def self.meat_average
+    average_cost_per_kg_for('meat')
+  end
+
+  def self.fish_average
+    average_cost_per_kg_for('fish')
+  end
+
+  def self.side_average
+    average_cost_per_kg_for('side')
+  end
 end

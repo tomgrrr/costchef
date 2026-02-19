@@ -35,7 +35,7 @@ class ProductPurchase < ApplicationRecord
   # Unité de saisie : kg, g, l, cl, ml, piece
   validates :package_unit,
             presence: true,
-            inclusion: { in: %w[kg g l cl ml piece] }
+            inclusion: { in: Units::VALID_UNITS }
 
   # Champs calculés (remplis par le service PricePerKgCalculator)
   # allow_nil: true car ces champs sont calculés APRÈS la saisie utilisateur
@@ -77,8 +77,11 @@ class ProductPurchase < ApplicationRecord
 
   # Vérifie que les champs calculés sont présents
   def calculated_fields_present
-    if package_quantity_kg.nil? || price_per_kg.nil?
-      errors.add(:base, "Les champs calculés doivent être remplis (package_quantity_kg et price_per_kg)")
+    if package_quantity_kg.nil?
+      errors.add(:base, "Le prix au kilo n'a pas pu être calculé (package_quantity_kg manquant)")
+    end
+    if price_per_kg.nil?
+      errors.add(:base, "Le prix au kilo n'a pas pu être calculé (price_per_kg manquant)")
     end
   end
 end
