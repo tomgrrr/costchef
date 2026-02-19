@@ -23,11 +23,11 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :products do
-    resources :product_purchases, only: %i[create update destroy] do
-      member do
-        patch :toggle_active
-      end
+  resources :products, except: [:show]
+
+  resources :product_purchases, only: %i[create update destroy] do
+    member do
+      post :toggle_active
     end
   end
 
