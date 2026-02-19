@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_19_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -71,7 +71,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_18_151302) do
     t.string "base_unit", default: "kg", null: false
     t.decimal "unit_weight_kg", precision: 10, scale: 4
     t.decimal "avg_price_per_kg", precision: 10, scale: 4, default: "0.0", null: false
-    t.index ["name"], name: "index_products_on_name"
+    t.index ["user_id", "name"], name: "index_products_on_user_id_and_name", unique: true
     t.index ["user_id"], name: "index_products_on_user_id"
   end
 

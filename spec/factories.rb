@@ -123,6 +123,14 @@ FactoryBot.define do
     end
   end
 
+  factory :daily_special do
+    user
+    category { 'meat' }
+    entry_date { Date.today }
+    item_name { 'Bœuf bourguignon' }
+    cost_per_kg { 12.5 }
+  end
+
   factory :invitation do
     email { 'invite@test.fr' }
     token { SecureRandom.urlsafe_base64(32) }
