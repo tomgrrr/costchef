@@ -53,7 +53,8 @@
                     <%# Toggle edit inline via Turbo Frame %>
                     <%= link_to "#",
                           class: "btn btn-sm btn-outline-secondary",
-                          data: { action: "click->toggle-edit#toggle",
+                          data: { controller: "toggle-edit",
+                                  action: "click->toggle-edit#toggle",
                                   toggle_edit_target_param: "edit_purchase_#{purchase.id}" } do %>
                       <i class="bi bi-pencil"></i>
                     <% end %>
@@ -83,7 +84,7 @@
                   <%= form_with url: product_purchase_path(purchase),
                                 method: :patch,
                                 class: "p-2" do |f| %>
-                    <%= f.hidden_field :product_id, value: product.id %>
+                    <%= hidden_field_tag :product_id, product.id %>
                     <div class="row g-2 align-items-end">
                       <div class="col-md-2">
                         <%= f.select :supplier_id,
@@ -138,7 +139,7 @@
   <h6 class="fw-bold mb-2">Ajouter un conditionnement</h6>
   <%= form_with url: product_purchases_path,
                 data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
-    <%= f.hidden_field :product_id, value: product.id %>
+    <%= hidden_field_tag :product_id, product.id %>
     <div class="row g-2 align-items-end">
       <div class="col-md-3">
         <%= f.select :supplier_id,

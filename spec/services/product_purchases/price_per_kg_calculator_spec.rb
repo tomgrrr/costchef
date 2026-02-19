@@ -88,14 +88,17 @@ RSpec.describe ProductPurchases::PricePerKgCalculator do
     end
 
     context 'with piece unit without unit_weight_kg' do
-      let(:product_no_weight) do
-        p = create(:product, :piece, user: user, name: 'Mystère')
-        p.update_columns(unit_weight_kg: nil)
-        p.reload
-      end
       let(:purchase) do
-        build(:product_purchase, :uncalculated, product: product_no_weight, supplier: supplier, package_unit: 'piece',
-                                                package_quantity: 30, package_price: 6.0)
+        p = build(:product_purchase, :uncalculated,
+                  product: product,
+                  supplier: supplier,
+                  package_unit: 'piece',
+                  package_quantity: 30,
+                  package_price: 6.0,
+                  package_quantity_kg: nil,
+                  price_per_kg: nil)
+        allow(p.product).to receive(:unit_weight_kg).and_return(nil)
+        p
       end
 
       it 'falls back to 0.001 kg floor' do
