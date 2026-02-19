@@ -22,12 +22,14 @@
 
 <%# Grille de cards %>
 <% if @products.any? %>
-  <div class="row row-cols-1 row-cols-md-3 g-4">
+  <div class="row row-cols-1 row-cols-md-3 g-4" style="overflow: visible;">
     <% @products.each do |product| %>
-      <div class="col" style="position: relative; z-index: 1;">
+      <div class="col" style="position: relative; overflow: visible;">
         <%= render "products/product_card", product: product %>
 
-        <div class="collapse" id="purchases_collapse_<%= product.id %>">
+        <div class="collapse"
+             id="purchases_collapse_<%= product.id %>"
+             style="position: relative; z-index: 1000;">
           <%= turbo_frame_tag "purchases_#{product.id}" do %>
             <%= render "product_purchases/purchases_section",
                   product: product,

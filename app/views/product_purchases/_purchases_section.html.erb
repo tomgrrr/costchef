@@ -82,6 +82,7 @@
               <tr id="edit_purchase_<%= purchase.id %>" class="d-none bg-white">
                 <td colspan="7">
                   <%= form_with url: product_purchase_path(purchase),
+                                scope: :product_purchase,
                                 method: :patch,
                                 class: "p-2" do |f| %>
                     <%= hidden_field_tag :product_id, product.id %>
@@ -138,6 +139,7 @@
   <%# Formulaire ajout toujours visible %>
   <h6 class="fw-bold mb-2">Ajouter un conditionnement</h6>
   <%= form_with url: product_purchases_path,
+                scope: :product_purchase,
                 data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
     <%= hidden_field_tag :product_id, product.id %>
     <div class="row g-2 align-items-end">
