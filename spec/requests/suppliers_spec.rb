@@ -111,10 +111,9 @@ RSpec.describe 'Suppliers', type: :request do
     context "supplier d'un autre user" do
       let!(:other_supplier) { create(:supplier, name: 'Pomona', user: other_user) }
 
-      it 'retourne 404' do
-        expect {
-          patch supplier_path(other_supplier), params: { supplier: { name: 'Hack' } }
-        }.to raise_error(ActiveRecord::RecordNotFound)
+      it 'redirige vers root_path' do
+        patch supplier_path(other_supplier), params: { supplier: { name: 'Hack' } }
+        expect(response).to redirect_to(root_path)
       end
     end
   end
@@ -241,22 +240,19 @@ RSpec.describe 'Suppliers', type: :request do
 
     let!(:other_supplier) { create(:supplier, name: 'Pomona', user: other_user) }
 
-    it 'retourne 404 pour deactivate' do
-      expect {
-        post deactivate_supplier_path(other_supplier)
-      }.to raise_error(ActiveRecord::RecordNotFound)
+    it 'redirige vers root_path pour deactivate' do
+      post deactivate_supplier_path(other_supplier)
+      expect(response).to redirect_to(root_path)
     end
 
-    it 'retourne 404 pour activate' do
-      expect {
-        post activate_supplier_path(other_supplier)
-      }.to raise_error(ActiveRecord::RecordNotFound)
+    it 'redirige vers root_path pour activate' do
+      post activate_supplier_path(other_supplier)
+      expect(response).to redirect_to(root_path)
     end
 
-    it 'retourne 404 pour destroy' do
-      expect {
-        delete supplier_path(other_supplier)
-      }.to raise_error(ActiveRecord::RecordNotFound)
+    it 'redirige vers root_path pour destroy' do
+      delete supplier_path(other_supplier)
+      expect(response).to redirect_to(root_path)
     end
   end
 end
