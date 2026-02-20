@@ -123,6 +123,12 @@ FactoryBot.define do
     end
   end
 
+  factory :tray_size do
+    name { 'Barquette 500g' }
+    price { 0.35 }
+    user
+  end
+
   factory :daily_special do
     user
     category { 'meat' }

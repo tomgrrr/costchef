@@ -27,7 +27,7 @@
               <td>
                 <%= button_to recipe_recipe_component_path(recipe, rc),
                       method: :delete,
-                      form: { data: { turbo_confirm: "Retirer ce composant ?" } },
+                      form: { data: { turbo_confirm: "Retirer ce composant ?", turbo_stream: true } },
                       class: "btn btn-sm btn-outline-danger" do %>
                   <i class="bi bi-trash"></i>
                 <% end %>

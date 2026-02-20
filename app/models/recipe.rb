@@ -14,6 +14,7 @@ class Recipe < ApplicationRecord
   # Composants de CETTE recette (ses ingrédients)
   has_many :recipe_components,
            foreign_key: :parent_recipe_id,
+           inverse_of: :parent_recipe,
            dependent: :destroy
 
   # Endroits où CETTE recette est utilisée comme sous-recette

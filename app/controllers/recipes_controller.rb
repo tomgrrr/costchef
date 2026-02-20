@@ -28,6 +28,7 @@ class RecipesController < ApplicationController
       Recalculations::Dispatcher.recipe_changed(@recipe)
       redirect_to @recipe, notice: "Recette créée."
     else
+      @tray_sizes = current_user.tray_sizes.order(:name)
       render :new, status: :unprocessable_entity
     end
   end
@@ -46,7 +47,10 @@ class RecipesController < ApplicationController
     else
       respond_to do |format|
         format.turbo_stream { render turbo_stream: turbo_stream.replace("cooking_loss_form_#{@recipe.id}", partial: "recipes/cooking_loss_form", locals: { recipe: @recipe }) }
-        format.html { render :edit, status: :unprocessable_entity }
+        format.html do
+          @tray_sizes = current_user.tray_sizes.order(:name)
+          render :edit, status: :unprocessable_entity
+        end
       end
     end
   end

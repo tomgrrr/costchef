@@ -25,11 +25,14 @@
             <i class="bi bi-truck"></i> Fournisseurs
           <% end %>
         </li>
+        <%# Plats du jour — module pas encore implémenté %>
+        <% if false %>
         <li class="nav-item">
           <%= link_to daily_specials_path, class: "nav-link #{'active' if controller_name == 'daily_specials'}" do %>
             <i class="bi bi-calendar-check"></i> Plats du jour
           <% end %>
         </li>
+        <% end %>
       </ul>
 
       <ul class="navbar-nav">
@@ -38,11 +41,14 @@
             <i class="bi bi-person-circle"></i> <%= current_user.email %>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
+            <%# Paramètres — module pas encore implémenté %>
+            <% if false %>
             <li>
               <%= link_to settings_path, class: "dropdown-item" do %>
                 <i class="bi bi-gear"></i> Paramètres
               <% end %>
             </li>
+            <% end %>
             <li>
               <%= link_to tray_sizes_path, class: "dropdown-item" do %>
                 <i class="bi bi-archive"></i> Barquettes

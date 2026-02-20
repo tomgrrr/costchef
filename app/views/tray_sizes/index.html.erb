@@ -1,0 +1,40 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Barquettes</h1>
+  <%= link_to 'Nouvelle barquette', new_tray_size_path, class: 'btn btn-primary' %>
+</div>
+
+<% if @tray_sizes.empty? %>
+  <p class="text-muted">Aucune barquette pour le moment.</p>
+<% else %>
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prix</th>
+        <th>Recettes associées</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tray_sizes.each do |tray_size| %>
+        <tr>
+          <td><%= tray_size.name %></td>
+          <td><%= number_with_precision(tray_size.price, precision: 2) %> €</td>
+          <td><span class="badge bg-secondary"><%= tray_size.recipes_count %></span></td>
+          <td class="d-flex gap-1">
+            <%= link_to 'Modifier', edit_tray_size_path(tray_size), class: 'btn btn-sm btn-outline-primary' %>
+            <% if tray_size.recipes_count > 0 %>
+              <%= button_to 'Supprimer', tray_size_path(tray_size), method: :delete,
+                    data: { turbo_confirm: "Cette barquette est utilisée dans #{tray_size.recipes_count} recette(s). Les recettes concernées perdront leur barquette. Continuer ?" },
+                    class: 'btn btn-sm btn-outline-danger' %>
+            <% else %>
+              <%= button_to 'Supprimer', tray_size_path(tray_size), method: :delete,
+                    data: { turbo_confirm: "Supprimer la barquette « #{tray_size.name} » ?" },
+                    class: 'btn btn-sm btn-outline-danger' %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

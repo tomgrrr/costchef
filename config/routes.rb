@@ -38,7 +38,7 @@ Rails.application.routes.draw do
     resources :recipe_components, only: %i[create update destroy]
   end
 
-  resources :tray_sizes
+  resources :tray_sizes, only: %i[index new create edit update destroy]
 
   get   '/settings', to: 'settings#edit',   as: :settings
   patch '/settings', to: 'settings#update'

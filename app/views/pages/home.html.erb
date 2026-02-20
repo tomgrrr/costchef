@@ -1,7 +1,7 @@
 <h1 class="mb-4">Tableau de bord</h1>
 
 <div class="row g-4">
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="card text-center h-100">
       <div class="card-body d-flex flex-column justify-content-center">
         <i class="bi bi-box-seam fs-1 text-primary mb-2"></i>
@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="card text-center h-100">
       <div class="card-body d-flex flex-column justify-content-center">
         <i class="bi bi-journal-text fs-1 text-success mb-2"></i>
@@ -23,13 +23,24 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="card text-center h-100">
       <div class="card-body d-flex flex-column justify-content-center">
         <i class="bi bi-truck fs-1 text-warning mb-2"></i>
         <h5 class="card-title">Fournisseurs</h5>
         <p class="display-4 fw-bold"><%= @suppliers_count %></p>
         <%= link_to "Accéder", suppliers_path, class: "btn btn-warning mt-auto" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <i class="bi bi-archive fs-1 text-secondary mb-2"></i>
+        <h5 class="card-title">Barquettes</h5>
+        <p class="display-4 fw-bold"><%= @tray_sizes_count %></p>
+        <%= link_to "Accéder", tray_sizes_path, class: "btn btn-secondary mt-auto" %>
       </div>
     </div>
   </div>
