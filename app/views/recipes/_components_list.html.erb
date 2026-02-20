@@ -1,0 +1,43 @@
+<div id="components_<%= recipe.id %>">
+  <% if recipe.recipe_components.any? %>
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Type</th>
+            <th>Composant</th>
+            <th>Quantit&eacute; (kg)</th>
+            <th>Co&ucirc;t ligne</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recipe.recipe_components.each do |rc| %>
+            <tr>
+              <td>
+                <% if rc.product_component? %>
+                  <span class="badge bg-success">Produit</span>
+                <% else %>
+                  <span class="badge bg-info">Recette</span>
+                <% end %>
+              </td>
+              <td><%= rc.component.name %></td>
+              <td><%= number_with_precision(rc.quantity_kg, precision: 3) %> kg</td>
+              <td><%= number_with_precision(rc.line_cost, precision: 2) %> &euro;</td>
+              <td>
+                <%= button_to recipe_recipe_component_path(recipe, rc),
+                      method: :delete,
+                      form: { data: { turbo_confirm: "Retirer ce composant ?" } },
+                      class: "btn btn-sm btn-outline-danger" do %>
+                  <i class="bi bi-trash"></i>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-muted mb-0">Aucun composant pour le moment.</p>
+  <% end %>
+</div>

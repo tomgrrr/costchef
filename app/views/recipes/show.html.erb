@@ -39,7 +39,12 @@
         <%= turbo_frame_tag "component_form_#{@recipe.id}" do %>
           <%= render "recipe_components/form",
                 recipe: @recipe,
-                component: @recipe.recipe_components.build %>
+                component: @recipe.recipe_components.build,
+                available_products: current_user.products.order(:name),
+                available_subrecipes: current_user.recipes
+                                                  .usable_as_subrecipe
+                                                  .where.not(id: @recipe.id)
+                                                  .order(:name) %>
         <% end %>
       </div>
     </div>

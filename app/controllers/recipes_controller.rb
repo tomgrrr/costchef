@@ -18,6 +18,7 @@ class RecipesController < ApplicationController
 
   def new
     @recipe = current_user.recipes.build
+    @tray_sizes = current_user.tray_sizes.order(:name)
   end
 
   def create
@@ -31,7 +32,9 @@ class RecipesController < ApplicationController
     end
   end
 
-  def edit; end
+  def edit
+    @tray_sizes = current_user.tray_sizes.order(:name)
+  end
 
   def update
     if @recipe.update(recipe_params)
