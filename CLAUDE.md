@@ -45,7 +45,7 @@ bin/rails console         # Interactive Ruby shell
 - **User** — Owns everything. `markup_coefficient` (default 1.0). Auth via Devise.
 - **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required.
 - **ProductPurchase** — Price history. Purchase units: `Units::VALID_UNITS`. `package_quantity_kg` and `price_per_kg` are nullable (calculated by service). `active` boolean filters obsolete prices.
-- **Recipe** — Cost calculations with cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_total_cost_with_loss`). `cooking_loss_percentage` (0-100). `sellable_as_component` controls sub-recipe eligibility.
+- **Recipe** — Cost calculations with cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_raw_weight`). `cooking_loss_percentage` (0-100). `sellable_as_component` controls sub-recipe eligibility.
 - **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). `quantity_unit` validated against `Units::VALID_UNITS`. **Max 1 level of sub-recipe depth.**
 - **Supplier** — Linked to ProductPurchases. Soft-delete via `active` flag.
 - **TraySize** — Optional recipe association. Nullified on delete.
@@ -111,10 +111,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Admin flow:** `Admin::InvitationsController` — index/new/create. On create, sends `InvitationMailer.invite_user(@invitation).deliver_later`.
 - **Signup flow:** `GET /signup?token=xxx` → form. `POST /signup` with `token` param + `user[password]` + `user[password_confirmation]`.
 
-### Test Suite (105 specs, 0 failures)
+### Test Suite (360 specs, 0 failures)
 
 **Setup:**
-- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation).
+- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size).
 - `spec/support/devise.rb` — Includes `Devise::Test::IntegrationHelpers` for request specs.
 - `spec/support/database_cleaner.rb` + `spec/support/factory_bot.rb` — Standard config.
 
@@ -125,8 +125,17 @@ Test each service with a dedicated RSpec before integrating into controllers.
 
 **Spec files:**
 - `spec/services/` — 5 service specs (Units::Converter, PricePerKgCalculator, AvgPriceRecalculator, Recalculator, Dispatcher). 46 examples.
-- `spec/requests/pages_spec.rb` — 8 examples. Covers `GET /` (auth, subscription gate, counters) + `GET /subscription_required`.
-- `spec/requests/signups_spec.rb` — 17 examples. Covers `GET /signup` (no token, invalid, expired, used, valid) + `POST /signup` (success, short password, mismatch, expired token).
-- `spec/requests/admin/invitations_spec.rb` — 13 examples. Covers index/new/create with auth (non-connected, user, admin) + email validation + `have_enqueued_mail`.
-- `spec/requests/admin/users_spec.rb` — 9 examples. Covers index (auth, user list, subscription badges) + update (subscription_active, subscription_notes, non-admin blocked).
-- `spec/models/correctifs_spec.rb` — 12 examples. Covers RecipeComponent quantity_unit validation, ProductPurchase calculated fields + package_unit validation, Supplier#force_destroy!, DailySpecial category averages with user isolation.
+- `spec/models/correctifs_spec.rb` — 12 examples. RecipeComponent quantity_unit, ProductPurchase calculated fields + package_unit, Supplier#force_destroy!, DailySpecial averages.
+- `spec/models/product_spec.rb` — 23 examples. Validations (name, base_unit, avg_price_per_kg), D6 unit_weight_kg, méthodes, defaults.
+- `spec/models/product_purchase_spec.rb` — 22 examples. Validations, supplier_belongs_to_same_user, scopes, toggle_active!, defaults.
+- `spec/models/recipe_spec.rb` — 36 examples. Validations (name, description, cooking_loss, tray_size), defaults, scopes, méthodes métier, calculs.
+- `spec/models/recipe_component_spec.rb` — 39 examples. Validations base (quantity, unit, type, unicité D9), validations métier (sellable, max_depth, self/circular ref, same_user), méthodes instance.
+- `spec/requests/pages_spec.rb` — 8 examples. GET / (auth, subscription gate, counters) + GET /subscription_required.
+- `spec/requests/signups_spec.rb` — 17 examples. GET /signup + POST /signup.
+- `spec/requests/products_spec.rb` — 21 examples. Index (auth, search), POST, PATCH, DELETE.
+- `spec/requests/suppliers_spec.rb` — 27 examples. Index, POST, PATCH, activate/deactivate, DELETE, force destroy, isolation.
+- `spec/requests/product_purchases_spec.rb` — 21 examples. POST, PATCH, DELETE, toggle_active avec turbo_stream.
+- `spec/requests/recipes_spec.rb` — 38 examples. Index (auth, search), show, new, create, edit, update, destroy, duplicate.
+- `spec/requests/recipe_components_spec.rb` — 28 examples. POST (kg, g, sous-recette), PATCH, DELETE avec turbo_stream + isolation.
+- `spec/requests/admin/invitations_spec.rb` — 13 examples. Index/new/create avec auth + email validation + have_enqueued_mail.
+- `spec/requests/admin/users_spec.rb` — 9 examples. Index + update (subscription_active, notes, non-admin blocked).
