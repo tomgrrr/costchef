@@ -39,9 +39,15 @@ class RecipesController < ApplicationController
   def update
     if @recipe.update(recipe_params)
       recalculate_if_needed
-      redirect_to @recipe, notice: "Recette mise à jour."
+      respond_to do |format|
+        format.turbo_stream { @recipe.reload }
+        format.html { redirect_to @recipe, notice: "Recette mise à jour." }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("cooking_loss_form_#{@recipe.id}", partial: "recipes/cooking_loss_form", locals: { recipe: @recipe }) }
+        format.html { render :edit, status: :unprocessable_entity }
+      end
     end
   end
 

@@ -1,0 +1,14 @@
+<li class="mb-2" id="cooking_loss_form_<%= recipe.id %>">
+  <%= form_with model: recipe, method: :patch, data: { turbo_stream: true }, class: "d-flex align-items-center gap-2" do |f| %>
+    <strong class="text-nowrap">Perte cuisson :</strong>
+    <div class="input-group input-group-sm" style="max-width: 140px;">
+      <%= f.number_field :cooking_loss_percentage, min: 0, max: 100, step: 0.1,
+          value: recipe.cooking_loss_percentage || 0,
+          class: "form-control form-control-sm" %>
+      <span class="input-group-text">%</span>
+    </div>
+    <button type="submit" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-check"></i>
+    </button>
+  <% end %>
+</li>

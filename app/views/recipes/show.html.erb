@@ -66,9 +66,7 @@
         <% end %>
 
         <ul class="list-unstyled mb-0">
-          <li class="mb-2">
-            <strong>Perte cuisson :</strong> <%= @recipe.cooking_loss_percentage || 0 %>&nbsp;%
-          </li>
+          <%= render "recipes/cooking_loss_form", recipe: @recipe %>
           <li class="mb-2">
             <strong>Sous-recette :</strong>
             <% if @recipe.sellable_as_component? %>
