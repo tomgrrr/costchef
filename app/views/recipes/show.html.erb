@@ -25,9 +25,7 @@
         <h5 class="mb-0">Composants</h5>
       </div>
       <div class="card-body">
-        <%= turbo_frame_tag "components_#{@recipe.id}" do %>
-          <%= render "recipes/components_list", recipe: @recipe %>
-        <% end %>
+        <%= render "recipes/components_list", recipe: @recipe %>
       </div>
     </div>
 
@@ -36,25 +34,21 @@
         <h5 class="mb-0">Ajouter un composant</h5>
       </div>
       <div class="card-body">
-        <%= turbo_frame_tag "component_form_#{@recipe.id}" do %>
-          <%= render "recipe_components/form",
-                recipe: @recipe,
-                component: @recipe.recipe_components.build,
-                available_products: current_user.products.order(:name),
-                available_subrecipes: current_user.recipes
-                                                  .usable_as_subrecipe
-                                                  .where.not(id: @recipe.id)
-                                                  .order(:name) %>
-        <% end %>
+        <%= render "recipe_components/form",
+              recipe: @recipe,
+              component: @recipe.recipe_components.build,
+              available_products: current_user.products.order(:name),
+              available_subrecipes: current_user.recipes
+                                                .usable_as_subrecipe
+                                                .where.not(id: @recipe.id)
+                                                .order(:name) %>
       </div>
     </div>
   </div>
 
   <%# Colonne droite : r&eacute;sum&eacute; et infos %>
   <div class="col-md-4">
-    <%= turbo_frame_tag "summary_#{@recipe.id}" do %>
-      <%= render "recipes/recipe_summary", recipe: @recipe %>
-    <% end %>
+    <%= render "recipes/recipe_summary", recipe: @recipe %>
 
     <div class="card mt-4">
       <div class="card-header">

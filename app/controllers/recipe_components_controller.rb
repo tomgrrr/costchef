@@ -94,6 +94,11 @@ class RecipeComponentsController < ApplicationController
         "summary_#{@recipe.id}",
         partial: 'recipes/recipe_summary',
         locals: { recipe: @recipe }
+      ),
+      turbo_stream.replace(
+        "component_form_#{@recipe.id}",
+        partial: 'recipe_components/form',
+        locals: form_locals(@recipe.recipe_components.build)
       )
     ]
   end
@@ -102,7 +107,19 @@ class RecipeComponentsController < ApplicationController
     render turbo_stream: turbo_stream.replace(
       "component_form_#{@recipe.id}",
       partial: 'recipe_components/form',
-      locals: { recipe: @recipe, component: @component }
+      locals: form_locals(@component)
     )
+  end
+
+  def form_locals(component)
+    {
+      recipe: @recipe,
+      component: component,
+      available_products: current_user.products.order(:name),
+      available_subrecipes: current_user.recipes
+                                        .usable_as_subrecipe
+                                        .where.not(id: @recipe.id)
+                                        .order(:name)
+    }
   end
 end
