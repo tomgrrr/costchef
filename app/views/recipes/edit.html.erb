@@ -1,0 +1,14 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Modifier <%= @recipe.name %></h4>
+  <%= link_to "← Retour", @recipe %>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <%= render "form", recipe: @recipe %>
+      </div>
+    </div>
+  </div>
+</div>

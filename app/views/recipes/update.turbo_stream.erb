@@ -1,0 +1,7 @@
+<%= turbo_stream.replace "summary_#{@recipe.id}" do %>
+  <%= render "recipes/recipe_summary", recipe: @recipe %>
+<% end %>
+
+<%= turbo_stream.replace "cooking_loss_form_#{@recipe.id}" do %>
+  <%= render "recipes/cooking_loss_form", recipe: @recipe %>
+<% end %>

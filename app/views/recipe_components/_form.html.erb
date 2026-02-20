@@ -1,0 +1,68 @@
+<div id="component_form_<%= recipe.id %>"
+     data-controller="component-type">
+
+  <% if component.errors.any? %>
+    <div class="alert alert-danger mb-3">
+      <% component.errors.full_messages.each do |msg| %>
+        <div><i class="bi bi-x-circle"></i> <%= msg %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= form_with url: recipe_recipe_components_path(recipe),
+                scope: :recipe_component,
+                data: { turbo_stream: true } do |f| %>
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <%= f.label :component_type, "Type", class: "form-label" %>
+        <%= f.select :component_type,
+              [["Produit", "Product"], ["Sous-recette", "Recipe"]],
+              { include_blank: "-- Type --" },
+              { class: "form-select form-select-sm",
+                data: { component_type_target: "typeSelect",
+                        action: "change->component-type#toggle" } } %>
+      </div>
+
+      <div class="col-md-3" data-component-type-target="productWrapper">
+        <%= f.label :component_id, "Produit", class: "form-label" %>
+        <%= f.select :component_id,
+              available_products.pluck(:name, :id),
+              { include_blank: "-- Choisir --" },
+              { class: "form-select form-select-sm",
+                data: { component_type_target: "productSelect" } } %>
+      </div>
+
+      <div class="col-md-3 d-none" data-component-type-target="recipeWrapper">
+        <label class="form-label">Sous-recette</label>
+        <select name="recipe_component[component_id]"
+                class="form-select form-select-sm"
+                data-component-type-target="recipeSelect">
+          <option value="">-- Choisir --</option>
+          <% available_subrecipes.each do |r| %>
+            <option value="<%= r.id %>"><%= r.name %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <%= f.label :quantity, "Quantit\u00e9", class: "form-label" %>
+        <%= f.number_field :quantity,
+              step: "0.001", min: "0.001",
+              placeholder: "Quantit\u00e9",
+              class: "form-control form-control-sm" %>
+      </div>
+
+      <div class="col-md-2">
+        <%= f.label :quantity_unit, "Unit\u00e9", class: "form-label" %>
+        <%= f.select :quantity_unit,
+              Units::VALID_UNITS,
+              { include_blank: false },
+              { class: "form-select form-select-sm" } %>
+      </div>
+
+      <div class="col-md-auto">
+        <%= f.submit "Ajouter", class: "btn btn-sm btn-primary" %>
+      </div>
+    </div>
+  <% end %>
+</div>

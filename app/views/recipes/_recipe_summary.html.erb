@@ -1,0 +1,39 @@
+<div id="summary_<%= recipe.id %>">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">R&eacute;sum&eacute;</h5>
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Co&ucirc;t total</span>
+        <% if recipe.cached_total_cost.to_f > 0 %>
+          <strong><%= number_with_precision(recipe.cached_total_cost, precision: 2) %> &euro;</strong>
+        <% else %>
+          <span class="badge bg-danger">0 &euro;</span>
+        <% end %>
+      </li>
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Poids brut</span>
+        <strong><%= number_with_precision(recipe.cached_raw_weight.to_f, precision: 3) %> kg</strong>
+      </li>
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Poids final</span>
+        <strong><%= number_with_precision(recipe.cached_total_weight.to_f, precision: 3) %> kg</strong>
+      </li>
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Co&ucirc;t/kg</span>
+        <% if recipe.cached_cost_per_kg.to_f > 0 %>
+          <strong><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %> &euro;/kg</strong>
+        <% else %>
+          <span class="badge bg-warning text-dark">0 &euro;/kg</span>
+        <% end %>
+      </li>
+      <% if recipe.suggested_selling_price.present? %>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Prix conseill&eacute;</span>
+          <strong class="text-success"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> &euro;/kg</strong>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

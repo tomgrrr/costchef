@@ -35,7 +35,7 @@ Rails.application.routes.draw do
     member do
       post :duplicate
     end
-    resources :recipe_components, only: %i[create destroy]
+    resources :recipe_components, only: %i[create update destroy]
   end
 
   resources :tray_sizes
