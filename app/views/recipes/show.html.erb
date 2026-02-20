@@ -1,0 +1,90 @@
+<%# En-tête %>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><%= @recipe.name %></h4>
+  <div class="d-flex gap-2">
+    <%= link_to edit_recipe_path(@recipe), class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-pencil"></i> Modifier
+    <% end %>
+    <%= button_to duplicate_recipe_path(@recipe),
+          method: :post,
+          class: "btn btn-outline-info",
+          form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
+      <i class="bi bi-copy"></i> Dupliquer
+    <% end %>
+    <%= link_to recipes_path, class: "btn btn-outline-primary" do %>
+      <i class="bi bi-arrow-left"></i> Retour
+    <% end %>
+  </div>
+</div>
+
+<div class="row">
+  <%# Colonne gauche : composants %>
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Composants</h5>
+      </div>
+      <div class="card-body">
+        <%= turbo_frame_tag "components_#{@recipe.id}" do %>
+          <%= render "recipes/components_list", recipe: @recipe %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Ajouter un composant</h5>
+      </div>
+      <div class="card-body">
+        <%= turbo_frame_tag "component_form_#{@recipe.id}" do %>
+          <%= render "recipe_components/form",
+                recipe: @recipe,
+                component: @recipe.recipe_components.build %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Colonne droite : r&eacute;sum&eacute; et infos %>
+  <div class="col-md-4">
+    <%= turbo_frame_tag "summary_#{@recipe.id}" do %>
+      <%= render "recipes/recipe_summary", recipe: @recipe %>
+    <% end %>
+
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">Informations</h5>
+      </div>
+      <div class="card-body">
+        <% if @recipe.description.present? %>
+          <p class="mb-3"><%= @recipe.description %></p>
+        <% end %>
+
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2">
+            <strong>Perte cuisson :</strong> <%= @recipe.cooking_loss_percentage || 0 %>&nbsp;%
+          </li>
+          <li class="mb-2">
+            <strong>Sous-recette :</strong>
+            <% if @recipe.sellable_as_component? %>
+              <span class="badge bg-info">Oui</span>
+            <% else %>
+              Non
+            <% end %>
+          </li>
+          <li>
+            <strong>Barquette :</strong>
+            <% if @recipe.has_tray? %>
+              <span class="badge bg-secondary">Oui</span>
+              <% if @recipe.tray_size %>
+                &mdash; <%= @recipe.tray_size.name %>
+              <% end %>
+            <% else %>
+              Non
+            <% end %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
