@@ -12,7 +12,7 @@ class RecipesController < ApplicationController
 
   def show
     @recipe = current_user.recipes
-                          .includes(recipe_components: :component)
+                          .includes(:user, recipe_components: :component)
                           .find(params[:id])
   end
 

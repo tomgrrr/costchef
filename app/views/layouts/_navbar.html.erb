@@ -25,8 +25,8 @@
             <i class="bi bi-truck"></i> Fournisseurs
           <% end %>
         </li>
-        <%# Plats du jour — module pas encore implémenté %>
-        <% if false %>
+        <%# Plats du jour %>
+        <% if true %>
         <li class="nav-item">
           <%= link_to daily_specials_path, class: "nav-link #{'active' if controller_name == 'daily_specials'}" do %>
             <i class="bi bi-calendar-check"></i> Plats du jour
@@ -50,8 +50,8 @@
             </li>
             <% end %>
             <li>
-              <%= link_to tray_sizes_path, class: "dropdown-item" do %>
-                <i class="bi bi-archive"></i> Barquettes
+              <%= link_to tray_sizes_path, class: "dropdown-item #{'active' if controller_name == 'tray_sizes'}" do %>
+                <i class="bi bi-sliders"></i> Barquettes & Coefficient
               <% end %>
             </li>
             <li><hr class="dropdown-divider"></li>
