@@ -50,8 +50,8 @@
             </li>
             <% end %>
             <li>
-              <%= link_to tray_sizes_path, class: "dropdown-item" do %>
-                <i class="bi bi-archive"></i> Barquettes
+              <%= link_to tray_sizes_path, class: "dropdown-item #{'active' if controller_name == 'tray_sizes'}" do %>
+                <i class="bi bi-sliders"></i> Barquettes & Coefficient
               <% end %>
             </li>
             <li><hr class="dropdown-divider"></li>
