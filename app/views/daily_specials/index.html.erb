@@ -37,12 +37,13 @@
                   <td><%= entry.item_name %></td>
                   <td><%= number_with_precision(entry.cost_per_kg, precision: 2) %></td>
                   <td class="text-nowrap">
-                    <a href="#" class="btn btn-link btn-sm p-0"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')">Modifier</a>
-                    &middot;
-                    <%= button_to 'Supprimer', daily_special_path(entry), method: :delete,
+                    <a href="#" class="btn btn-outline-secondary btn-sm px-1 py-0" title="Modifier"
+                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                    <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                          class: 'btn btn-link btn-sm text-danger p-0' %>
+                          class: 'btn btn-outline-danger btn-sm px-1 py-0', title: 'Supprimer' do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
                   </td>
                 </tr>
                 <tr id="edit-<%= entry.id %>" class="d-none table-warning">
@@ -63,8 +64,8 @@
                           <%= f.submit 'Enregistrer', class: 'btn btn-success btn-sm' %>
                         </div>
                         <div class="col-auto">
-                          <a href="#" class="btn btn-link btn-sm text-secondary"
-                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')">Annuler</a>
+                          <a href="#" class="btn btn-outline-secondary btn-sm" title="Annuler"
+                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
                         </div>
                       </div>
                     <% end %>
@@ -116,12 +117,13 @@
                   <td><%= entry.item_name %></td>
                   <td><%= number_with_precision(entry.cost_per_kg, precision: 2) %></td>
                   <td class="text-nowrap">
-                    <a href="#" class="btn btn-link btn-sm p-0"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')">Modifier</a>
-                    &middot;
-                    <%= button_to 'Supprimer', daily_special_path(entry), method: :delete,
+                    <a href="#" class="btn btn-outline-secondary btn-sm px-1 py-0" title="Modifier"
+                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                    <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                          class: 'btn btn-link btn-sm text-danger p-0' %>
+                          class: 'btn btn-outline-danger btn-sm px-1 py-0', title: 'Supprimer' do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
                   </td>
                 </tr>
                 <tr id="edit-<%= entry.id %>" class="d-none table-warning">
@@ -142,8 +144,8 @@
                           <%= f.submit 'Enregistrer', class: 'btn btn-success btn-sm' %>
                         </div>
                         <div class="col-auto">
-                          <a href="#" class="btn btn-link btn-sm text-secondary"
-                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')">Annuler</a>
+                          <a href="#" class="btn btn-outline-secondary btn-sm" title="Annuler"
+                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
                         </div>
                       </div>
                     <% end %>
@@ -195,12 +197,13 @@
                   <td><%= entry.item_name %></td>
                   <td><%= number_with_precision(entry.cost_per_kg, precision: 2) %></td>
                   <td class="text-nowrap">
-                    <a href="#" class="btn btn-link btn-sm p-0"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')">Modifier</a>
-                    &middot;
-                    <%= button_to 'Supprimer', daily_special_path(entry), method: :delete,
+                    <a href="#" class="btn btn-outline-secondary btn-sm px-1 py-0" title="Modifier"
+                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                    <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                          class: 'btn btn-link btn-sm text-danger p-0' %>
+                          class: 'btn btn-outline-danger btn-sm px-1 py-0', title: 'Supprimer' do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
                   </td>
                 </tr>
                 <tr id="edit-<%= entry.id %>" class="d-none table-warning">
@@ -221,8 +224,8 @@
                           <%= f.submit 'Enregistrer', class: 'btn btn-success btn-sm' %>
                         </div>
                         <div class="col-auto">
-                          <a href="#" class="btn btn-link btn-sm text-secondary"
-                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')">Annuler</a>
+                          <a href="#" class="btn btn-outline-secondary btn-sm" title="Annuler"
+                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
                         </div>
                       </div>
                     <% end %>
