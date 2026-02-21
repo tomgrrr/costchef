@@ -28,6 +28,10 @@
           <span class="badge bg-warning text-dark">0 &euro;/kg</span>
         <% end %>
       </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <small class="text-muted">Coefficient appliqu&eacute;</small>
+        <span class="badge bg-light text-dark border">&times;<%= number_with_precision(recipe.user.markup_coefficient, precision: 1) %></span>
+      </li>
       <% if recipe.suggested_selling_price.present? %>
         <li class="list-group-item d-flex justify-content-between">
           <span>Prix conseill&eacute;</span>
