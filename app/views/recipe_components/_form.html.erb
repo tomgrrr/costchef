@@ -1,5 +1,10 @@
+<% products_json = available_products.map { |p| { id: p.id, name: p.name } }.to_json %>
+<% subrecipes_json = available_subrecipes.map { |r| { id: r.id, name: r.name } }.to_json %>
+
 <div id="component_form_<%= recipe.id %>"
-     data-controller="component-type">
+     data-controller="component-type"
+     data-component-type-products-value="<%= products_json %>"
+     data-component-type-subrecipes-value="<%= subrecipes_json %>">
 
   <% if component.errors.any? %>
     <div class="alert alert-danger mb-3">
@@ -20,40 +25,43 @@
               { include_blank: "-- Type --" },
               { class: "form-select form-select-sm",
                 data: { component_type_target: "typeSelect",
-                        action: "change->component-type#toggle" } } %>
+                        action: "change->component-type#toggleType" } } %>
       </div>
+    </div>
 
-      <div class="col-md-3" data-component-type-target="productWrapper">
-        <%= f.label :component_id, "Produit", class: "form-label" %>
-        <%= f.select :component_id,
-              available_products.pluck(:name, :id),
-              { include_blank: "-- Choisir --" },
-              { class: "form-select form-select-sm",
-                data: { component_type_target: "productSelect" } } %>
+    <input type="hidden"
+           name="recipe_component[component_id]"
+           data-component-type-target="componentId">
+
+    <%# Bloc recherche — caché tant qu'aucun type n'est sélectionné %>
+    <div class="d-none mt-2" data-component-type-target="searchWrapper">
+      <div class="input-group input-group-sm mb-2">
+        <input type="text"
+               class="form-control"
+               placeholder="Rechercher..."
+               data-component-type-target="searchInput"
+               data-action="input->component-type#search">
+        <span class="input-group-text" data-component-type-target="selectedDisplay">
+          Aucune sélection
+        </span>
       </div>
+      <ul class="list-group list-group-flush overflow-auto"
+          style="max-height: 200px;"
+          data-component-type-target="resultsList">
+      </ul>
+    </div>
 
-      <div class="col-md-3 d-none" data-component-type-target="recipeWrapper">
-        <label class="form-label">Sous-recette</label>
-        <select name="recipe_component[component_id]"
-                class="form-select form-select-sm"
-                data-component-type-target="recipeSelect">
-          <option value="">-- Choisir --</option>
-          <% available_subrecipes.each do |r| %>
-            <option value="<%= r.id %>"><%= r.name %></option>
-          <% end %>
-        </select>
-      </div>
-
+    <div class="row g-2 align-items-end mt-2">
       <div class="col-md-2">
-        <%= f.label :quantity, "Quantit\u00e9", class: "form-label" %>
+        <%= f.label :quantity, "Quantité", class: "form-label" %>
         <%= f.number_field :quantity,
               step: "0.001", min: "0.001",
-              placeholder: "Quantit\u00e9",
+              placeholder: "Quantité",
               class: "form-control form-control-sm" %>
       </div>
 
       <div class="col-md-2">
-        <%= f.label :quantity_unit, "Unit\u00e9", class: "form-label" %>
+        <%= f.label :quantity_unit, "Unité", class: "form-label" %>
         <%= f.select :quantity_unit,
               Units::VALID_UNITS,
               { include_blank: false },
@@ -61,7 +69,10 @@
       </div>
 
       <div class="col-md-auto">
-        <%= f.submit "Ajouter", class: "btn btn-sm btn-primary" %>
+        <%= f.submit "Ajouter",
+              class: "btn btn-sm btn-primary",
+              disabled: true,
+              data: { component_type_target: "submitBtn" } %>
       </div>
     </div>
   <% end %>
