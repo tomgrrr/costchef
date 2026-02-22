@@ -99,6 +99,19 @@ RSpec.describe Recipe, type: :model do
       end
     end
 
+    context 'subrecipe_cannot_have_tray' do
+      it 'invalide si sellable_as_component: true et has_tray: true' do
+        recipe = build(:recipe, sellable_as_component: true, has_tray: true, tray_size: tray_size, user: user)
+        expect(recipe).not_to be_valid
+        expect(recipe.errors[:has_tray]).to include('Une sous-recette ne peut pas avoir de barquette')
+      end
+
+      it 'valide si sellable_as_component: true et has_tray: false' do
+        recipe = build(:recipe, sellable_as_component: true, has_tray: false, user: user)
+        expect(recipe).to be_valid
+      end
+    end
+
     context 'tray_size_belongs_to_same_user' do
       it 'invalide si tray_size appartient à other_user' do
         other_tray = create(:tray_size, name: 'M', user: other_user)
@@ -155,6 +168,18 @@ RSpec.describe Recipe, type: :model do
 
         expect(user.recipes.by_cost_per_kg).to eq([cheap, mid, expensive])
       end
+    end
+  end
+
+  describe '#subrecipe?' do
+    it 'retourne true si sellable_as_component: true' do
+      recipe = build(:recipe, sellable_as_component: true, user: user)
+      expect(recipe.subrecipe?).to be(true)
+    end
+
+    it 'retourne false si sellable_as_component: false' do
+      recipe = build(:recipe, sellable_as_component: false, user: user)
+      expect(recipe.subrecipe?).to be(false)
     end
   end
 
