@@ -2,9 +2,9 @@
 <% subrecipes_json = available_subrecipes.map { |r| { id: r.id, name: r.name } }.to_json %>
 
 <div id="component_form_<%= recipe.id %>"
-     data-controller="component-type"
-     data-component-type-products-value="<%= products_json %>"
-     data-component-type-subrecipes-value="<%= subrecipes_json %>">
+     data-controller="unified-search"
+     data-unified-search-products-value="<%= products_json %>"
+     data-unified-search-subrecipes-value="<%= subrecipes_json %>">
 
   <% if component.errors.any? %>
     <div class="alert alert-danger mb-3">
@@ -17,41 +17,36 @@
   <%= form_with url: recipe_recipe_components_path(recipe),
                 scope: :recipe_component,
                 data: { turbo_stream: true } do |f| %>
-    <div class="row g-2 align-items-end">
-      <div class="col-md-3">
-        <%= f.label :component_type, "Type", class: "form-label" %>
-        <%= f.select :component_type,
-              [["Produit", "Product"], ["Sous-recette", "Recipe"]],
-              { include_blank: "-- Type --" },
-              { class: "form-select form-select-sm",
-                data: { component_type_target: "typeSelect",
-                        action: "change->component-type#toggleType" } } %>
-      </div>
+
+    <%# Recherche unifiée produits + sous-recettes %>
+    <div class="input-group input-group-sm mb-2">
+      <input type="text"
+             class="form-control"
+             placeholder="Rechercher un produit ou une sous-recette..."
+             data-unified-search-target="searchInput"
+             data-action="input->unified-search#search">
+      <span class="input-group-text" data-unified-search-target="selectedDisplay">
+        Aucune sélection
+      </span>
+      <button type="button" class="btn btn-outline-secondary btn-sm"
+              data-action="click->unified-search#clear">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
+
+    <ul class="list-group list-group-flush overflow-auto mb-3"
+        style="max-height: 200px;"
+        data-unified-search-target="resultsList">
+    </ul>
 
     <input type="hidden"
            name="recipe_component[component_id]"
-           data-component-type-target="componentId">
+           data-unified-search-target="componentId">
+    <input type="hidden"
+           name="recipe_component[component_type]"
+           data-unified-search-target="componentType">
 
-    <%# Bloc recherche — caché tant qu'aucun type n'est sélectionné %>
-    <div class="d-none mt-2" data-component-type-target="searchWrapper">
-      <div class="input-group input-group-sm mb-2">
-        <input type="text"
-               class="form-control"
-               placeholder="Rechercher..."
-               data-component-type-target="searchInput"
-               data-action="input->component-type#search">
-        <span class="input-group-text" data-component-type-target="selectedDisplay">
-          Aucune sélection
-        </span>
-      </div>
-      <ul class="list-group list-group-flush overflow-auto"
-          style="max-height: 200px;"
-          data-component-type-target="resultsList">
-      </ul>
-    </div>
-
-    <div class="row g-2 align-items-end mt-2">
+    <div class="row g-2 align-items-end">
       <div class="col-md-2">
         <%= f.label :quantity, "Quantité", class: "form-label" %>
         <%= f.number_field :quantity,
@@ -72,7 +67,7 @@
         <%= f.submit "Ajouter",
               class: "btn btn-sm btn-primary",
               disabled: true,
-              data: { component_type_target: "submitBtn" } %>
+              data: { unified_search_target: "submitBtn" } %>
       </div>
     </div>
   <% end %>
