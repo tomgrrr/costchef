@@ -7,7 +7,6 @@ class ProductPurchasesController < ApplicationController
   def create
     @purchase = @product.product_purchases.build(purchase_params)
     @purchase.supplier = current_user.suppliers.find(purchase_params[:supplier_id])
-    ProductPurchases::PricePerKgCalculator.call(@purchase)
 
     if @purchase.save
       Recalculations::Dispatcher.product_purchase_changed(@purchase)
@@ -28,7 +27,6 @@ class ProductPurchasesController < ApplicationController
 
   def update
     @purchase.assign_attributes(purchase_params)
-    ProductPurchases::PricePerKgCalculator.call(@purchase)
 
     if @purchase.save
       Recalculations::Dispatcher.product_purchase_changed(@purchase)

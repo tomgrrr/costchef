@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_19_102017) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_22_104759) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,9 +47,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_19_102017) do
     t.bigint "supplier_id", null: false
     t.decimal "package_quantity", precision: 10, scale: 3, null: false
     t.string "package_unit", default: "kg", null: false
-    t.decimal "package_quantity_kg", precision: 10, scale: 3
+    t.decimal "package_quantity_kg", precision: 10, scale: 3, null: false
     t.decimal "package_price", precision: 10, scale: 2, null: false
-    t.decimal "price_per_kg", precision: 10, scale: 4
+    t.decimal "price_per_kg", precision: 10, scale: 4, null: false
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

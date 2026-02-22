@@ -145,9 +145,9 @@ RSpec.describe Recalculations::Dispatcher do
       product_b = create(:product, user: user, name: 'Produit B')
 
       create(:product_purchase, product: product_a, supplier: supplier,
-                                package_quantity_kg: 10.0, price_per_kg: 2.0)
+                                package_quantity: 10, package_price: 20.0)
       create(:product_purchase, product: product_b, supplier: supplier,
-                                package_quantity_kg: 5.0, price_per_kg: 4.0)
+                                package_quantity: 5, package_price: 20.0)
 
       recipe = create(:recipe, user: user, cooking_loss_percentage: 0)
       create(:recipe_component, parent_recipe: recipe, component: product_a, quantity_kg: 1.0)

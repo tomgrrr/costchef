@@ -124,10 +124,10 @@ module Recalculations
     def full_product_recalculation(product)
       return unless product
 
-      # Recalculer tous les achats du produit
+      # Recalculer tous les achats du produit (le callback before_validation
+      # dans ProductPurchase appelle PricePerKgCalculator automatiquement)
       product.product_purchases.find_each do |purchase|
-        ProductPurchases::PricePerKgCalculator.call(purchase)
-        purchase.save! if purchase.changed?
+        purchase.save!
       end
 
       # Recalculer le prix moyen

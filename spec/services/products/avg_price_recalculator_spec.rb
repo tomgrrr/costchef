@@ -11,7 +11,7 @@ RSpec.describe Products::AvgPriceRecalculator do
     context 'with 1 active purchase' do
       before do
         create(:product_purchase, product: product, supplier: supplier,
-                                  package_quantity_kg: 10.0, price_per_kg: 2.0)
+                                  package_quantity: 10, package_price: 20.0)
       end
 
       it 'sets avg_price_per_kg to that purchase price' do
@@ -39,9 +39,8 @@ RSpec.describe Products::AvgPriceRecalculator do
     context 'with inactive purchases ignored' do
       before do
         create(:product_purchase, product: product, supplier: supplier,
-                                  package_quantity_kg: 10.0, price_per_kg: 2.0)
+                                  package_quantity: 10, package_price: 20.0)
         create(:product_purchase, :inactive, product: product, supplier: supplier,
-                                             package_quantity_kg: 5.0, price_per_kg: 100.0,
                                              package_quantity: 5, package_price: 500.0)
       end
 
@@ -60,7 +59,7 @@ RSpec.describe Products::AvgPriceRecalculator do
 
     it 'persists via update_columns' do
       create(:product_purchase, product: product, supplier: supplier,
-                                package_quantity_kg: 10.0, price_per_kg: 3.5)
+                                package_quantity: 10, package_price: 35.0)
       described_class.call(product)
       expect(product.reload.avg_price_per_kg.to_f).to eq(3.5)
     end

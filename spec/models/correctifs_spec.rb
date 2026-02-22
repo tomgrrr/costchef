@@ -43,22 +43,14 @@ RSpec.describe ProductPurchase, type: :model do
   let(:supplier) { create(:supplier, user: user) }
   let(:product)  { create(:product, user: user) }
 
-  describe 'calculated fields validation' do
-    it 'est invalide sans package_quantity_kg ni price_per_kg' do
-      pp = build(:product_purchase, :uncalculated,
-                 product: product, supplier: supplier,
-                 package_quantity_kg: nil, price_per_kg: nil)
-      expect(pp).not_to be_valid
-      expect(pp.errors[:base]).to include(a_string_matching(/calculé/))
-    end
-
-    it 'est valide après passage par le service calculateur' do
-      pp = build(:product_purchase, :uncalculated,
-                 product: product, supplier: supplier,
+  describe 'calculated fields via callback' do
+    it 'calcule automatiquement les champs dérivés avant validation' do
+      pp = build(:product_purchase, product: product, supplier: supplier,
                  package_unit: 'kg', package_quantity: 10, package_price: 20.0,
                  package_quantity_kg: nil, price_per_kg: nil)
-      ProductPurchases::PricePerKgCalculator.call(pp)
       expect(pp).to be_valid
+      expect(pp.package_quantity_kg).to eq(10.0)
+      expect(pp.price_per_kg).to eq(2.0)
     end
   end
 

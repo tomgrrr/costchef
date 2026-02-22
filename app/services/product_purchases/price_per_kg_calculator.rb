@@ -8,7 +8,7 @@ module ProductPurchases
   # Sorties : package_quantity_kg et price_per_kg
   #
   # Ce service ne déclenche aucun recalcul en cascade.
-  # Il est appelé par le Dispatcher avant la sauvegarde d'un achat.
+  # Il est appelé automatiquement par le callback before_validation de ProductPurchase.
   #
   class PricePerKgCalculator
     # Conversion d'unités déléguée à Units::Converter (source unique de vérité)
