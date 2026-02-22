@@ -18,6 +18,7 @@ class RecipesController < ApplicationController
 
   def new
     @recipe = current_user.recipes.build
+    @recipe.sellable_as_component = true if params[:type] == 'subrecipe'
     @tray_sizes = current_user.tray_sizes.order(:name)
   end
 
@@ -38,11 +39,15 @@ class RecipesController < ApplicationController
   end
 
   def update
+    was_subrecipe = @recipe.sellable_as_component?
+    parent_count = was_subrecipe ? @recipe.parent_recipes_count : 0
+
     if @recipe.update(recipe_params)
       recalculate_if_needed
+      alert_msg = subrecipe_demotion_alert(was_subrecipe, parent_count)
       respond_to do |format|
         format.turbo_stream { @recipe.reload }
-        format.html { redirect_to @recipe, notice: "Recette mise à jour." }
+        format.html { redirect_to @recipe, notice: "Recette mise à jour.", alert: alert_msg }
       end
     else
       respond_to do |format|
@@ -93,6 +98,12 @@ class RecipesController < ApplicationController
     return unless (@recipe.previous_changes.keys & fields).any?
 
     Recalculations::Dispatcher.recipe_changed(@recipe)
+  end
+
+  def subrecipe_demotion_alert(was_subrecipe, parent_count)
+    return nil unless was_subrecipe && !@recipe.sellable_as_component? && parent_count.positive?
+
+    "Cette recette était utilisée comme sous-recette dans #{parent_count} recette(s) parente(s). Vérifiez leur cohérence."
   end
 
   def build_duplicate
