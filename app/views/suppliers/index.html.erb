@@ -3,6 +3,19 @@
   <%= link_to 'Nouveau fournisseur', new_supplier_path, class: 'btn btn-primary' %>
 </div>
 
+<%= form_with url: suppliers_path, method: :get, class: "mb-4" do |f| %>
+  <div class="input-group" style="max-width: 400px;">
+    <%= f.text_field :search,
+          value: params[:search],
+          placeholder: "Rechercher un fournisseur...",
+          class: "form-control" %>
+    <%= f.submit "Rechercher", class: "btn btn-outline-secondary" %>
+    <% if params[:search].present? %>
+      <%= link_to "✕", suppliers_path, class: "btn btn-outline-danger" %>
+    <% end %>
+  </div>
+<% end %>
+
 <div class="mb-3">
   <span class="badge bg-success">Actifs : <%= @active_suppliers.size %></span>
   <span class="badge bg-secondary">Inactifs : <%= @inactive_suppliers.size %></span>

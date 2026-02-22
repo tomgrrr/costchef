@@ -4,8 +4,10 @@ class SuppliersController < ApplicationController
   before_action :set_supplier, only: %i[edit update destroy activate deactivate]
 
   def index
-    @active_suppliers = current_user.suppliers.where(active: true).order(:name)
-    @inactive_suppliers = current_user.suppliers.where(active: false).order(:name)
+    base = current_user.suppliers
+    base = base.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
+    @active_suppliers = base.where(active: true).order(:name)
+    @inactive_suppliers = base.where(active: false).order(:name)
   end
 
   def new
