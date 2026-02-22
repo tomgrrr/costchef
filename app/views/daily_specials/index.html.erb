@@ -241,3 +241,33 @@
     </div>
   </div>
 </div>
+
+<div class="card shadow-sm mt-4">
+  <div class="card-header">
+    <h5 class="mb-0">Coût et Tarif plat du jour</h5>
+  </div>
+  <div class="card-body">
+    <table class="table table-striped align-middle mb-2">
+      <thead>
+        <tr>
+          <th>Plat du jour</th>
+          <th>Coût de revient</th>
+          <th>Prix de vente conseillé</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Viande + Accompagnement</td>
+          <td><%= number_with_precision(@meat_average + @side_average, precision: 2) %> &euro;</td>
+          <td class="text-success fw-bold"><%= number_with_precision((@meat_average + @side_average) * current_user.markup_coefficient, precision: 2) %> &euro;</td>
+        </tr>
+        <tr>
+          <td>Poisson + Accompagnement</td>
+          <td><%= number_with_precision(@fish_average + @side_average, precision: 2) %> &euro;</td>
+          <td class="text-success fw-bold"><%= number_with_precision((@fish_average + @side_average) * current_user.markup_coefficient, precision: 2) %> &euro;</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-muted mb-0">Coefficient appliqué : &times;<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></p>
+  </div>
+</div>
