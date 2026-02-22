@@ -1,13 +1,32 @@
 <%# En-tête %>
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h4 class="mb-0">Recettes</h4>
-  <%= link_to new_recipe_path, class: "btn btn-primary" do %>
-    <i class="bi bi-plus-lg"></i> Nouvelle recette
+  <% if @tab == 'subrecipes' %>
+    <%= link_to new_recipe_path(type: "subrecipe"), class: "btn btn-primary" do %>
+      <i class="bi bi-plus-lg"></i> Nouvelle sous-recette
+    <% end %>
+  <% else %>
+    <%= link_to new_recipe_path, class: "btn btn-primary" do %>
+      <i class="bi bi-plus-lg"></i> Nouvelle recette
+    <% end %>
   <% end %>
 </div>
 
+<%# Onglets %>
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <%= link_to "Recettes", recipes_path(tab: "recipes"),
+          class: "nav-link #{'active' if @tab == 'recipes'}" %>
+  </li>
+  <li class="nav-item">
+    <%= link_to "Sous-recettes", recipes_path(tab: "subrecipes"),
+          class: "nav-link #{'active' if @tab == 'subrecipes'}" %>
+  </li>
+</ul>
+
 <%# Barre de recherche %>
 <%= form_with url: recipes_path, method: :get, class: "mb-4" do |f| %>
+  <%= hidden_field_tag :tab, @tab %>
   <div class="input-group" style="max-width: 400px;">
     <%= f.text_field :search,
           value: params[:search],
@@ -15,7 +34,7 @@
           class: "form-control" %>
     <%= f.submit "Rechercher", class: "btn btn-outline-secondary" %>
     <% if params[:search].present? %>
-      <%= link_to "✕", recipes_path, class: "btn btn-outline-danger" %>
+      <%= link_to "✕", recipes_path(tab: @tab), class: "btn btn-outline-danger" %>
     <% end %>
   </div>
 <% end %>
@@ -27,11 +46,13 @@
       <thead>
         <tr>
           <th>Nom</th>
-          <th>Co&ucirc;t/kg</th>
+          <th>Coût/kg</th>
           <th>Poids final</th>
           <th>Perte cuisson</th>
-          <th>Sous-recette</th>
-          <th>Barquette</th>
+          <% unless @tab == 'subrecipes' %>
+            <th>Sous-recette</th>
+            <th>Barquette</th>
+          <% end %>
           <th>Actions</th>
         </tr>
       </thead>
@@ -41,9 +62,9 @@
             <td><%= link_to recipe.name, recipe_path(recipe) %></td>
             <td>
               <% if recipe.cached_cost_per_kg.present? && recipe.cached_cost_per_kg > 0 %>
-                <%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %>&nbsp;&euro;/kg
+                <%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %>&nbsp;€/kg
               <% else %>
-                <span class="badge bg-warning text-dark">Non calcul&eacute;</span>
+                <span class="badge bg-warning text-dark">Non calculé</span>
               <% end %>
             </td>
             <td>
@@ -54,16 +75,18 @@
               <% end %>
             </td>
             <td><%= recipe.cooking_loss_percentage || 0 %>&nbsp;%</td>
-            <td>
-              <% if recipe.sellable_as_component? %>
-                <span class="badge bg-info">Oui</span>
-              <% end %>
-            </td>
-            <td>
-              <% if recipe.has_tray? %>
-                <span class="badge bg-secondary">Oui</span>
-              <% end %>
-            </td>
+            <% unless @tab == 'subrecipes' %>
+              <td>
+                <% if recipe.sellable_as_component? %>
+                  <span class="badge bg-info">Oui</span>
+                <% end %>
+              </td>
+              <td>
+                <% if recipe.has_tray? %>
+                  <span class="badge bg-secondary">Oui</span>
+                <% end %>
+              </td>
+            <% end %>
             <td>
               <div class="d-flex gap-1">
                 <%= link_to recipe_path(recipe), class: "btn btn-sm btn-outline-primary" do %>
@@ -94,7 +117,7 @@
 <% else %>
   <p class="text-muted text-center mt-4">
     <% if params[:search].present? %>
-      Aucune recette trouv&eacute;e pour "<%= params[:search] %>".
+      Aucune recette trouvée pour "<%= params[:search] %>".
     <% else %>
       Aucune recette pour le moment.
     <% end %>

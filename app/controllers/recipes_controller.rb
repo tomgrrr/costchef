@@ -4,8 +4,10 @@ class RecipesController < ApplicationController
   before_action :set_recipe, only: %i[show edit update destroy duplicate]
 
   def index
+    @tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
     @recipes = current_user.recipes
                            .includes(:recipe_components, :tray_size)
+                           .where(sellable_as_component: @tab == 'subrecipes')
                            .order(:cached_cost_per_kg)
     @recipes = @recipes.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
   end

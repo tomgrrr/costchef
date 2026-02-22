@@ -57,6 +57,14 @@ RSpec.describe 'Recipes', type: :request do
         get recipes_path, params: { search: 'inexistant' }
         expect(response.body).to include('Aucune recette')
       end
+
+      it 'tab=subrecipes affiche uniquement les sous-recettes' do
+        create(:recipe, name: 'Pâte brisée', user: user)
+        create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+        get recipes_path, params: { tab: 'subrecipes' }
+        expect(response.body).to include('Crème pâtissière')
+        expect(response.body).not_to include('Pâte brisée')
+      end
     end
   end
 
@@ -93,8 +101,9 @@ RSpec.describe 'Recipes', type: :request do
     it 'pré-coche sellable_as_component si type=subrecipe' do
       get new_recipe_path, params: { type: 'subrecipe' }
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('sellable_as_component')
-      expect(response.body).to match(/sellable_as_component.*checked/)
+      expect(response.body).to include('value="1"')
+      expect(response.body).to include('name="recipe[sellable_as_component]"')
+      expect(response.body).to include('type="hidden"')
     end
   end
 
