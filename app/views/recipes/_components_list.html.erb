@@ -35,6 +35,15 @@
             </tr>
           <% end %>
         </tbody>
+        <tfoot>
+          <tr class="table-light fw-bold">
+            <td></td>
+            <td><%= recipe.recipe_components.size %> composant(s)</td>
+            <td><%= number_with_precision(recipe.cached_raw_weight, precision: 3) %> kg</td>
+            <td><%= number_with_precision(recipe.cached_total_cost || 0, precision: 2) %> &euro;</td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   <% else %>
