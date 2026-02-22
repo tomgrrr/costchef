@@ -228,6 +228,13 @@ RSpec.describe 'Suppliers', type: :request do
         .and change(ProductPurchase, :count).by(-1)
     end
 
+    it 'appelle Dispatcher.supplier_force_destroyed avec les product_ids' do
+      allow(Recalculations::Dispatcher).to receive(:supplier_force_destroyed)
+      delete supplier_path(supplier, force: true)
+      expect(Recalculations::Dispatcher)
+        .to have_received(:supplier_force_destroyed).with([product.id])
+    end
+
     it 'redirige avec notice' do
       delete supplier_path(supplier, force: true)
       expect(response).to redirect_to(suppliers_path)
