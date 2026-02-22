@@ -50,7 +50,6 @@
           <th>Poids final</th>
           <th>Perte cuisson</th>
           <% unless @tab == 'subrecipes' %>
-            <th>Sous-recette</th>
             <th>Barquette</th>
           <% end %>
           <th>Actions</th>
@@ -76,11 +75,6 @@
             </td>
             <td><%= recipe.cooking_loss_percentage || 0 %>&nbsp;%</td>
             <% unless @tab == 'subrecipes' %>
-              <td>
-                <% if recipe.sellable_as_component? %>
-                  <span class="badge bg-info">Oui</span>
-                <% end %>
-              </td>
               <td>
                 <% if recipe.has_tray? %>
                   <span class="badge bg-secondary">Oui</span>
