@@ -28,15 +28,27 @@
           <span class="badge bg-warning text-dark">0 €/kg</span>
         <% end %>
       </li>
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <small class="text-muted">Coefficient appliqué</small>
-        <span class="badge bg-light text-dark border">×<%= number_with_precision(recipe.user.markup_coefficient, precision: 1) %></span>
-      </li>
-      <% if recipe.suggested_selling_price.present? %>
-        <li class="list-group-item d-flex justify-content-between">
-          <span>Prix de vente conseillé</span>
-          <strong class="text-success"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</strong>
+      <% if recipe.subrecipe? %>
+        <li class="list-group-item text-muted">
+          Type : Sous-recette — coût interne uniquement
         </li>
+      <% else %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <small class="text-muted">Coefficient appliqué</small>
+          <span class="badge bg-light text-dark border">×<%= number_with_precision(recipe.user.markup_coefficient, precision: 1) %></span>
+        </li>
+        <% if recipe.has_tray? && recipe.tray_size.present? %>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Barquette</span>
+            <strong><%= recipe.tray_size.name %> — <%= number_to_currency(recipe.tray_size.price, unit: "€", separator: ",", delimiter: " ") %></strong>
+          </li>
+        <% end %>
+        <% if recipe.suggested_selling_price.present? %>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Prix de vente conseillé</span>
+            <strong class="text-success"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</strong>
+          </li>
+        <% end %>
       <% end %>
     </ul>
   </div>

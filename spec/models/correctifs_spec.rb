@@ -43,22 +43,14 @@ RSpec.describe ProductPurchase, type: :model do
   let(:supplier) { create(:supplier, user: user) }
   let(:product)  { create(:product, user: user) }
 
-  describe 'calculated fields validation' do
-    it 'est invalide sans package_quantity_kg ni price_per_kg' do
-      pp = build(:product_purchase, :uncalculated,
-                 product: product, supplier: supplier,
-                 package_quantity_kg: nil, price_per_kg: nil)
-      expect(pp).not_to be_valid
-      expect(pp.errors[:base]).to include(a_string_matching(/calculé/))
-    end
-
-    it 'est valide après passage par le service calculateur' do
-      pp = build(:product_purchase, :uncalculated,
-                 product: product, supplier: supplier,
+  describe 'calculated fields via callback' do
+    it 'calcule automatiquement les champs dérivés avant validation' do
+      pp = build(:product_purchase, product: product, supplier: supplier,
                  package_unit: 'kg', package_quantity: 10, package_price: 20.0,
                  package_quantity_kg: nil, price_per_kg: nil)
-      ProductPurchases::PricePerKgCalculator.call(pp)
       expect(pp).to be_valid
+      expect(pp.package_quantity_kg).to eq(10.0)
+      expect(pp.price_per_kg).to eq(2.0)
     end
   end
 
@@ -82,7 +74,6 @@ RSpec.describe Supplier, type: :model do
     before do
       create(:product_purchase, product: product, supplier: supplier,
                                 package_quantity_kg: 10.0, price_per_kg: 2.0)
-      Products::AvgPriceRecalculator.call(product)
     end
 
     it 'supprime le fournisseur et ses achats' do
@@ -91,10 +82,15 @@ RSpec.describe Supplier, type: :model do
         .and change(ProductPurchase, :count).by(-1)
     end
 
-    it 'recalcule le avg_price_per_kg du produit impacté à 0' do
-      expect(product.reload.avg_price_per_kg.to_f).to eq(2.0)
+    it 'retourne les product_ids impactés' do
+      result = supplier.force_destroy!
+      expect(result).to eq([product.id])
+    end
+
+    it 'ne déclenche pas le Dispatcher' do
+      allow(Recalculations::Dispatcher).to receive(:supplier_force_destroyed)
       supplier.force_destroy!
-      expect(product.reload.avg_price_per_kg.to_f).to eq(0.0)
+      expect(Recalculations::Dispatcher).not_to have_received(:supplier_force_destroyed)
     end
   end
 end

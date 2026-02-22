@@ -19,6 +19,11 @@ class ProductPurchase < ApplicationRecord
   scope :inactive, -> { where(active: false) }
 
   # ============================================
+  # Callbacks
+  # ============================================
+  before_validation :calculate_derived_fields
+
+  # ============================================
   # Validations (PRD Section 6.5 & 8.3)
   # ============================================
 
@@ -37,19 +42,12 @@ class ProductPurchase < ApplicationRecord
             presence: true,
             inclusion: { in: Units::VALID_UNITS }
 
-  # Champs calculés (remplis par le service PricePerKgCalculator)
-  # allow_nil: true car ces champs sont calculés APRÈS la saisie utilisateur
-  # Le contrôleur appelle le service qui remplit ces valeurs avant save
+  # Champs calculés automatiquement par le callback before_validation
   validates :package_quantity_kg,
-            numericality: { greater_than: 0 },
-            allow_nil: true
+            numericality: { greater_than: 0 }
 
   validates :price_per_kg,
-            numericality: { greater_than_or_equal_to: 0 },
-            allow_nil: true
-
-  # Validation de présence des champs calculés
-  validate :calculated_fields_present
+            numericality: { greater_than_or_equal_to: 0 }
 
   # ============================================
   # Validations personnalisées
@@ -66,22 +64,20 @@ class ProductPurchase < ApplicationRecord
 
   private
 
+  # Calcule les champs dérivés via PricePerKgCalculator avant validation.
+  # Ne se déclenche que si les champs de saisie sont présents.
+  def calculate_derived_fields
+    return unless package_unit.present? && package_quantity.present?
+
+    ProductPurchases::PricePerKgCalculator.call(self)
+  end
+
   # Le fournisseur doit appartenir au même utilisateur que le produit
   def supplier_belongs_to_same_user
     return unless product && supplier
 
     if product.user_id != supplier.user_id
       errors.add(:supplier, "doit appartenir au même utilisateur que le produit")
-    end
-  end
-
-  # Vérifie que les champs calculés sont présents
-  def calculated_fields_present
-    if package_quantity_kg.nil?
-      errors.add(:base, "Le prix au kilo n'a pas pu être calculé (package_quantity_kg manquant)")
-    end
-    if price_per_kg.nil?
-      errors.add(:base, "Le prix au kilo n'a pas pu être calculé (price_per_kg manquant)")
     end
   end
 end

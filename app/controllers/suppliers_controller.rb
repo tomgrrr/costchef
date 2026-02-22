@@ -34,7 +34,8 @@ class SuppliersController < ApplicationController
 
   def destroy
     if params[:force] == "true"
-      @supplier.force_destroy!
+      impacted_product_ids = @supplier.force_destroy!
+      Recalculations::Dispatcher.supplier_force_destroyed(impacted_product_ids)
       redirect_to suppliers_path, notice: "Fournisseur et ses conditionnements supprimés."
     elsif @supplier.has_purchases?
       redirect_to suppliers_path,

@@ -45,24 +45,15 @@ class Supplier < ApplicationRecord
     product_purchases.exists?
   end
 
-  # Suppression forcée avec cascade + recalcul
-  # Supprime les achats et le fournisseur, puis déclenche le Dispatcher
+  # Suppression forcée avec cascade (achats + fournisseur) dans une transaction.
+  # Retourne les product_ids impactés pour que l'appelant (contrôleur)
+  # puisse déclencher les recalculs via le Dispatcher.
   def force_destroy!
-    impacted_product_ids = collect_impacted_product_ids
-    delete_purchases_and_self
-    Recalculations::Dispatcher.supplier_force_destroyed(impacted_product_ids)
-  end
-
-  private
-
-  def collect_impacted_product_ids
-    product_purchases.pluck(:product_id).uniq
-  end
-
-  def delete_purchases_and_self
+    impacted_product_ids = product_purchases.pluck(:product_id).uniq
     transaction do
       ProductPurchase.where(supplier_id: id).delete_all
       destroy!
     end
+    impacted_product_ids
   end
 end

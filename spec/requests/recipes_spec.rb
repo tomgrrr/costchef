@@ -57,6 +57,14 @@ RSpec.describe 'Recipes', type: :request do
         get recipes_path, params: { search: 'inexistant' }
         expect(response.body).to include('Aucune recette')
       end
+
+      it 'tab=subrecipes affiche uniquement les sous-recettes' do
+        create(:recipe, name: 'Pâte brisée', user: user)
+        create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+        get recipes_path, params: { tab: 'subrecipes' }
+        expect(response.body).to include('Crème pâtissière')
+        expect(response.body).not_to include('Pâte brisée')
+      end
     end
   end
 
@@ -88,6 +96,14 @@ RSpec.describe 'Recipes', type: :request do
     it 'retourne HTTP 200' do
       get new_recipe_path
       expect(response).to have_http_status(:ok)
+    end
+
+    it 'pré-coche sellable_as_component si type=subrecipe' do
+      get new_recipe_path, params: { type: 'subrecipe' }
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('value="1"')
+      expect(response.body).to include('name="recipe[sellable_as_component]"')
+      expect(response.body).to include('type="hidden"')
     end
   end
 
@@ -208,6 +224,28 @@ RSpec.describe 'Recipes', type: :request do
       it 'retourne HTTP 422' do
         patch recipe_path(recipe), params: { recipe: { name: '' } }
         expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context 'dé-promotion sous-recette utilisée dans une recette parente' do
+      let!(:subrecipe) { create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user) }
+      let!(:parent) { create(:recipe, name: 'Mille-feuille', user: user) }
+      let!(:component) { create(:recipe_component, parent_recipe: parent, component: subrecipe) }
+
+      it 'redirige avec flash alert' do
+        patch recipe_path(subrecipe), params: { recipe: { sellable_as_component: false } }
+        expect(response).to redirect_to(subrecipe)
+        expect(flash[:alert]).to include('1 recette(s) parente(s)')
+      end
+    end
+
+    context 'dé-promotion sous-recette non utilisée' do
+      let!(:subrecipe) { create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user) }
+
+      it 'redirige sans flash alert' do
+        patch recipe_path(subrecipe), params: { recipe: { sellable_as_component: false } }
+        expect(response).to redirect_to(subrecipe)
+        expect(flash[:alert]).to be_nil
       end
     end
 

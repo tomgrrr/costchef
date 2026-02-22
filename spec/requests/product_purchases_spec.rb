@@ -105,7 +105,7 @@ RSpec.describe 'ProductPurchases', type: :request do
     context 'données valides' do
       it 'appelle PricePerKgCalculator' do
         patch product_purchase_path(purchase), params: update_params, headers: turbo_headers
-        expect(ProductPurchases::PricePerKgCalculator).to have_received(:call)
+        expect(ProductPurchases::PricePerKgCalculator).to have_received(:call).at_least(:once)
       end
 
       it 'appelle Dispatcher.product_purchase_changed' do

@@ -10,6 +10,17 @@
     </div>
   <% end %>
 
+  <%# Badge type en édition %>
+  <% if recipe.persisted? %>
+    <div class="mb-3">
+      <% if recipe.subrecipe? %>
+        <span class="badge bg-info">Sous-recette</span>
+      <% else %>
+        <span class="badge bg-success">Recette</span>
+      <% end %>
+    </div>
+  <% end %>
+
   <div class="mb-3">
     <%= f.label :name, "Nom", class: "form-label" %>
     <%= f.text_field :name, class: "form-control", required: true %>
@@ -37,30 +48,35 @@
     </div>
   </div>
 
-  <div class="mb-3 form-check">
-    <%= f.check_box :sellable_as_component, class: "form-check-input" %>
-    <%= f.label :sellable_as_component, "Utilisable comme sous-recette", class: "form-check-label" %>
-  </div>
-
-  <div class="mb-3" data-controller="tray-toggle">
-    <div class="form-check">
-      <%= f.check_box :has_tray,
-            class: "form-check-input",
-            data: { tray_toggle_target: "checkbox", action: "change->tray-toggle#toggle" } %>
-      <%= f.label :has_tray, "Barquette plastique", class: "form-check-label" %>
+  <% if recipe.subrecipe? %>
+    <%# Sous-recette : champ caché pour conserver la valeur, pas de barquette %>
+    <%= f.hidden_field :sellable_as_component, value: "1" %>
+  <% else %>
+    <div class="mb-3 form-check">
+      <%= f.check_box :sellable_as_component, class: "form-check-input" %>
+      <%= f.label :sellable_as_component, "Utilisable comme sous-recette", class: "form-check-label" %>
     </div>
 
-    <div class="mt-2" data-tray-toggle-target="wrapper" style="display: none;">
-      <%= f.label :tray_size_id, "Taille de barquette", class: "form-label" %>
-      <%= f.collection_select :tray_size_id,
-            @tray_sizes, :id, :name,
-            { include_blank: "-- Choisir --", prompt: false },
-            { class: "form-select" } %>
+    <div class="mb-3" data-controller="tray-toggle">
+      <div class="form-check">
+        <%= f.check_box :has_tray,
+              class: "form-check-input",
+              data: { tray_toggle_target: "checkbox", action: "change->tray-toggle#toggle" } %>
+        <%= f.label :has_tray, "Barquette plastique", class: "form-check-label" %>
+      </div>
+
+      <div class="mt-2" data-tray-toggle-target="wrapper" style="display: none;">
+        <%= f.label :tray_size_id, "Taille de barquette", class: "form-label" %>
+        <%= f.collection_select :tray_size_id,
+              @tray_sizes, :id, :name,
+              { include_blank: "-- Choisir --", prompt: false },
+              { class: "form-select" } %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <div class="d-flex gap-2">
-    <%= f.submit recipe.persisted? ? "Mettre à jour" : "Cr\u00e9er", class: "btn btn-primary" %>
+    <%= f.submit recipe.persisted? ? "Mettre à jour" : "Créer", class: "btn btn-primary" %>
     <%= link_to "Annuler", recipes_path, class: "btn btn-outline-secondary" %>
   </div>
 <% end %>

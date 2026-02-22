@@ -85,6 +85,7 @@ class Recipe < ApplicationRecord
   # ============================================
   validate :tray_size_consistency
   validate :tray_size_belongs_to_same_user
+  validate :subrecipe_cannot_have_tray
 
   # ============================================
   # Callbacks
@@ -94,6 +95,11 @@ class Recipe < ApplicationRecord
   # ============================================
   # Instance Methods
   # ============================================
+
+  # Alias lisible de sellable_as_component?
+  def subrecipe?
+    sellable_as_component?
+  end
 
   # Vérifie si la recette est utilisée comme sous-recette ailleurs
   def used_as_subrecipe?
@@ -176,6 +182,13 @@ class Recipe < ApplicationRecord
     self.cooking_loss_percentage ||= 0
     self.sellable_as_component ||= false
     self.has_tray ||= false
+  end
+
+  # Une sous-recette ne peut pas avoir de barquette
+  def subrecipe_cannot_have_tray
+    if sellable_as_component && (has_tray || tray_size_id.present?)
+      errors.add(:has_tray, 'Une sous-recette ne peut pas avoir de barquette')
+    end
   end
 
   # PRD: Si barquette activée, une taille doit être sélectionnée

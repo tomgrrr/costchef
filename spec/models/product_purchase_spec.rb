@@ -50,27 +50,28 @@ RSpec.describe ProductPurchase, type: :model do
       end
     end
 
-    context 'champs calculés' do
-      it 'est invalide sans package_quantity_kg avec message calculé' do
-        purchase = build(:product_purchase, product: product, supplier: supplier, package_quantity_kg: nil)
-        expect(purchase).not_to be_valid
-        expect(purchase.errors[:base].join).to include('calculé')
-      end
-
-      it 'est invalide sans price_per_kg avec message calculé' do
-        purchase = build(:product_purchase, product: product, supplier: supplier, price_per_kg: nil)
-        expect(purchase).not_to be_valid
-        expect(purchase.errors[:base].join).to include('calculé')
-      end
-
-      it 'est valide après PricePerKgCalculator.call' do
-        purchase = build(:product_purchase,
-                         product: product,
-                         supplier: supplier,
-                         package_quantity_kg: nil,
-                         price_per_kg: nil)
-        ProductPurchases::PricePerKgCalculator.call(purchase)
+    context 'callback before_validation calcule les champs dérivés' do
+      it 'calcule automatiquement package_quantity_kg et price_per_kg' do
+        purchase = build(:product_purchase, product: product, supplier: supplier,
+                         package_quantity: 10, package_unit: 'kg', package_price: 20.0,
+                         package_quantity_kg: nil, price_per_kg: nil)
         expect(purchase).to be_valid
+        expect(purchase.package_quantity_kg).to eq(10.0)
+        expect(purchase.price_per_kg).to eq(2.0)
+      end
+
+      it 'ne calcule pas si package_unit est absent' do
+        purchase = build(:product_purchase, product: product, supplier: supplier,
+                         package_unit: nil, package_quantity_kg: nil, price_per_kg: nil)
+        purchase.valid?
+        expect(purchase.package_quantity_kg).to be_nil
+      end
+
+      it 'ne calcule pas si package_quantity est absent' do
+        purchase = build(:product_purchase, product: product, supplier: supplier,
+                         package_quantity: nil, package_quantity_kg: nil, price_per_kg: nil)
+        purchase.valid?
+        expect(purchase.package_quantity_kg).to be_nil
       end
     end
   end

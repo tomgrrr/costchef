@@ -14,17 +14,19 @@ RSpec.describe Recalculations::Dispatcher do
       create(:recipe_component, parent_recipe: recipe, component: product, quantity_kg: 2.0)
     end
 
-    context 'with a persisted purchase' do
+    context 'with a persisted and pre-calculated purchase' do
       let!(:purchase) do
-        create(:product_purchase, :uncalculated, product: product, supplier: supplier,
-                                                 package_unit: 'kg', package_quantity: 10, package_price: 20.0)
+        pp = build(:product_purchase, :uncalculated, product: product, supplier: supplier,
+                                                     package_unit: 'kg', package_quantity: 10, package_price: 20.0)
+        ProductPurchases::PricePerKgCalculator.call(pp)
+        pp.save!
+        pp
       end
 
-      it 'recalculates the full chain: purchase → product → recipe' do
-        described_class.product_purchase_changed(purchase)
-
-        purchase.reload
+      it 'recalculates the cascade: product avg → recipes (purchase already calculated)' do
         expect(purchase.price_per_kg.to_f).to eq(2.0)
+
+        described_class.product_purchase_changed(purchase)
 
         product.reload
         expect(product.avg_price_per_kg.to_f).to eq(2.0)
@@ -143,9 +145,9 @@ RSpec.describe Recalculations::Dispatcher do
       product_b = create(:product, user: user, name: 'Produit B')
 
       create(:product_purchase, product: product_a, supplier: supplier,
-                                package_quantity_kg: 10.0, price_per_kg: 2.0)
+                                package_quantity: 10, package_price: 20.0)
       create(:product_purchase, product: product_b, supplier: supplier,
-                                package_quantity_kg: 5.0, price_per_kg: 4.0)
+                                package_quantity: 5, package_price: 20.0)
 
       recipe = create(:recipe, user: user, cooking_loss_percentage: 0)
       create(:recipe_component, parent_recipe: recipe, component: product_a, quantity_kg: 1.0)

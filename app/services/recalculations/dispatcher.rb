@@ -8,6 +8,9 @@ module Recalculations
   #
   # Principe : aucun callback Active Record. Les controllers appellent explicitement le Dispatcher.
   #
+  # Contrat : le Dispatcher ne persiste jamais un ProductPurchase. Les achats doivent être
+  # calculés (PricePerKgCalculator) et sauvegardés par le contrôleur AVANT d'appeler le Dispatcher.
+  #
   # Événements gérés :
   # - A : product_purchase_changed (create/update/destroy/toggle active)
   # - B : recipe_component_changed (create/update/destroy)
@@ -21,22 +24,20 @@ module Recalculations
     # ÉVÉNEMENT A : Changement sur un conditionnement d'achat
     # =========================================================================
     #
-    # Appelé après create/update/destroy/toggle d'un ProductPurchase
+    # Appelé après create/update/destroy/toggle d'un ProductPurchase.
+    # L'achat doit être déjà calculé et persisté par le contrôleur.
     #
     # Ordre strict (PRD Section 7.4) :
-    # 1. PricePerKgCalculator.call(purchase) + save (si purchase non nil)
-    # 2. AvgPriceRecalculator.call(purchase.product)
-    # 3. Trouver les recettes impactées via recipe_components
-    # 4. Recalculator.call(recipe) pour chaque recette impactée
-    # 5. Propager aux recettes parentes (1 niveau)
+    # 1. AvgPriceRecalculator.call(purchase.product)
+    # 2. Trouver les recettes impactées via recipe_components
+    # 3. Recalculator.call(recipe) pour chaque recette impactée
+    # 4. Propager aux recettes parentes (1 niveau)
     #
     def self.product_purchase_changed(purchase, product: nil)
       new.product_purchase_changed(purchase, product: product)
     end
 
     def product_purchase_changed(purchase, product: nil)
-      calculate_and_persist_purchase(purchase)
-
       target_product = product || purchase&.product
       return unless target_product
 
@@ -123,10 +124,10 @@ module Recalculations
     def full_product_recalculation(product)
       return unless product
 
-      # Recalculer tous les achats du produit
+      # Recalculer tous les achats du produit (le callback before_validation
+      # dans ProductPurchase appelle PricePerKgCalculator automatiquement)
       product.product_purchases.find_each do |purchase|
-        ProductPurchases::PricePerKgCalculator.call(purchase)
-        purchase.save! if purchase.changed?
+        purchase.save!
       end
 
       # Recalculer le prix moyen
@@ -137,14 +138,6 @@ module Recalculations
     end
 
     private
-
-    # Calcule et persiste les champs d'un achat (étape 1 de l'événement A)
-    def calculate_and_persist_purchase(purchase)
-      return unless purchase
-
-      ProductPurchases::PricePerKgCalculator.call(purchase)
-      purchase.save! if purchase.changed?
-    end
 
     # Trouve et recalcule toutes les recettes utilisant un produit
     def recalculate_recipes_using_product(product)
