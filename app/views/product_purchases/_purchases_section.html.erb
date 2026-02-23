@@ -90,13 +90,27 @@
                               scope: :product_purchase,
                               method: :patch do |f| %>
                   <%= hidden_field_tag :product_id, product.id %>
-                  <div class="form-row" style="grid-template-columns: 1fr 1fr auto 1fr auto auto;">
-                    <div>
+                  <% edit_suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
+                  <div class="form-row" style="grid-template-columns: 1fr 1fr auto 1fr auto auto;"
+                       data-controller="supplier-search"
+                       data-supplier-search-suppliers-value="<%= edit_suppliers_json %>"
+                       data-supplier-search-selected-value="<%= purchase.supplier_id %>">
+                    <div style="position: relative;">
                       <label class="form-label-xs">Fournisseur</label>
-                      <%= f.select :supplier_id,
-                            suppliers.pluck(:name, :id),
-                            { selected: purchase.supplier_id },
-                            class: "form-select form-select-sm", style: "font-size: 12px;" %>
+                      <input type="text"
+                             class="form-control form-control-sm"
+                             style="font-size: 12px;"
+                             value="<%= purchase.supplier.name %>"
+                             autocomplete="off"
+                             data-supplier-search-target="input"
+                             data-action="input->supplier-search#search focus->supplier-search#focus">
+                      <input type="hidden"
+                             name="product_purchase[supplier_id]"
+                             value="<%= purchase.supplier_id %>"
+                             data-supplier-search-target="hidden">
+                      <div class="search-results-dropdown" style="display: none; position: absolute; z-index: 10; width: 100%; margin-top: 2px;"
+                           data-supplier-search-target="results">
+                      </div>
                     </div>
                     <div>
                       <label class="form-label-xs">Quantité</label>
@@ -152,13 +166,25 @@
                     scope: :product_purchase,
                     data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
         <%= hidden_field_tag :product_id, product.id %>
-        <div class="form-row" style="grid-template-columns: 1fr 1fr auto 1fr auto;">
-          <div>
+        <% suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr auto 1fr auto;"
+             data-controller="supplier-search"
+             data-supplier-search-suppliers-value="<%= suppliers_json %>">
+          <div style="position: relative;">
             <label class="form-label-xs">Fournisseur</label>
-            <%= f.select :supplier_id,
-                  suppliers.pluck(:name, :id),
-                  { include_blank: "-- Fournisseur --" },
-                  class: "form-select form-select-sm", style: "font-size: 12px;" %>
+            <input type="text"
+                   class="form-control form-control-sm"
+                   style="font-size: 12px;"
+                   placeholder="Rechercher..."
+                   autocomplete="off"
+                   data-supplier-search-target="input"
+                   data-action="input->supplier-search#search focus->supplier-search#focus">
+            <input type="hidden"
+                   name="product_purchase[supplier_id]"
+                   data-supplier-search-target="hidden">
+            <div class="search-results-dropdown" style="display: none; position: absolute; z-index: 10; width: 100%; margin-top: 2px;"
+                 data-supplier-search-target="results">
+            </div>
           </div>
           <div>
             <label class="form-label-xs">Quantité</label>

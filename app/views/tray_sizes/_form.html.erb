@@ -1,35 +1,31 @@
-<div class="row">
-  <div class="col-md-6 mx-auto">
-    <div class="card">
-      <div class="card-body">
-        <%= form_with(model: tray_size) do |f| %>
-          <% if tray_size.errors.any? %>
-            <div class="alert alert-danger">
-              <% tray_size.errors.full_messages.each do |message| %>
-                <p class="mb-0"><%= message %></p>
-              <% end %>
-            </div>
+<div class="section-card">
+  <div style="padding: 20px;">
+    <%= form_with(model: tray_size) do |f| %>
+      <% if tray_size.errors.any? %>
+        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--cc-danger);">
+          <% tray_size.errors.full_messages.each do |message| %>
+            <div><%= message %></div>
           <% end %>
+        </div>
+      <% end %>
 
-          <div class="mb-3">
-            <%= f.label :name, 'Nom', class: 'form-label' %>
-            <%= f.text_field :name, class: 'form-control', required: true, autofocus: true %>
-          </div>
-
-          <div class="mb-3">
-            <%= f.label :price, 'Prix', class: 'form-label' %>
-            <div class="input-group">
-              <%= f.number_field :price, class: 'form-control', min: 0, step: 0.01 %>
-              <span class="input-group-text">€</span>
-            </div>
-          </div>
-
-          <div class="d-flex gap-2">
-            <%= f.submit class: 'btn btn-primary' %>
-            <%= link_to 'Annuler', tray_sizes_path, class: 'btn btn-outline-secondary' %>
-          </div>
-        <% end %>
+      <div style="margin-bottom: 14px;">
+        <label class="form-label-xs">Nom</label>
+        <%= f.text_field :name, class: 'form-control form-control-sm', style: 'font-size: 12px;', required: true, autofocus: true %>
       </div>
-    </div>
+
+      <div style="margin-bottom: 16px;">
+        <label class="form-label-xs">Prix</label>
+        <div style="display: flex; align-items: center; gap: 6px; max-width: 180px;">
+          <%= f.number_field :price, class: 'form-control form-control-sm mono', style: 'font-size: 12px;', min: 0, step: 0.01 %>
+          <span class="mono" style="color: var(--sl-400); font-size: 12px;">€</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <%= f.submit class: 'btn-slate' %>
+        <%= link_to 'Annuler', tray_sizes_path, class: 'btn-outline-slate' %>
+      </div>
+    <% end %>
   </div>
 </div>

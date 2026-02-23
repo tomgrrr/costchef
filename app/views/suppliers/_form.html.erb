@@ -1,27 +1,23 @@
-<div class="row">
-  <div class="col-md-6 mx-auto">
-    <div class="card">
-      <div class="card-body">
-        <%= form_with(model: supplier) do |f| %>
-          <% if supplier.errors.any? %>
-            <div class="alert alert-danger">
-              <% supplier.errors.full_messages.each do |message| %>
-                <p class="mb-0"><%= message %></p>
-              <% end %>
-            </div>
+<div class="section-card">
+  <div style="padding: 20px;">
+    <%= form_with(model: supplier) do |f| %>
+      <% if supplier.errors.any? %>
+        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--cc-danger);">
+          <% supplier.errors.full_messages.each do |message| %>
+            <div><%= message %></div>
           <% end %>
+        </div>
+      <% end %>
 
-          <div class="mb-3">
-            <%= f.label :name, 'Nom', class: 'form-label' %>
-            <%= f.text_field :name, class: 'form-control', autofocus: true %>
-          </div>
-
-          <div class="d-flex gap-2">
-            <%= f.submit class: 'btn btn-primary' %>
-            <%= link_to 'Annuler', suppliers_path, class: 'btn btn-outline-secondary' %>
-          </div>
-        <% end %>
+      <div style="margin-bottom: 16px;">
+        <label class="form-label-xs">Nom</label>
+        <%= f.text_field :name, class: 'form-control form-control-sm', style: 'font-size: 12px;', autofocus: true %>
       </div>
-    </div>
+
+      <div style="display: flex; gap: 8px;">
+        <%= f.submit class: 'btn-slate' %>
+        <%= link_to 'Annuler', suppliers_path, class: 'btn-outline-slate' %>
+      </div>
+    <% end %>
   </div>
 </div>
