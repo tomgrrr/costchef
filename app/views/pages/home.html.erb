@@ -47,4 +47,15 @@
       </div>
     </div>
   </div>
+
+  <div class="col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <i class="bi bi-tags fs-1 text-info mb-2"></i>
+        <h5 class="card-title">Tarifs</h5>
+        <p class="display-4 fw-bold"><%= current_user.recipes.where(sellable_as_component: false).count %></p>
+        <%= link_to "Accéder", tarifs_recipes_path, class: "btn btn-info mt-auto" %>
+      </div>
+    </div>
+  </div>
 </div>

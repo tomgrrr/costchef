@@ -31,6 +31,8 @@ Rails.application.routes.draw do
     end
   end
 
+  get 'recipes/tarifs', to: 'recipes#tarifs', as: 'tarifs_recipes'
+
   resources :recipes do
     member do
       post :duplicate
