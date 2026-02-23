@@ -45,14 +45,14 @@
         <tbody>
           <% if @meats.any? %>
             <% @meats.each do |entry| %>
-              <tr id="display-<%= entry.id %>">
+              <tr id="display-meat-<%= entry.id %>">
                 <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
                 <td><%= entry.item_name %></td>
                 <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
                 <td>
                   <div class="row-actions" style="opacity: 1;">
                     <a href="#" class="action-btn" title="Modifier"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                       onclick="document.getElementById('display-meat-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-meat-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
                     <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
                           class: 'action-btn danger', title: 'Supprimer' do %>
@@ -61,7 +61,7 @@
                   </div>
                 </td>
               </tr>
-              <tr id="edit-<%= entry.id %>" class="d-none">
+              <tr id="edit-meat-<%= entry.id %>" class="d-none">
                 <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
                   <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
                     <%= f.hidden_field :category, value: entry.category %>
@@ -80,7 +80,7 @@
                       </div>
                       <%= f.submit 'OK', class: 'btn-slate' %>
                       <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
-                         onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                         onclick="document.getElementById('edit-meat-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-meat-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
                     </div>
                   <% end %>
                 </td>
@@ -127,14 +127,14 @@
         <tbody>
           <% if @fishes.any? %>
             <% @fishes.each do |entry| %>
-              <tr id="display-<%= entry.id %>">
+              <tr id="display-fish-<%= entry.id %>">
                 <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
                 <td><%= entry.item_name %></td>
                 <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
                 <td>
                   <div class="row-actions" style="opacity: 1;">
                     <a href="#" class="action-btn" title="Modifier"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                       onclick="document.getElementById('display-fish-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-fish-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
                     <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
                           class: 'action-btn danger', title: 'Supprimer' do %>
@@ -143,7 +143,7 @@
                   </div>
                 </td>
               </tr>
-              <tr id="edit-<%= entry.id %>" class="d-none">
+              <tr id="edit-fish-<%= entry.id %>" class="d-none">
                 <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
                   <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
                     <%= f.hidden_field :category, value: entry.category %>
@@ -162,7 +162,7 @@
                       </div>
                       <%= f.submit 'OK', class: 'btn-slate' %>
                       <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
-                         onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                         onclick="document.getElementById('edit-fish-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-fish-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
                     </div>
                   <% end %>
                 </td>
@@ -209,14 +209,14 @@
         <tbody>
           <% if @sides.any? %>
             <% @sides.each do |entry| %>
-              <tr id="display-<%= entry.id %>">
+              <tr id="display-side-<%= entry.id %>">
                 <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
                 <td><%= entry.item_name %></td>
                 <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
                 <td>
                   <div class="row-actions" style="opacity: 1;">
                     <a href="#" class="action-btn" title="Modifier"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                       onclick="document.getElementById('display-side-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-side-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
                     <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
                           class: 'action-btn danger', title: 'Supprimer' do %>
@@ -225,7 +225,7 @@
                   </div>
                 </td>
               </tr>
-              <tr id="edit-<%= entry.id %>" class="d-none">
+              <tr id="edit-side-<%= entry.id %>" class="d-none">
                 <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
                   <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
                     <%= f.hidden_field :category, value: entry.category %>
@@ -244,7 +244,7 @@
                       </div>
                       <%= f.submit 'OK', class: 'btn-slate' %>
                       <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
-                         onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                         onclick="document.getElementById('edit-side-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-side-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
                     </div>
                   <% end %>
                 </td>
