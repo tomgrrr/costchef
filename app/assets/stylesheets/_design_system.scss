@@ -425,6 +425,22 @@ body {
   gap: 16px;
 }
 
+.ds-grid > .section-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ds-grid .data-table {
+  table-layout: fixed;
+}
+
+.ds-grid .data-table td,
+.ds-grid .data-table th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ds-add-form {
   background: var(--sl-50);
   border-bottom: 1px solid var(--sl-100);

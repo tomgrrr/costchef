@@ -257,35 +257,35 @@
       </table>
     </div>
 
-  </div>
+    <%# Tarification recap card — spans all 3 columns %>
+    <div class="section-card" style="grid-column: 1 / -1;">
+      <div class="section-header">
+        <h2 class="section-title">Coût et Tarif plat du jour</h2>
+      </div>
+      <div style="padding: 16px 20px;">
+        <div class="summary-row">
+          <span class="s-label">Viande + Accompagnement — coût</span>
+          <span class="s-value"><%= number_with_precision(@meat_average + @side_average, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row">
+          <span class="s-label">Viande + Accompagnement — prix conseillé</span>
+          <span class="s-value accent"><%= number_with_precision((@meat_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row">
+          <span class="s-label">Poisson + Accompagnement — coût</span>
+          <span class="s-value"><%= number_with_precision(@fish_average + @side_average, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row">
+          <span class="s-label">Poisson + Accompagnement — prix conseillé</span>
+          <span class="s-value accent"><%= number_with_precision((@fish_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row" style="border-bottom: none; margin-top: 4px;">
+          <span class="s-label">Coefficient appliqué</span>
+          <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
+        </div>
+      </div>
+    </div>
 
-  <%# Tarification recap card %>
-  <div class="section-card" style="margin-top: 8px;">
-    <div class="section-header">
-      <h2 class="section-title">Coût et Tarif plat du jour</h2>
-    </div>
-    <div style="padding: 16px 20px;">
-      <div class="summary-row">
-        <span class="s-label">Viande + Accompagnement — coût</span>
-        <span class="s-value"><%= number_with_precision(@meat_average + @side_average, precision: 2) %> €</span>
-      </div>
-      <div class="summary-row">
-        <span class="s-label">Viande + Accompagnement — prix conseillé</span>
-        <span class="s-value accent"><%= number_with_precision((@meat_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
-      </div>
-      <div class="summary-row">
-        <span class="s-label">Poisson + Accompagnement — coût</span>
-        <span class="s-value"><%= number_with_precision(@fish_average + @side_average, precision: 2) %> €</span>
-      </div>
-      <div class="summary-row">
-        <span class="s-label">Poisson + Accompagnement — prix conseillé</span>
-        <span class="s-value accent"><%= number_with_precision((@fish_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
-      </div>
-      <div class="summary-row" style="border-bottom: none; margin-top: 4px;">
-        <span class="s-label">Coefficient appliqué</span>
-        <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
-      </div>
-    </div>
   </div>
 
 </div>

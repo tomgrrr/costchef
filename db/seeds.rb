@@ -56,6 +56,22 @@ user_inactive.assign_attributes(
 user_inactive.save!
 puts "  - Utilisateur inactif: laurent@nouveau.fr (mot de passe: password123)"
 
+# Utilisateur Lassalas avec abonnement actif
+user_lassalas = User.find_or_initialize_by(email: "lassalas@traiteur.fr")
+user_lassalas.assign_attributes(
+  password: "password123",
+  password_confirmation: "password123",
+  first_name: "Dimitri",
+  last_name: "Lassalas",
+  company_name: "Lassalas Traiteur",
+  subscription_active: true,
+  subscription_started_at: Date.today,
+  subscription_expires_at: 1.year.from_now,
+  admin: false
+)
+user_lassalas.save!
+puts "  - Utilisateur actif: lassalas@traiteur.fr (mot de passe: password123)"
+
 # Invitation de démonstration (pour tester le workflow)
 puts ''
 puts 'Création d\'une invitation de démonstration...'

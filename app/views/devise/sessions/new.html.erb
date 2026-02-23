@@ -1,43 +1,55 @@
-<div class="row mt-5">
-  <div class="col-md-4 offset-md-4">
-    <div class="card">
-      <div class="card-header text-center">
-        <h4>🍳 CostChef</h4>
+<div style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 48px);">
+  <div style="background: white; border: 1px solid var(--sl-200); border-radius: 6px; padding: 32px; width: 100%; max-width: 400px;">
+
+    <%# ── En-tête ── %>
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 18px; color: var(--accent); margin-bottom: 8px;">
+        ⬡ CostChef
       </div>
-      <div class="card-body">
-        <% if resource.errors.any? %>
-          <div class="alert alert-danger">
-            <% resource.errors.full_messages.each do |message| %>
-              <p class="mb-0"><%= message %></p>
-            <% end %>
-          </div>
-        <% end %>
-
-        <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-          <div class="mb-3">
-            <%= f.label :email, "Email", class: "form-label" %>
-            <%= f.text_field :email, autofocus: true, autocomplete: "email", class: "form-control" %>
-          </div>
-
-          <div class="mb-3">
-            <%= f.label :password, "Mot de passe", class: "form-label" %>
-            <%= f.password_field :password, autocomplete: "current-password", class: "form-control" %>
-          </div>
-
-          <% if devise_mapping.rememberable? %>
-            <div class="mb-3 form-check">
-              <%= f.check_box :remember_me, class: "form-check-input" %>
-              <%= f.label :remember_me, "Se souvenir de moi", class: "form-check-label" %>
-            </div>
-          <% end %>
-
-          <%= f.submit "Se connecter", class: "btn btn-primary w-100" %>
-        <% end %>
-
-        <div class="text-center mt-3">
-          <%= link_to "Mot de passe oublié ?", new_password_path(resource_name) %>
-        </div>
+      <div style="font-size: 16px; font-weight: 600; color: var(--sl-900);">
+        Connexion
       </div>
     </div>
+
+    <%# ── Erreurs ── %>
+    <% if resource.errors.any? %>
+      <div class="alert alert-danger" style="font-size: 12px; margin-bottom: 16px;">
+        <% resource.errors.full_messages.each do |message| %>
+          <p class="mb-0"><%= message %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# ── Formulaire ── %>
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+      <div style="margin-bottom: 16px;">
+        <%= f.label :email, "EMAIL", class: "form-label-xs" %>
+        <%= f.text_field :email, autofocus: true, autocomplete: "email", class: "form-control form-control-sm", style: "width: 100%;" %>
+      </div>
+
+      <div style="margin-bottom: 8px;">
+        <%= f.label :password, "MOT DE PASSE", class: "form-label-xs" %>
+        <%= f.password_field :password, autocomplete: "current-password", class: "form-control form-control-sm", style: "width: 100%;" %>
+      </div>
+
+      <div style="text-align: right; margin-bottom: 16px;">
+        <%= link_to "Mot de passe oublié ?", new_password_path(resource_name), style: "color: var(--sl-400); font-size: 11px; text-decoration: none;" %>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 6px;">
+          <%= f.check_box :remember_me, class: "form-check-input", style: "margin: 0;" %>
+          <%= f.label :remember_me, "Se souvenir de moi", style: "font-size: 12px; color: var(--sl-500); margin: 0;" %>
+        </div>
+      <% end %>
+
+      <%= f.submit "Se connecter", class: "btn-slate", style: "width: 100%; padding: 10px; font-size: 13px; cursor: pointer;" %>
+    <% end %>
+
+    <%# ── Footer ── %>
+    <div style="border-top: 1px solid var(--sl-100); margin-top: 24px; padding-top: 16px; text-align: center;">
+      <%= link_to "Créer un compte", signup_path, style: "color: var(--sl-500); font-size: 12px; text-decoration: none;" %>
+    </div>
+
   </div>
 </div>
