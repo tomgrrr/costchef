@@ -1,61 +1,52 @@
 <%= turbo_frame_tag "product_#{product.id}" do %>
-  <div class="card h-100 shadow-sm">
+  <div class="product-card">
+    <%# Hover actions %>
+    <div class="card-actions">
+      <%= link_to edit_product_path(product),
+            class: "action-btn",
+            data: { turbo_frame: "_top" },
+            title: "Modifier" do %>
+        <i class="bi bi-pencil"></i>
+      <% end %>
 
-    <%# En-tête : nom + actions %>
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span class="fw-bold"><%= product.name %></span>
-      <div class="d-flex gap-1">
-        <%= link_to edit_product_path(product),
-              class: "btn btn-sm btn-outline-secondary",
-              data: { turbo_frame: "_top" } do %>
-          <i class="bi bi-pencil"></i>
-        <% end %>
-
-        <%= button_to product_path(product),
-              method: :delete,
-              form: { data: { turbo_confirm: "Supprimer ce produit ?", turbo_frame: "_top" } },
-              class: "btn btn-sm btn-outline-danger #{'disabled' if product.used_in_recipes?}",
-              title: product.used_in_recipes? ? "Utilisé dans #{product.recipes_count} recette(s)" : "Supprimer" do %>
-          <i class="bi bi-trash"></i>
-        <% end %>
-      </div>
+      <%= button_to product_path(product),
+            method: :delete,
+            form: { data: { turbo_confirm: "Supprimer ce produit ?", turbo_frame: "_top" } },
+            class: "action-btn danger #{'disabled' if product.used_in_recipes?}",
+            title: product.used_in_recipes? ? "Utilisé dans #{product.recipes_count} recette(s)" : "Supprimer" do %>
+        <i class="bi bi-trash"></i>
+      <% end %>
     </div>
 
-    <%# Corps : unité + prix moyen + nb conditionnements %>
-    <div class="card-body">
-      <div class="mb-2">
-        <span class="badge bg-light text-dark border">
-          <%= product.base_unit %>
+    <%# Unit badge %>
+    <div class="p-unit"><%= product.base_unit %></div>
+
+    <%# Name %>
+    <div class="p-name"><%= product.name %></div>
+
+    <%# Price %>
+    <div class="p-price">
+      <% if product.avg_price_per_kg.to_f > 0 %>
+        <%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €/kg
+      <% else %>
+        <span class="badge-warning-sl">
+          <i class="bi bi-exclamation-triangle"></i> Prix non défini
         </span>
-      </div>
-
-      <div class="mb-2">
-        <% if product.avg_price_per_kg.to_f > 0 %>
-          <span class="fw-bold text-success">
-            <%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €/kg
-          </span>
-        <% else %>
-          <span class="badge bg-warning text-dark">
-            <i class="bi bi-exclamation-triangle"></i> Prix non défini
-          </span>
-        <% end %>
-      </div>
-
-      <small class="text-muted">
-        <%= product.product_purchases.active.count %> conditionnement(s) actif(s)
-      </small>
+      <% end %>
     </div>
 
-    <%# Pied : bouton toggle conditionnements %>
-    <div class="card-footer p-2">
-      <button class="btn btn-sm btn-outline-primary w-100"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#purchases_collapse_<%= product.id %>"
-              aria-expanded="false">
-        <i class="bi bi-box-seam"></i> Gérer les conditionnements
-      </button>
+    <%# Meta %>
+    <div class="p-meta">
+      <%= product.product_purchases.active.count %> conditionnement(s) actif(s)
     </div>
 
+    <%# Stock button %>
+    <button class="stock-btn"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#purchases_collapse_<%= product.id %>"
+            aria-expanded="false">
+      <i class="bi bi-box-seam"></i> Gérer les conditionnements
+    </button>
   </div>
 <% end %>

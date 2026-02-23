@@ -1,52 +1,56 @@
-<%# En-tête %>
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Produits</h4>
-  <%= link_to new_product_path, class: "btn btn-primary" do %>
+<%# Page header %>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    <h1 class="page-title">Produits</h1>
+    <span class="mono" style="color: var(--sl-400);"><%= @products.size %> produit<%= 's' if @products.size > 1 %></span>
+  </div>
+  <%= link_to new_product_path, class: "btn-accent" do %>
     <i class="bi bi-plus-lg"></i> Nouveau produit
   <% end %>
 </div>
 
-<%# Barre de recherche %>
-<%= form_with url: products_path, method: :get, class: "mb-4" do |f| %>
-  <div class="input-group" style="max-width: 400px;">
+<%# Search bar %>
+<div class="search-bar" style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
+  <%= form_with url: products_path, method: :get, class: "d-flex align-items-center gap-2" do |f| %>
     <%= f.text_field :search,
           value: params[:search],
           placeholder: "Rechercher un produit...",
-          class: "form-control" %>
-    <%= f.submit "Rechercher", class: "btn btn-outline-secondary" %>
+          class: "form-control form-control-sm",
+          style: "max-width: 300px; font-size: 12px;" %>
+    <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
-      <%= link_to "✕", products_path, class: "btn btn-outline-danger" %>
+      <%= link_to "✕", products_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
     <% end %>
-  </div>
-<% end %>
+  <% end %>
+</div>
 
-<%# Grille de cards %>
-<% if @products.any? %>
-  <div class="row row-cols-1 row-cols-md-3 g-4" style="overflow: visible;">
-    <% @products.each do |product| %>
-      <div class="col" style="position: relative; overflow: visible;">
-        <%= render "products/product_card", product: product %>
+<%# Products grid %>
+<div style="padding: 24px;">
+  <% if @products.any? %>
+    <div class="products-grid">
+      <% @products.each do |product| %>
+        <div>
+          <%= render "products/product_card", product: product %>
 
-        <div class="collapse"
-             id="purchases_collapse_<%= product.id %>"
-             style="position: relative; z-index: 1000;">
-          <%= turbo_frame_tag "purchases_#{product.id}" do %>
-            <%= render "product_purchases/purchases_section",
-                  product: product,
-                  purchases: product.product_purchases.order(:created_at),
-                  new_purchase: ProductPurchase.new,
-                  suppliers: current_user.suppliers.active %>
-          <% end %>
+          <div class="collapse" id="purchases_collapse_<%= product.id %>">
+            <%= turbo_frame_tag "purchases_#{product.id}" do %>
+              <%= render "product_purchases/purchases_section",
+                    product: product,
+                    purchases: product.product_purchases.order(:created_at),
+                    new_purchase: ProductPurchase.new,
+                    suppliers: current_user.suppliers.active %>
+            <% end %>
+          </div>
         </div>
-      </div>
-    <% end %>
-  </div>
-<% else %>
-  <p class="text-muted text-center mt-4">
-    <% if params[:search].present? %>
-      Aucun produit trouvé pour "<%= params[:search] %>".
-    <% else %>
-      Aucun produit pour le moment.
-    <% end %>
-  </p>
-<% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <p style="color: var(--sl-400); text-align: center; margin-top: 24px; font-size: 13px;">
+      <% if params[:search].present? %>
+        Aucun produit trouvé pour "<%= params[:search] %>".
+      <% else %>
+        Aucun produit pour le moment.
+      <% end %>
+    </p>
+  <% end %>
+</div>
