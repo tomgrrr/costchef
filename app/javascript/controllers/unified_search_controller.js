@@ -44,19 +44,19 @@ export default class extends Controller {
   }
 
   select(event) {
-    const li = event.currentTarget
-    const id = li.dataset.id
-    const name = li.dataset.name
-    const kind = li.dataset.kind
+    const el = event.currentTarget
+    const id = el.dataset.id
+    const name = el.dataset.name
+    const kind = el.dataset.kind
 
     this.componentIdTarget.value = id
     this.componentTypeTarget.value = kind
     this.selectedDisplayTarget.textContent = name
 
-    this.resultsListTarget.querySelectorAll("li").forEach(el => {
-      el.classList.remove("active")
+    this.resultsListTarget.querySelectorAll(".search-result-item").forEach(item => {
+      item.classList.remove("selected")
     })
-    li.classList.add("active")
+    el.classList.add("selected")
 
     this.submitBtnTarget.removeAttribute("disabled")
   }
@@ -72,26 +72,29 @@ export default class extends Controller {
   }
 
   renderResults(items) {
+    const list = this.resultsListTarget
+
     if (items.length === 0) {
-      this.resultsListTarget.innerHTML = `
-        <li class="list-group-item text-muted small py-2 text-center">
+      list.style.display = "block"
+      list.innerHTML = `
+        <div class="search-result-item" style="justify-content: center; color: var(--sl-400); cursor: default;">
           Aucun résultat
-        </li>`
+        </div>`
       return
     }
 
-    this.resultsListTarget.innerHTML = items.map(item => `
-      <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-          style="cursor: pointer;"
-          data-action="click->unified-search#select"
-          data-id="${item.id}"
-          data-name="${this.escapeHtml(item.name)}"
-          data-kind="${item.kind}">
+    list.style.display = "block"
+    list.innerHTML = items.map(item => `
+      <div class="search-result-item"
+           data-action="click->unified-search#select"
+           data-id="${item.id}"
+           data-name="${this.escapeHtml(item.name)}"
+           data-kind="${item.kind}">
         <span>${this.escapeHtml(item.name)}</span>
-        <span class="badge ${item.kind === 'Product' ? 'bg-success' : 'bg-info'} ms-2">
+        <span class="${item.kind === 'Product' ? 'badge-produit' : 'badge-sous-recette'}">
           ${item.label}
         </span>
-      </li>`
+      </div>`
     ).join("")
   }
 

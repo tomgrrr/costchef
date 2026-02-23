@@ -320,3 +320,98 @@ body {
   transition: all 0.15s;
 }
 .stock-btn:hover { background: var(--sl-100); border-color: var(--sl-300); }
+
+// ─── RECIPE LAYOUT ────────────────────────────────────
+.recipe-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 0;
+  min-height: calc(100vh - 48px - 56px);
+}
+
+.recipe-main { padding: 24px; }
+
+.recipe-sidebar {
+  background: white;
+  border-left: 1px solid var(--sl-200);
+}
+
+.recipe-sidebar .sidebar-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sl-100);
+}
+
+.recipe-sidebar .sidebar-label {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--sl-400); margin-bottom: 12px;
+}
+
+// ─── INFO GRID ────────────────────────────────────────
+.info-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.info-grid .info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px;
+}
+
+.info-grid .info-label { color: var(--sl-500); }
+.info-grid .info-value { color: var(--sl-800); font-weight: 500; }
+
+// ─── TAB BAR ──────────────────────────────────────────
+.tab-bar {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-bottom: 1px solid var(--sl-200);
+  padding: 0 24px;
+}
+
+.tab-item {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sl-400);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.tab-item:hover { color: var(--sl-700); }
+.tab-item.active { color: var(--sl-900); border-bottom-color: var(--accent); }
+
+// ─── ROW ACTIONS (visible on hover) ──────────────────
+.data-table .row-actions {
+  display: flex; gap: 4px; justify-content: flex-end;
+  opacity: 0; transition: opacity 0.15s;
+}
+.data-table tr:hover .row-actions { opacity: 1; }
+
+// ─── ADD COMPONENT FORM ──────────────────────────────
+.add-component-form {
+  background: var(--sl-50);
+  border: 1px dashed var(--sl-300);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.add-component-form .form-control:focus,
+.add-component-form .form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+}
+
+.add-component-form .selected-display {
+  font-size: 11px;
+  color: var(--sl-500);
+  padding: 4px 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
