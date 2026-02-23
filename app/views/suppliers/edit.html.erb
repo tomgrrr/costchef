@@ -1,5 +1,10 @@
-<%= link_to '← Fournisseurs', suppliers_path, class: 'text-decoration-none d-inline-block mb-3' %>
+<div class="page-header">
+  <h1 class="page-title">Modifier <%= @supplier.name %></h1>
+  <%= link_to suppliers_path, class: "btn-outline-slate" do %>
+    <i class="bi bi-arrow-left"></i> Fournisseurs
+  <% end %>
+</div>
 
-<h1 class="mb-4">Modifier <%= @supplier.name %></h1>
-
-<%= render 'form', supplier: @supplier %>
+<div style="padding: 24px; max-width: 480px;">
+  <%= render 'form', supplier: @supplier %>
+</div>

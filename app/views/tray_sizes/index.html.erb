@@ -1,84 +1,104 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1>Barquettes & Coefficient</h1>
-  <%= link_to 'Nouvelle barquette', new_tray_size_path, class: 'btn btn-primary' %>
+<%# Page header %>
+<div class="page-header">
+  <h1 class="page-title">Barquettes & Coefficient</h1>
+  <%= link_to new_tray_size_path, class: "btn-accent" do %>
+    <i class="bi bi-plus-lg"></i> Nouvelle barquette
+  <% end %>
 </div>
 
-<div class="card mb-5 shadow-sm">
-  <div class="card-header bg-primary text-white">
-    <h5 class="mb-0"><i class="bi bi-percent"></i> Coefficient multiplicateur</h5>
-  </div>
-  <div class="card-body">
-    <p>
-      Ce coefficient est appliqué au coût/kg matière pour
-      obtenir le prix de vente conseillé. La barquette est ajoutée après application du coefficient.
-    </p>
-    <div class="row g-4 align-items-stretch">
-      <div class="col-md-5">
-        <div class="bg-light rounded border p-3 h-100 d-flex flex-column justify-content-center text-center">
-          <small class="text-muted text-uppercase">Formule prix conseillé</small>
-          <div class="fw-bold mt-2">(Coût/kg × coeff) + barquette</div>
-          <hr>
-          <small class="text-muted">
-            Exemple avec 5,00 €/kg :
-            <br>
-            <span class="text-success fw-bold">
-              <%= number_with_precision(5.0 * current_user.markup_coefficient, precision: 2) %> €/kg
-            </span>
-            <br>
-            (hors barquette)
-          </small>
+<div style="padding: 24px;">
+
+  <%# Coefficient section %>
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title"><i class="bi bi-percent"></i> Coefficient multiplicateur</h2>
+    </div>
+    <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+      <%# Formula card %>
+      <div style="background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 6px; padding: 20px; text-align: center;">
+        <span class="form-label-xs">Formule prix conseillé</span>
+        <div style="font-weight: 600; font-size: 14px; color: var(--sl-900); margin: 12px 0;">(Coût/kg × coeff) + barquette</div>
+        <div style="border-top: 1px solid var(--sl-200); padding-top: 12px; margin-top: 12px;">
+          <span style="font-size: 11px; color: var(--sl-400);">Exemple avec 5,00 €/kg :</span>
+          <br>
+          <span class="mono" style="color: var(--cc-success); font-size: 16px; font-weight: 600;">
+            <%= number_with_precision(5.0 * current_user.markup_coefficient, precision: 2) %> €/kg
+          </span>
+          <br>
+          <span style="font-size: 11px; color: var(--sl-400);">(hors barquette)</span>
         </div>
       </div>
-      <div class="col-md-7">
+
+      <%# Coefficient form %>
+      <div>
+        <p style="font-size: 12px; color: var(--sl-600); margin-bottom: 16px;">
+          Ce coefficient est appliqué au coût/kg matière pour
+          obtenir le prix de vente conseillé. La barquette est ajoutée après application du coefficient.
+        </p>
         <%= form_with url: settings_path, method: :patch do |f| %>
-          <label class="form-label fw-semibold">Coefficient actuel</label>
-          <div class="input-group" style="max-width: 300px;">
-            <span class="input-group-text">×</span>
+          <label class="form-label-xs">Coefficient actuel</label>
+          <div style="display: flex; gap: 8px; align-items: center; max-width: 260px;">
+            <span class="mono" style="color: var(--sl-400); font-size: 16px;">×</span>
             <%= number_field_tag 'user[markup_coefficient]', current_user.markup_coefficient,
-                step: 0.1, min: 0.1, class: 'form-control fs-5 fw-bold' %>
-            <%= f.submit 'Enregistrer', class: 'btn btn-primary' %>
+                step: 0.1, min: 0.1, class: 'form-control form-control-sm mono', style: 'font-size: 16px; font-weight: 600; max-width: 100px;' %>
+            <%= f.submit 'Enregistrer', class: 'btn-slate' %>
           </div>
-          <div class="form-text">Minimum : 0.1 · Défaut : 1.0</div>
+          <span style="font-size: 10px; color: var(--sl-400); margin-top: 4px; display: block;">Minimum : 0.1 · Défaut : 1.0</span>
         <% end %>
       </div>
     </div>
   </div>
+
+  <%# Tray sizes table %>
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title"><i class="bi bi-archive"></i> Barquettes plastique</h2>
+      <span class="mono" style="color: var(--sl-400);"><%= @tray_sizes.size %> barquette<%= 's' if @tray_sizes.size > 1 %></span>
+    </div>
+
+    <% if @tray_sizes.empty? %>
+      <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucune barquette pour le moment.</p>
+    <% else %>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Prix</th>
+            <th>Recettes associées</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @tray_sizes.each do |tray_size| %>
+            <tr>
+              <td style="font-weight: 500; color: var(--sl-900);"><%= tray_size.name %></td>
+              <td><span class="mono"><%= number_with_precision(tray_size.price, precision: 2) %> €</span></td>
+              <td><span class="mono" style="color: var(--sl-500);"><%= tray_size.recipes_count %></span></td>
+              <td>
+                <div class="row-actions">
+                  <%= link_to edit_tray_size_path(tray_size), class: "action-btn", title: "Modifier" do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                  <% if tray_size.recipes_count > 0 %>
+                    <%= button_to tray_size_path(tray_size), method: :delete,
+                          data: { turbo_confirm: "Cette barquette est utilisée dans #{tray_size.recipes_count} recette(s). Les recettes concernées perdront leur barquette. Continuer ?" },
+                          class: "action-btn danger", title: "Supprimer" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  <% else %>
+                    <%= button_to tray_size_path(tray_size), method: :delete,
+                          data: { turbo_confirm: "Supprimer la barquette « #{tray_size.name} » ?" },
+                          class: "action-btn danger", title: "Supprimer" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+
 </div>
-
-<h5 class="mb-3"><i class="bi bi-archive"></i> Barquettes plastique</h5>
-
-<% if @tray_sizes.empty? %>
-  <p class="text-muted">Aucune barquette pour le moment.</p>
-<% else %>
-  <table class="table table-striped align-middle">
-    <thead>
-      <tr>
-        <th>Nom</th>
-        <th>Prix</th>
-        <th>Recettes associées</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @tray_sizes.each do |tray_size| %>
-        <tr>
-          <td><%= tray_size.name %></td>
-          <td><%= number_with_precision(tray_size.price, precision: 2) %> €</td>
-          <td><span class="badge bg-secondary"><%= tray_size.recipes_count %></span></td>
-          <td class="d-flex gap-1">
-            <%= link_to 'Modifier', edit_tray_size_path(tray_size), class: 'btn btn-sm btn-outline-primary' %>
-            <% if tray_size.recipes_count > 0 %>
-              <%= button_to 'Supprimer', tray_size_path(tray_size), method: :delete,
-                    data: { turbo_confirm: "Cette barquette est utilisée dans #{tray_size.recipes_count} recette(s). Les recettes concernées perdront leur barquette. Continuer ?" },
-                    class: 'btn btn-sm btn-outline-danger' %>
-            <% else %>
-              <%= button_to 'Supprimer', tray_size_path(tray_size), method: :delete,
-                    data: { turbo_confirm: "Supprimer la barquette « #{tray_size.name} » ?" },
-                    class: 'btn btn-sm btn-outline-danger' %>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-<% end %>

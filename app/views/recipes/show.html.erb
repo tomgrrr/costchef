@@ -1,61 +1,67 @@
-<%# En-tête %>
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div class="d-flex align-items-center gap-2">
-    <h4 class="mb-0"><%= @recipe.name %></h4>
+<%# Page header %>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    <h1 class="page-title"><%= @recipe.name %></h1>
     <% if @recipe.subrecipe? %>
-      <span class="badge bg-info">Sous-recette</span>
+      <span class="badge-sous-recette">Sous-recette</span>
     <% end %>
   </div>
   <div class="d-flex gap-2">
-    <% if @recipe.subrecipe? %>
-      <%= button_to recipe_path(@recipe),
-            method: :patch,
-            params: { recipe: { sellable_as_component: false } },
-            class: "btn btn-outline-success",
-            form: { data: { turbo_confirm: "Convertir en recette ?" } } do %>
-        <i class="bi bi-arrow-up-circle"></i> Convertir en recette
-      <% end %>
-    <% else %>
-      <%= button_to recipe_path(@recipe),
-            method: :patch,
-            params: { recipe: { sellable_as_component: true, has_tray: false, tray_size_id: "" } },
-            class: "btn btn-outline-info",
-            form: { data: { turbo_confirm: "Convertir en sous-recette ?" } } do %>
-        <i class="bi bi-arrow-down-circle"></i> Convertir en sous-recette
-      <% end %>
-    <% end %>
-    <%= link_to edit_recipe_path(@recipe), class: "btn btn-outline-secondary" do %>
-      <i class="bi bi-pencil"></i> Modifier
+    <%= link_to recipes_path, class: "btn-outline-slate" do %>
+      <i class="bi bi-arrow-left"></i> Retour
     <% end %>
     <%= button_to duplicate_recipe_path(@recipe),
           method: :post,
-          class: "btn btn-outline-info",
+          class: "btn-outline-slate",
           form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
       <i class="bi bi-copy"></i> Dupliquer
     <% end %>
-    <%= link_to recipes_path, class: "btn btn-outline-primary" do %>
-      <i class="bi bi-arrow-left"></i> Retour
+    <%= link_to edit_recipe_path(@recipe), class: "btn-outline-slate" do %>
+      <i class="bi bi-pencil"></i> Modifier
+    <% end %>
+    <%# TODO: Réactiver les boutons convertir recette/sous-recette %>
+    <% if false # masqué temporairement %>
+      <% if @recipe.subrecipe? %>
+        <%= button_to recipe_path(@recipe),
+              method: :patch,
+              params: { recipe: { sellable_as_component: false } },
+              class: "btn-slate",
+              form: { data: { turbo_confirm: "Convertir en recette ?" } } do %>
+          <i class="bi bi-arrow-up-circle"></i> Convertir en recette
+        <% end %>
+      <% else %>
+        <%= button_to recipe_path(@recipe),
+              method: :patch,
+              params: { recipe: { sellable_as_component: true, has_tray: false, tray_size_id: "" } },
+              class: "btn-slate",
+              form: { data: { turbo_confirm: "Convertir en sous-recette ?" } } do %>
+          <i class="bi bi-arrow-down-circle"></i> Convertir en sous-recette
+        <% end %>
+      <% end %>
     <% end %>
   </div>
 </div>
 
-<div class="row">
-  <%# Colonne gauche : composants %>
-  <div class="col-md-8">
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5 class="mb-0">Composants</h5>
+<%# Two-column layout %>
+<div class="recipe-layout">
+  <%# Main column %>
+  <div class="recipe-main">
+    <%# Components section %>
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">Composants</h2>
       </div>
-      <div class="card-body">
+      <div>
         <%= render "recipes/components_list", recipe: @recipe %>
       </div>
     </div>
 
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5 class="mb-0">Ajouter un composant</h5>
+    <%# Add component section %>
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">Ajouter un composant</h2>
       </div>
-      <div class="card-body">
+      <div style="padding: 16px;">
         <%= render "recipe_components/form",
               recipe: @recipe,
               component: @recipe.recipe_components.build,
@@ -68,43 +74,44 @@
     </div>
   </div>
 
-  <%# Colonne droite : résumé et infos %>
-  <div class="col-md-4">
+  <%# Sidebar %>
+  <div class="recipe-sidebar">
     <%= render "recipes/recipe_summary", recipe: @recipe %>
 
-    <div class="card mt-4">
-      <div class="card-header">
-        <h5 class="mb-0">Informations</h5>
-      </div>
-      <div class="card-body">
-        <% if @recipe.description.present? %>
-          <p class="mb-3"><%= @recipe.description %></p>
-        <% end %>
+    <%# Informations section %>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Informations</div>
 
-        <ul class="list-unstyled mb-0">
-          <%= render "recipes/cooking_loss_form", recipe: @recipe %>
-          <li class="mb-2">
-            <strong>Sous-recette :</strong>
+      <% if @recipe.description.present? %>
+        <p style="font-size: 12px; color: var(--sl-600); margin-bottom: 12px;"><%= @recipe.description %></p>
+      <% end %>
+
+      <div class="info-grid">
+        <%= render "recipes/cooking_loss_form", recipe: @recipe %>
+
+        <div class="info-row">
+          <span class="info-label">Sous-recette</span>
+          <span class="info-value">
             <% if @recipe.sellable_as_component? %>
-              <span class="badge bg-info">Oui</span>
+              <span class="badge-sous-recette">Oui</span>
             <% else %>
               Non
             <% end %>
-          </li>
-          <% unless @recipe.subrecipe? %>
-            <li>
-              <strong>Barquette :</strong>
+          </span>
+        </div>
+
+        <% unless @recipe.subrecipe? %>
+          <div class="info-row">
+            <span class="info-label">Barquette</span>
+            <span class="info-value">
               <% if @recipe.has_tray? %>
-                <span class="badge bg-secondary">Oui</span>
-                <% if @recipe.tray_size %>
-                  &mdash; <%= @recipe.tray_size.name %>
-                <% end %>
+                Oui<% if @recipe.tray_size %> — <%= @recipe.tray_size.name %><% end %>
               <% else %>
                 Non
               <% end %>
-            </li>
-          <% end %>
-        </ul>
+            </span>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>

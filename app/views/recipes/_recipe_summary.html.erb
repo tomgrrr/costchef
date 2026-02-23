@@ -1,55 +1,58 @@
 <div id="summary_<%= recipe.id %>">
-  <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">Résumé</h5>
-    </div>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item d-flex justify-content-between">
-        <span>Coût total</span>
-        <% if recipe.cached_total_cost.to_f > 0 %>
-          <strong><%= number_with_precision(recipe.cached_total_cost, precision: 2) %> €</strong>
-        <% else %>
-          <span class="badge bg-danger">0 €</span>
-        <% end %>
-      </li>
-      <li class="list-group-item d-flex justify-content-between">
-        <span>Poids brut</span>
-        <strong><%= number_with_precision(recipe.cached_raw_weight.to_f, precision: 3) %> kg</strong>
-      </li>
-      <li class="list-group-item d-flex justify-content-between">
-        <span>Poids final</span>
-        <strong><%= number_with_precision(recipe.cached_total_weight.to_f, precision: 3) %> kg</strong>
-      </li>
-      <li class="list-group-item d-flex justify-content-between">
-        <span>Coût/kg</span>
-        <% if recipe.cached_cost_per_kg.to_f > 0 %>
-          <strong><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %> €/kg</strong>
-        <% else %>
-          <span class="badge bg-warning text-dark">0 €/kg</span>
-        <% end %>
-      </li>
-      <% if recipe.subrecipe? %>
-        <li class="list-group-item text-muted">
-          Type : Sous-recette — coût interne uniquement
-        </li>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Résumé</div>
+
+    <div class="summary-row">
+      <span class="s-label">Coût total</span>
+      <% if recipe.cached_total_cost.to_f > 0 %>
+        <span class="s-value"><%= number_with_precision(recipe.cached_total_cost, precision: 2) %> €</span>
       <% else %>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <small class="text-muted">Coefficient appliqué</small>
-          <span class="badge bg-light text-dark border">×<%= number_with_precision(recipe.user.markup_coefficient, precision: 1) %></span>
-        </li>
-        <% if recipe.has_tray? && recipe.tray_size.present? %>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>Barquette</span>
-            <strong><%= recipe.tray_size.name %> — <%= number_to_currency(recipe.tray_size.price, unit: "€", separator: ",", delimiter: " ") %></strong>
-          </li>
-        <% end %>
-        <% if recipe.suggested_selling_price.present? %>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>Prix de vente conseillé</span>
-            <strong class="text-success"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</strong>
-          </li>
-        <% end %>
+        <span class="badge-warning-sl">0 €</span>
       <% end %>
-    </ul>
+    </div>
+
+    <div class="summary-row">
+      <span class="s-label">Poids brut</span>
+      <span class="s-value"><%= number_with_precision(recipe.cached_raw_weight.to_f, precision: 3) %> kg</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="s-label">Poids final</span>
+      <span class="s-value"><%= number_with_precision(recipe.cached_total_weight.to_f, precision: 3) %> kg</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="s-label">Coût/kg</span>
+      <% if recipe.cached_cost_per_kg.to_f > 0 %>
+        <span class="s-value"><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %> €/kg</span>
+      <% else %>
+        <span class="badge-warning-sl">0 €/kg</span>
+      <% end %>
+    </div>
+
+    <% if recipe.subrecipe? %>
+      <div class="summary-row">
+        <span class="s-label" style="color: var(--sl-400); font-style: italic;">Sous-recette — coût interne uniquement</span>
+      </div>
+    <% else %>
+      <div class="summary-row">
+        <span class="s-label">Coefficient</span>
+        <span class="s-value muted">×<%= number_with_precision(recipe.user.markup_coefficient, precision: 1) %></span>
+      </div>
+
+      <% if recipe.has_tray? && recipe.tray_size.present? %>
+        <div class="summary-row tray-row">
+          <span class="s-label">Barquette</span>
+          <span class="s-value"><%= recipe.tray_size.name %> — <%= number_to_currency(recipe.tray_size.price, unit: "€", separator: ",", delimiter: " ") %></span>
+        </div>
+      <% end %>
+
+      <% if recipe.suggested_selling_price.present? %>
+        <div class="summary-row">
+          <span class="s-label">Prix de vente conseillé</span>
+          <span class="s-value accent"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</span>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 </div>

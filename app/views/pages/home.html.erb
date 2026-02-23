@@ -1,50 +1,47 @@
-<div class="text-center mb-4">
-  <%= image_tag "logo.jpg", height: 100, class: "rounded mb-3" %>
-  <h1>Tableau de bord</h1>
+<%# Page header %>
+<div style="text-align: center; padding: 32px 24px 16px;">
+  <%= image_tag "logo.jpg", height: 80, style: "border-radius: 8px; margin-bottom: 12px;" %>
+  <h1 class="page-title" style="font-size: 22px;">Tableau de bord</h1>
+  <p style="color: var(--sl-400); font-size: 13px; margin-top: 4px;">Bienvenue <%= current_user.email.split('@').first.capitalize %></p>
 </div>
 
-<div class="row g-4">
-  <div class="col-md-3">
-    <div class="card text-center h-100">
-      <div class="card-body d-flex flex-column justify-content-center">
-        <i class="bi bi-box-seam fs-1 text-primary mb-2"></i>
-        <h5 class="card-title">Produits</h5>
-        <p class="display-4 fw-bold"><%= @products_count %></p>
-        <%= link_to "Accéder", products_path, class: "btn btn-primary mt-auto" %>
-      </div>
-    </div>
-  </div>
+<div style="padding: 24px;">
+  <div class="dash-grid">
 
-  <div class="col-md-3">
-    <div class="card text-center h-100">
-      <div class="card-body d-flex flex-column justify-content-center">
-        <i class="bi bi-journal-text fs-1 text-success mb-2"></i>
-        <h5 class="card-title">Recettes</h5>
-        <p class="display-4 fw-bold"><%= @recipes_count %></p>
-        <%= link_to "Accéder", recipes_path, class: "btn btn-success mt-auto" %>
-      </div>
+    <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-box-seam"></i></div>
+      <div class="dash-label">Produits</div>
+      <div class="dash-count"><%= @products_count %></div>
+      <%= link_to "Accéder →", products_path, class: "dash-link" %>
     </div>
-  </div>
 
-  <div class="col-md-3">
-    <div class="card text-center h-100">
-      <div class="card-body d-flex flex-column justify-content-center">
-        <i class="bi bi-truck fs-1 text-warning mb-2"></i>
-        <h5 class="card-title">Fournisseurs</h5>
-        <p class="display-4 fw-bold"><%= @suppliers_count %></p>
-        <%= link_to "Accéder", suppliers_path, class: "btn btn-warning mt-auto" %>
-      </div>
+    <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-journal-text"></i></div>
+      <div class="dash-label">Recettes</div>
+      <div class="dash-count"><%= @recipes_count %></div>
+      <%= link_to "Accéder →", recipes_path, class: "dash-link" %>
     </div>
-  </div>
 
-  <div class="col-md-3">
-    <div class="card text-center h-100">
-      <div class="card-body d-flex flex-column justify-content-center">
-        <i class="bi bi-archive fs-1 text-secondary mb-2"></i>
-        <h5 class="card-title">Barquettes</h5>
-        <p class="display-4 fw-bold"><%= @tray_sizes_count %></p>
-        <%= link_to "Accéder", tray_sizes_path, class: "btn btn-secondary mt-auto" %>
-      </div>
+    <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-truck"></i></div>
+      <div class="dash-label">Fournisseurs</div>
+      <div class="dash-count"><%= @suppliers_count %></div>
+      <%= link_to "Accéder →", suppliers_path, class: "dash-link" %>
     </div>
+
+    <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-archive"></i></div>
+      <div class="dash-label">Barquettes</div>
+      <div class="dash-count"><%= @tray_sizes_count %></div>
+      <%= link_to "Accéder →", tray_sizes_path, class: "dash-link" %>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-tags"></i></div>
+      <div class="dash-label">Tarifs</div>
+      <div class="dash-count"><%= current_user.recipes.where(sellable_as_component: false).count %></div>
+      <%= link_to "Accéder →", tarifs_recipes_path, class: "dash-link" %>
+    </div>
+
   </div>
 </div>

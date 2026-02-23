@@ -1,43 +1,50 @@
 <div id="components_<%= recipe.id %>">
   <% if recipe.recipe_components.any? %>
-    <div class="table-responsive">
-      <table class="table table-sm table-bordered align-middle mb-0">
-        <thead class="table-light">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Composant</th>
+          <th>Quantit&eacute; (kg)</th>
+          <th>Co&ucirc;t ligne</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% recipe.recipe_components.each do |rc| %>
           <tr>
-            <th>Type</th>
-            <th>Composant</th>
-            <th>Quantit&eacute; (kg)</th>
-            <th>Co&ucirc;t ligne</th>
-            <th>Actions</th>
+            <td>
+              <% if rc.product_component? %>
+                <span class="badge-produit">Produit</span>
+              <% else %>
+                <span class="badge-sous-recette">Recette</span>
+              <% end %>
+            </td>
+            <td><%= rc.component.name %></td>
+            <td><span class="mono"><%= number_with_precision(rc.quantity_kg, precision: 3) %> kg</span></td>
+            <td><span class="mono"><%= number_with_precision(rc.line_cost, precision: 2) %> &euro;</span></td>
+            <td style="text-align: right;">
+              <%= button_to recipe_recipe_component_path(recipe, rc),
+                    method: :delete,
+                    form: { data: { turbo_confirm: "Retirer ce composant ?", turbo_stream: true } },
+                    class: "action-btn danger" do %>
+                <i class="bi bi-trash"></i>
+              <% end %>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          <% recipe.recipe_components.each do |rc| %>
-            <tr>
-              <td>
-                <% if rc.product_component? %>
-                  <span class="badge bg-success">Produit</span>
-                <% else %>
-                  <span class="badge bg-info">Recette</span>
-                <% end %>
-              </td>
-              <td><%= rc.component.name %></td>
-              <td><%= number_with_precision(rc.quantity_kg, precision: 3) %> kg</td>
-              <td><%= number_with_precision(rc.line_cost, precision: 2) %> &euro;</td>
-              <td>
-                <%= button_to recipe_recipe_component_path(recipe, rc),
-                      method: :delete,
-                      form: { data: { turbo_confirm: "Retirer ce composant ?", turbo_stream: true } },
-                      class: "btn btn-sm btn-outline-danger" do %>
-                  <i class="bi bi-trash"></i>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th></th>
+          <th><%= recipe.recipe_components.size %> composant(s)</th>
+          <th><span class="mono"><%= number_with_precision(recipe.cached_raw_weight, precision: 3) %> kg</span></th>
+          <th><span class="mono"><%= number_with_precision(recipe.cached_total_cost || 0, precision: 2) %> &euro;</span></th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
   <% else %>
-    <p class="text-muted mb-0">Aucun composant pour le moment.</p>
+    <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun composant pour le moment.</p>
   <% end %>
 </div>

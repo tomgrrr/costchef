@@ -2,12 +2,12 @@
 <% subrecipes_json = available_subrecipes.map { |r| { id: r.id, name: r.name } }.to_json %>
 
 <div id="component_form_<%= recipe.id %>"
-     data-controller="component-type"
-     data-component-type-products-value="<%= products_json %>"
-     data-component-type-subrecipes-value="<%= subrecipes_json %>">
+     data-controller="unified-search"
+     data-unified-search-products-value="<%= products_json %>"
+     data-unified-search-subrecipes-value="<%= subrecipes_json %>">
 
   <% if component.errors.any? %>
-    <div class="alert alert-danger mb-3">
+    <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--cc-danger);">
       <% component.errors.full_messages.each do |msg| %>
         <div><i class="bi bi-x-circle"></i> <%= msg %></div>
       <% end %>
@@ -17,62 +17,66 @@
   <%= form_with url: recipe_recipe_components_path(recipe),
                 scope: :recipe_component,
                 data: { turbo_stream: true } do |f| %>
-    <div class="row g-2 align-items-end">
-      <div class="col-md-3">
-        <%= f.label :component_type, "Type", class: "form-label" %>
-        <%= f.select :component_type,
-              [["Produit", "Product"], ["Sous-recette", "Recipe"]],
-              { include_blank: "-- Type --" },
-              { class: "form-select form-select-sm",
-                data: { component_type_target: "typeSelect",
-                        action: "change->component-type#toggleType" } } %>
-      </div>
-    </div>
 
-    <input type="hidden"
-           name="recipe_component[component_id]"
-           data-component-type-target="componentId">
-
-    <%# Bloc recherche — caché tant qu'aucun type n'est sélectionné %>
-    <div class="d-none mt-2" data-component-type-target="searchWrapper">
-      <div class="input-group input-group-sm mb-2">
+    <%# Search input + selected display %>
+    <div class="add-component-form">
+      <div style="margin-bottom: 12px;">
+        <label class="form-label-xs">Recherche</label>
         <input type="text"
-               class="form-control"
-               placeholder="Rechercher..."
-               data-component-type-target="searchInput"
-               data-action="input->component-type#search">
-        <span class="input-group-text" data-component-type-target="selectedDisplay">
-          Aucune sélection
-        </span>
-      </div>
-      <ul class="list-group list-group-flush overflow-auto"
-          style="max-height: 200px;"
-          data-component-type-target="resultsList">
-      </ul>
-    </div>
-
-    <div class="row g-2 align-items-end mt-2">
-      <div class="col-md-2">
-        <%= f.label :quantity, "Quantité", class: "form-label" %>
-        <%= f.number_field :quantity,
-              step: "0.001", min: "0.001",
-              placeholder: "Quantité",
-              class: "form-control form-control-sm" %>
+               class="form-control form-control-sm"
+               style="font-size: 12px;"
+               autocomplete="off"
+               placeholder="Rechercher un produit ou une sous-recette..."
+               data-unified-search-target="searchInput"
+               data-action="input->unified-search#search">
+        <div class="d-flex align-items-center justify-content-between" style="margin-top: 4px;">
+          <span class="selected-display" data-unified-search-target="selectedDisplay">
+            Aucune sélection
+          </span>
+          <button type="button" class="action-btn"
+                  data-action="click->unified-search#clear"
+                  title="Effacer">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
-      <div class="col-md-2">
-        <%= f.label :quantity_unit, "Unité", class: "form-label" %>
-        <%= f.select :quantity_unit,
-              Units::VALID_UNITS,
-              { include_blank: false },
-              { class: "form-select form-select-sm" } %>
+      <%# Search results dropdown %>
+      <div class="search-results-dropdown" style="display: none; margin-bottom: 12px;"
+           data-unified-search-target="resultsList">
       </div>
 
-      <div class="col-md-auto">
-        <%= f.submit "Ajouter",
-              class: "btn btn-sm btn-primary",
-              disabled: true,
-              data: { component_type_target: "submitBtn" } %>
+      <%# Hidden fields %>
+      <input type="hidden"
+             name="recipe_component[component_id]"
+             data-unified-search-target="componentId">
+      <input type="hidden"
+             name="recipe_component[component_type]"
+             data-unified-search-target="componentType">
+
+      <%# Quantity + Unit + Submit %>
+      <div class="form-row">
+        <div>
+          <label class="form-label-xs">Quantité</label>
+          <%= f.number_field :quantity,
+                step: "0.001", min: "0.001",
+                placeholder: "0.000",
+                class: "form-control form-control-sm",
+                style: "font-size: 12px;" %>
+        </div>
+        <div>
+          <label class="form-label-xs">Unité</label>
+          <%= f.select :quantity_unit,
+                Units::VALID_UNITS,
+                { include_blank: false },
+                { class: "form-select form-select-sm", style: "font-size: 12px;" } %>
+        </div>
+        <div style="align-self: end;">
+          <%= f.submit "Ajouter",
+                class: "btn-slate",
+                disabled: true,
+                data: { unified_search_target: "submitBtn" } %>
+        </div>
       </div>
     </div>
   <% end %>

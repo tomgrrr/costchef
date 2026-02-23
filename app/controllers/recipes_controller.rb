@@ -12,6 +12,13 @@ class RecipesController < ApplicationController
     @recipes = @recipes.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
   end
 
+  def tarifs
+    @recipes = current_user.recipes
+                           .where(sellable_as_component: false)
+                           .includes(:tray_size, :user)
+                           .order(:name)
+  end
+
   def show
     @recipe = current_user.recipes
                           .includes(:user, recipe_components: :component)

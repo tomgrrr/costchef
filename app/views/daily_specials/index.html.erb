@@ -1,243 +1,291 @@
-<h1 class="mb-4">Plats du jour</h1>
+<%# Page header %>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    <h1 class="page-title">Plats du jour</h1>
+    <span class="mono" style="color: var(--sl-400);"><%= @meats.size + @fishes.size + @sides.size %> entrée(s)</span>
+  </div>
+</div>
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
-  <%# ── Viandes ── %>
-  <div class="col">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-fire"></i> Viandes</span>
-        <span class="badge bg-info text-dark">Moy : <%= number_with_precision(@meat_average, precision: 2) %> €/kg</span>
+<div style="padding: 24px;">
+
+  <%# 3-column grid: Viandes / Poissons / Accompagnements %>
+  <div class="ds-grid">
+
+    <%# ── Viandes ── %>
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-fire"></i> Viandes</h2>
+        <span class="mono" style="color: var(--cc-success); font-size: 11px; font-weight: 600;">
+          Moy: <%= number_with_precision(@meat_average, precision: 2) %> €/kg
+        </span>
       </div>
 
-      <div class="card-body bg-light pb-2">
+      <div class="ds-add-form">
         <%= form_with url: daily_specials_path, method: :post, scope: :daily_special do |f| %>
           <%= f.hidden_field :category, value: 'meat' %>
-          <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm' %>
-          <%= f.text_field :item_name, placeholder: 'Ex: Entrecôte, Poulet rôti...', class: 'form-control form-control-sm mt-2' %>
-          <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm mt-2' %>
-          <%= f.submit 'Ajouter', class: 'btn btn-primary btn-sm w-100 mt-2' %>
+          <label class="form-label-xs">Date</label>
+          <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <label class="form-label-xs">Nom</label>
+          <%= f.text_field :item_name, placeholder: 'Ex: Entrecôte, Poulet rôti...', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <label class="form-label-xs">Coût (€/kg)</label>
+          <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <%= f.submit 'Ajouter', class: 'btn-slate', style: 'width: 100%; margin-top: 4px;' %>
         <% end %>
       </div>
 
-      <div class="card-body pt-0">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Nom</th>
-              <th>€/kg</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if @meats.any? %>
-              <% @meats.each do |entry| %>
-                <tr id="display-<%= entry.id %>">
-                  <td><%= l(entry.entry_date, format: :short) %></td>
-                  <td><%= entry.item_name %></td>
-                  <td><%= number_with_precision(entry.cost_per_kg, precision: 2) %></td>
-                  <td class="text-nowrap">
-                    <a href="#" class="btn btn-outline-secondary btn-sm px-1 py-0" title="Modifier"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nom</th>
+            <th>€/kg</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @meats.any? %>
+            <% @meats.each do |entry| %>
+              <tr id="display-meat-<%= entry.id %>">
+                <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
+                <td><%= entry.item_name %></td>
+                <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
+                <td>
+                  <div class="row-actions" style="opacity: 1;">
+                    <a href="#" class="action-btn" title="Modifier"
+                       onclick="document.getElementById('display-meat-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-meat-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
                     <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                          class: 'btn btn-outline-danger btn-sm px-1 py-0', title: 'Supprimer' do %>
+                          class: 'action-btn danger', title: 'Supprimer' do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
-                  </td>
-                </tr>
-                <tr id="edit-<%= entry.id %>" class="d-none table-warning">
-                  <td colspan="4">
-                    <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
-                      <%= f.hidden_field :category, value: entry.category %>
-                      <div class="row g-1 align-items-center">
-                        <div class="col">
-                          <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col">
-                          <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col">
-                          <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col-auto">
-                          <%= f.submit 'Enregistrer', class: 'btn btn-success btn-sm' %>
-                        </div>
-                        <div class="col-auto">
-                          <a href="#" class="btn btn-outline-secondary btn-sm" title="Annuler"
-                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
-                        </div>
+                  </div>
+                </td>
+              </tr>
+              <tr id="edit-meat-<%= entry.id %>" class="d-none">
+                <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
+                  <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
+                    <%= f.hidden_field :category, value: entry.category %>
+                    <div style="display: flex; gap: 6px; align-items: end;">
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">Date</label>
+                        <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
                       </div>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            <% else %>
-              <tr><td colspan="4" class="text-muted text-center small py-2">Aucune entrée.</td></tr>
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">Nom</label>
+                        <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                      </div>
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">€/kg</label>
+                        <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                      </div>
+                      <%= f.submit 'OK', class: 'btn-slate' %>
+                      <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
+                         onclick="document.getElementById('edit-meat-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-meat-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                  <% end %>
+                </td>
+              </tr>
             <% end %>
-          </tbody>
-        </table>
-      </div>
+          <% else %>
+            <tr><td colspan="4" style="text-align: center; color: var(--sl-400); font-size: 12px; padding: 12px;">Aucune entrée.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
-  </div>
 
-  <%# ── Poissons ── %>
-  <div class="col">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-water"></i> Poissons</span>
-        <span class="badge bg-info text-dark">Moy : <%= number_with_precision(@fish_average, precision: 2) %> €/kg</span>
+    <%# ── Poissons ── %>
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-water"></i> Poissons</h2>
+        <span class="mono" style="color: var(--cc-success); font-size: 11px; font-weight: 600;">
+          Moy: <%= number_with_precision(@fish_average, precision: 2) %> €/kg
+        </span>
       </div>
 
-      <div class="card-body bg-light pb-2">
+      <div class="ds-add-form">
         <%= form_with url: daily_specials_path, method: :post, scope: :daily_special do |f| %>
           <%= f.hidden_field :category, value: 'fish' %>
-          <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm' %>
-          <%= f.text_field :item_name, placeholder: 'Ex: Saumon, Cabillaud...', class: 'form-control form-control-sm mt-2' %>
-          <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm mt-2' %>
-          <%= f.submit 'Ajouter', class: 'btn btn-primary btn-sm w-100 mt-2' %>
+          <label class="form-label-xs">Date</label>
+          <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <label class="form-label-xs">Nom</label>
+          <%= f.text_field :item_name, placeholder: 'Ex: Saumon, Cabillaud...', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <label class="form-label-xs">Coût (€/kg)</label>
+          <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <%= f.submit 'Ajouter', class: 'btn-slate', style: 'width: 100%; margin-top: 4px;' %>
         <% end %>
       </div>
 
-      <div class="card-body pt-0">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Nom</th>
-              <th>€/kg</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if @fishes.any? %>
-              <% @fishes.each do |entry| %>
-                <tr id="display-<%= entry.id %>">
-                  <td><%= l(entry.entry_date, format: :short) %></td>
-                  <td><%= entry.item_name %></td>
-                  <td><%= number_with_precision(entry.cost_per_kg, precision: 2) %></td>
-                  <td class="text-nowrap">
-                    <a href="#" class="btn btn-outline-secondary btn-sm px-1 py-0" title="Modifier"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nom</th>
+            <th>€/kg</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @fishes.any? %>
+            <% @fishes.each do |entry| %>
+              <tr id="display-fish-<%= entry.id %>">
+                <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
+                <td><%= entry.item_name %></td>
+                <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
+                <td>
+                  <div class="row-actions" style="opacity: 1;">
+                    <a href="#" class="action-btn" title="Modifier"
+                       onclick="document.getElementById('display-fish-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-fish-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
                     <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                          class: 'btn btn-outline-danger btn-sm px-1 py-0', title: 'Supprimer' do %>
+                          class: 'action-btn danger', title: 'Supprimer' do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
-                  </td>
-                </tr>
-                <tr id="edit-<%= entry.id %>" class="d-none table-warning">
-                  <td colspan="4">
-                    <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
-                      <%= f.hidden_field :category, value: entry.category %>
-                      <div class="row g-1 align-items-center">
-                        <div class="col">
-                          <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col">
-                          <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col">
-                          <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col-auto">
-                          <%= f.submit 'Enregistrer', class: 'btn btn-success btn-sm' %>
-                        </div>
-                        <div class="col-auto">
-                          <a href="#" class="btn btn-outline-secondary btn-sm" title="Annuler"
-                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
-                        </div>
+                  </div>
+                </td>
+              </tr>
+              <tr id="edit-fish-<%= entry.id %>" class="d-none">
+                <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
+                  <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
+                    <%= f.hidden_field :category, value: entry.category %>
+                    <div style="display: flex; gap: 6px; align-items: end;">
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">Date</label>
+                        <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
                       </div>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            <% else %>
-              <tr><td colspan="4" class="text-muted text-center small py-2">Aucune entrée.</td></tr>
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">Nom</label>
+                        <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                      </div>
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">€/kg</label>
+                        <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                      </div>
+                      <%= f.submit 'OK', class: 'btn-slate' %>
+                      <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
+                         onclick="document.getElementById('edit-fish-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-fish-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                  <% end %>
+                </td>
+              </tr>
             <% end %>
-          </tbody>
-        </table>
-      </div>
+          <% else %>
+            <tr><td colspan="4" style="text-align: center; color: var(--sl-400); font-size: 12px; padding: 12px;">Aucune entrée.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
-  </div>
 
-  <%# ── Accompagnements ── %>
-  <div class="col">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-basket2"></i> Accompagnements</span>
-        <span class="badge bg-info text-dark">Moy : <%= number_with_precision(@side_average, precision: 2) %> €/kg</span>
+    <%# ── Accompagnements ── %>
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title"><i class="bi bi-basket2"></i> Accompagnements</h2>
+        <span class="mono" style="color: var(--cc-success); font-size: 11px; font-weight: 600;">
+          Moy: <%= number_with_precision(@side_average, precision: 2) %> €/kg
+        </span>
       </div>
 
-      <div class="card-body bg-light pb-2">
+      <div class="ds-add-form">
         <%= form_with url: daily_specials_path, method: :post, scope: :daily_special do |f| %>
           <%= f.hidden_field :category, value: 'side' %>
-          <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm' %>
-          <%= f.text_field :item_name, placeholder: 'Ex: Riz, Gratin dauphinois...', class: 'form-control form-control-sm mt-2' %>
-          <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm mt-2' %>
-          <%= f.submit 'Ajouter', class: 'btn btn-primary btn-sm w-100 mt-2' %>
+          <label class="form-label-xs">Date</label>
+          <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <label class="form-label-xs">Nom</label>
+          <%= f.text_field :item_name, placeholder: 'Ex: Riz, Gratin dauphinois...', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <label class="form-label-xs">Coût (€/kg)</label>
+          <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+          <%= f.submit 'Ajouter', class: 'btn-slate', style: 'width: 100%; margin-top: 4px;' %>
         <% end %>
       </div>
 
-      <div class="card-body pt-0">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Nom</th>
-              <th>€/kg</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if @sides.any? %>
-              <% @sides.each do |entry| %>
-                <tr id="display-<%= entry.id %>">
-                  <td><%= l(entry.entry_date, format: :short) %></td>
-                  <td><%= entry.item_name %></td>
-                  <td><%= number_with_precision(entry.cost_per_kg, precision: 2) %></td>
-                  <td class="text-nowrap">
-                    <a href="#" class="btn btn-outline-secondary btn-sm px-1 py-0" title="Modifier"
-                       onclick="document.getElementById('display-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nom</th>
+            <th>€/kg</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @sides.any? %>
+            <% @sides.each do |entry| %>
+              <tr id="display-side-<%= entry.id %>">
+                <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
+                <td><%= entry.item_name %></td>
+                <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
+                <td>
+                  <div class="row-actions" style="opacity: 1;">
+                    <a href="#" class="action-btn" title="Modifier"
+                       onclick="document.getElementById('display-side-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-side-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
                     <%= button_to daily_special_path(entry), method: :delete,
                           data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                          class: 'btn btn-outline-danger btn-sm px-1 py-0', title: 'Supprimer' do %>
+                          class: 'action-btn danger', title: 'Supprimer' do %>
                       <i class="bi bi-trash"></i>
                     <% end %>
-                  </td>
-                </tr>
-                <tr id="edit-<%= entry.id %>" class="d-none table-warning">
-                  <td colspan="4">
-                    <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
-                      <%= f.hidden_field :category, value: entry.category %>
-                      <div class="row g-1 align-items-center">
-                        <div class="col">
-                          <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col">
-                          <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col">
-                          <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm' %>
-                        </div>
-                        <div class="col-auto">
-                          <%= f.submit 'Enregistrer', class: 'btn btn-success btn-sm' %>
-                        </div>
-                        <div class="col-auto">
-                          <a href="#" class="btn btn-outline-secondary btn-sm" title="Annuler"
-                             onclick="document.getElementById('edit-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
-                        </div>
+                  </div>
+                </td>
+              </tr>
+              <tr id="edit-side-<%= entry.id %>" class="d-none">
+                <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
+                  <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
+                    <%= f.hidden_field :category, value: entry.category %>
+                    <div style="display: flex; gap: 6px; align-items: end;">
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">Date</label>
+                        <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
                       </div>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            <% else %>
-              <tr><td colspan="4" class="text-muted text-center small py-2">Aucune entrée.</td></tr>
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">Nom</label>
+                        <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                      </div>
+                      <div style="flex: 1;">
+                        <label class="form-label-xs">€/kg</label>
+                        <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                      </div>
+                      <%= f.submit 'OK', class: 'btn-slate' %>
+                      <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
+                         onclick="document.getElementById('edit-side-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-side-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                  <% end %>
+                </td>
+              </tr>
             <% end %>
-          </tbody>
-        </table>
+          <% else %>
+            <tr><td colspan="4" style="text-align: center; color: var(--sl-400); font-size: 12px; padding: 12px;">Aucune entrée.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Tarification recap card — spans all 3 columns %>
+    <div class="section-card" style="grid-column: 1 / -1;">
+      <div class="section-header">
+        <h2 class="section-title">Coût et Tarif plat du jour</h2>
+      </div>
+      <div style="padding: 16px 20px;">
+        <div class="summary-row">
+          <span class="s-label">Viande + Accompagnement — coût</span>
+          <span class="s-value"><%= number_with_precision(@meat_average + @side_average, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row">
+          <span class="s-label">Viande + Accompagnement — prix conseillé</span>
+          <span class="s-value accent"><%= number_with_precision((@meat_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row">
+          <span class="s-label">Poisson + Accompagnement — coût</span>
+          <span class="s-value"><%= number_with_precision(@fish_average + @side_average, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row">
+          <span class="s-label">Poisson + Accompagnement — prix conseillé</span>
+          <span class="s-value accent"><%= number_with_precision((@fish_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
+        </div>
+        <div class="summary-row" style="border-bottom: none; margin-top: 4px;">
+          <span class="s-label">Coefficient appliqué</span>
+          <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
+        </div>
       </div>
     </div>
+
   </div>
+
 </div>
