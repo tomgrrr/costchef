@@ -1,67 +1,126 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1>Fournisseurs</h1>
-  <%= link_to 'Nouveau fournisseur', new_supplier_path, class: 'btn btn-primary' %>
+<%# Page header %>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    <h1 class="page-title">Fournisseurs</h1>
+    <span class="mono" style="color: var(--sl-400);"><%= @active_suppliers.size + @inactive_suppliers.size %> fournisseur<%= 's' if @active_suppliers.size + @inactive_suppliers.size > 1 %></span>
+  </div>
+  <%= link_to new_supplier_path, class: "btn-accent" do %>
+    <i class="bi bi-plus-lg"></i> Nouveau fournisseur
+  <% end %>
 </div>
 
-<%= form_with url: suppliers_path, method: :get, class: "mb-4" do |f| %>
-  <div class="input-group" style="max-width: 400px;">
+<%# Search bar %>
+<div style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
+  <%= form_with url: suppliers_path, method: :get, class: "d-flex align-items-center gap-2" do |f| %>
     <%= f.text_field :search,
           value: params[:search],
           placeholder: "Rechercher un fournisseur...",
-          class: "form-control" %>
-    <%= f.submit "Rechercher", class: "btn btn-outline-secondary" %>
+          class: "form-control form-control-sm",
+          style: "max-width: 300px; font-size: 12px;" %>
+    <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
-      <%= link_to "✕", suppliers_path, class: "btn btn-outline-danger" %>
+      <%= link_to "✕", suppliers_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
     <% end %>
-  </div>
-<% end %>
-
-<div class="mb-3">
-  <span class="badge bg-success">Actifs : <%= @active_suppliers.size %></span>
-  <span class="badge bg-secondary">Inactifs : <%= @inactive_suppliers.size %></span>
+  <% end %>
 </div>
 
-<% if @active_suppliers.empty? && @inactive_suppliers.empty? %>
-  <p class="text-muted">Aucun fournisseur pour le moment.</p>
-<% else %>
-  <table class="table table-striped align-middle">
-    <thead>
-      <tr>
-        <th>Nom</th>
-        <th>Statut</th>
-        <th>Conditionnements</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @active_suppliers.each do |supplier| %>
-        <tr>
-          <td><%= supplier.name %></td>
-          <td><span class="badge bg-success">Actif</span></td>
-          <td><%= supplier.product_purchases.count %></td>
-          <td class="d-flex gap-1">
-            <%= link_to 'Modifier', edit_supplier_path(supplier), class: 'btn btn-sm btn-outline-primary' %>
-            <%= button_to 'Désactiver', deactivate_supplier_path(supplier), method: :post, class: 'btn btn-sm btn-warning' %>
-            <% if supplier.has_purchases? %>
-              <button type="button" class="btn btn-sm btn-outline-danger" disabled title="Désactivez d'abord ou forcez la suppression">Supprimer</button>
-            <% else %>
-              <%= button_to 'Supprimer', supplier_path(supplier), method: :delete, data: { turbo_confirm: 'Supprimer ce fournisseur ?' }, class: 'btn btn-sm btn-outline-danger' %>
+<div style="padding: 24px;">
+
+  <%# Badges actifs / inactifs %>
+  <div style="margin-bottom: 16px;">
+    <span class="mono" style="color: var(--sl-400); font-size: 12px;"><%= @active_suppliers.size %> actif<%= 's' if @active_suppliers.size > 1 %> · <%= @inactive_suppliers.size %> inactif<%= 's' if @inactive_suppliers.size > 1 %></span>
+  </div>
+
+  <% if @active_suppliers.empty? && @inactive_suppliers.empty? %>
+    <div style="text-align: center; color: var(--sl-400); font-size: 13px; padding: 40px 0;">
+      Aucun fournisseur pour le moment.
+    </div>
+  <% else %>
+
+    <%# Fournisseurs actifs %>
+    <% if @active_suppliers.any? %>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Actifs</h2>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Conditionnements</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @active_suppliers.each do |supplier| %>
+              <tr>
+                <td style="font-weight: 500; color: var(--sl-900);"><%= supplier.name %></td>
+                <td><span class="mono" style="color: var(--sl-500);"><%= supplier.product_purchases.count %></span></td>
+                <td>
+                  <div class="row-actions">
+                    <%= link_to edit_supplier_path(supplier), class: "action-btn", title: "Modifier" do %>
+                      <i class="bi bi-pencil"></i>
+                    <% end %>
+                    <%= button_to deactivate_supplier_path(supplier), method: :post, class: "action-btn", title: "Désactiver" do %>
+                      <i class="bi bi-pause-circle"></i>
+                    <% end %>
+                    <% if supplier.has_purchases? %>
+                      <button type="button" class="action-btn" disabled title="Ce fournisseur a des conditionnements — désactivez-le d'abord">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    <% else %>
+                      <%= button_to supplier_path(supplier), method: :delete, data: { turbo_confirm: 'Supprimer ce fournisseur ?' }, class: "action-btn danger", title: "Supprimer" do %>
+                        <i class="bi bi-trash"></i>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
             <% end %>
-          </td>
-        </tr>
-      <% end %>
-      <% @inactive_suppliers.each do |supplier| %>
-        <tr class="opacity-50">
-          <td><%= supplier.name %></td>
-          <td><span class="badge bg-secondary">Inactif</span></td>
-          <td><%= supplier.product_purchases.count %></td>
-          <td class="d-flex gap-1">
-            <%= link_to 'Modifier', edit_supplier_path(supplier), class: 'btn btn-sm btn-outline-primary' %>
-            <%= button_to 'Réactiver', activate_supplier_path(supplier), method: :post, class: 'btn btn-sm btn-success' %>
-            <%= button_to 'Forcer la suppression', supplier_path(supplier, force: true), method: :delete, data: { turbo_confirm: 'Supprimer ce fournisseur et tous ses conditionnements définitivement ? Cette action est irréversible.' }, class: 'btn btn-sm btn-danger' %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-<% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+
+    <%# Fournisseurs inactifs %>
+    <% if @inactive_suppliers.any? %>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Inactifs</h2>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Conditionnements</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @inactive_suppliers.each do |supplier| %>
+              <tr style="opacity: 0.6;">
+                <td style="font-weight: 500; color: var(--sl-900);"><%= supplier.name %></td>
+                <td><span class="mono" style="color: var(--sl-500);"><%= supplier.product_purchases.count %></span></td>
+                <td>
+                  <div class="row-actions">
+                    <%= link_to edit_supplier_path(supplier), class: "action-btn", title: "Modifier" do %>
+                      <i class="bi bi-pencil"></i>
+                    <% end %>
+                    <%= button_to activate_supplier_path(supplier), method: :post, class: "action-btn", title: "Réactiver" do %>
+                      <i class="bi bi-play-circle"></i>
+                    <% end %>
+                    <%= button_to supplier_path(supplier, force: true), method: :delete, data: { turbo_confirm: 'Supprimer ce fournisseur et tous ses conditionnements définitivement ? Cette action est irréversible.' }, class: "action-btn danger", title: "Forcer la suppression" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+
+  <% end %>
+
+</div>
