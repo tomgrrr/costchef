@@ -9,9 +9,10 @@
 <div style="padding: 24px;">
 
   <%# 3-column grid: Viandes / Poissons / Accompagnements %>
-  <div class="ds-grid">
+  <div class="row g-3">
 
     <%# ── Viandes ── %>
+    <div class="col-md-4">
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title"><i class="bi bi-fire"></i> Viandes</h2>
@@ -92,8 +93,10 @@
         </tbody>
       </table>
     </div>
+    </div>
 
     <%# ── Poissons ── %>
+    <div class="col-md-4">
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title"><i class="bi bi-water"></i> Poissons</h2>
@@ -174,8 +177,10 @@
         </tbody>
       </table>
     </div>
+    </div>
 
     <%# ── Accompagnements ── %>
+    <div class="col-md-4">
     <div class="section-card">
       <div class="section-header">
         <h2 class="section-title"><i class="bi bi-basket2"></i> Accompagnements</h2>
@@ -256,9 +261,11 @@
         </tbody>
       </table>
     </div>
+    </div>
 
     <%# Tarification recap card — spans all 3 columns %>
-    <div class="section-card" style="grid-column: 1 / -1;">
+    <div class="col-12">
+    <div class="section-card">
       <div class="section-header">
         <h2 class="section-title">Coût et Tarif plat du jour</h2>
       </div>
@@ -284,6 +291,7 @@
           <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
         </div>
       </div>
+    </div>
     </div>
 
   </div>
