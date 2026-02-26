@@ -38,7 +38,5 @@ class User < ApplicationRecord
 
   def set_defaults
     self.markup_coefficient ||= 1.0
-    self.subscription_active ||= false
-    self.admin ||= false
   end
 end
