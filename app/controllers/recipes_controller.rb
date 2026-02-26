@@ -80,7 +80,7 @@ class RecipesController < ApplicationController
   end
 
   def duplicate
-    new_recipe = build_duplicate
+    new_recipe = Recipes::Duplicator.call(@recipe)
     if new_recipe.save
       Recalculations::Dispatcher.recipe_changed(new_recipe)
       redirect_to new_recipe, notice: "Recette dupliquée."
@@ -115,12 +115,4 @@ class RecipesController < ApplicationController
     "Cette recette était utilisée comme sous-recette dans #{parent_count} recette(s) parente(s). Vérifiez leur cohérence."
   end
 
-  def build_duplicate
-    new_recipe = @recipe.dup
-    new_recipe.name = "#{@recipe.name} (copie)"
-    @recipe.recipe_components.each do |rc|
-      new_recipe.recipe_components.build(rc.attributes.except("id", "parent_recipe_id", "created_at", "updated_at"))
-    end
-    new_recipe
-  end
 end
