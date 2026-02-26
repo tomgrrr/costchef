@@ -57,6 +57,24 @@ RSpec.describe Products::AvgPriceRecalculator do
       end
     end
 
+    context 'guard: raises on nil avg_price_per_kg' do
+      it 'raises ArgumentError when weighted average returns nil' do
+        allow_any_instance_of(described_class)
+          .to receive(:calculate_weighted_average).and_return(nil)
+
+        expect { described_class.call(product) }.to raise_error(ArgumentError, /nil/)
+      end
+    end
+
+    context 'guard: raises on negative avg_price_per_kg' do
+      it 'raises ArgumentError when weighted average is negative' do
+        allow_any_instance_of(described_class)
+          .to receive(:calculate_weighted_average).and_return(-3.0)
+
+        expect { described_class.call(product) }.to raise_error(ArgumentError, /négatif/)
+      end
+    end
+
     it 'persists via update_columns' do
       create(:product_purchase, product: product, supplier: supplier,
                                 package_quantity: 10, package_price: 35.0)

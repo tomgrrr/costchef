@@ -1,0 +1,82 @@
+<div class="col-md-4">
+<div class="section-card">
+  <div class="section-header">
+    <h2 class="section-title"><i class="bi <%= icon %>"></i> <%= title %></h2>
+    <span class="mono" style="color: var(--cc-success); font-size: 11px; font-weight: 600;">
+      Moy: <%= number_with_precision(average, precision: 2) %> €/kg
+    </span>
+  </div>
+
+  <div class="ds-add-form">
+    <%= form_with url: daily_specials_path, method: :post, scope: :daily_special do |f| %>
+      <%= f.hidden_field :category, value: category %>
+      <label class="form-label-xs">Date</label>
+      <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+      <label class="form-label-xs">Nom</label>
+      <%= f.text_field :item_name, placeholder: placeholder, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+      <label class="form-label-xs">Coût (€/kg)</label>
+      <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
+      <%= f.submit 'Ajouter', class: 'btn-slate', style: 'width: 100%; margin-top: 4px;' %>
+    <% end %>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Nom</th>
+        <th>€/kg</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if entries.any? %>
+        <% entries.each do |entry| %>
+          <tr id="display-<%= category %>-<%= entry.id %>">
+            <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
+            <td><%= entry.item_name %></td>
+            <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
+            <td>
+              <div class="row-actions" style="opacity: 1;">
+                <a href="#" class="action-btn" title="Modifier"
+                   onclick="document.getElementById('display-<%= category %>-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= category %>-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                <%= button_to daily_special_path(entry), method: :delete,
+                      data: { turbo_confirm: 'Supprimer cette entrée ?' },
+                      class: 'action-btn danger', title: 'Supprimer' do %>
+                  <i class="bi bi-trash"></i>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+          <tr id="edit-<%= category %>-<%= entry.id %>" class="d-none">
+            <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
+              <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
+                <%= f.hidden_field :category, value: entry.category %>
+                <div style="display: flex; gap: 6px; align-items: end;">
+                  <div style="flex: 1;">
+                    <label class="form-label-xs">Date</label>
+                    <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="form-label-xs">Nom</label>
+                    <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="form-label-xs">€/kg</label>
+                    <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
+                  </div>
+                  <%= f.submit 'OK', class: 'btn-slate' %>
+                  <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
+                     onclick="document.getElementById('edit-<%= category %>-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= category %>-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                </div>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr><td colspan="4" style="text-align: center; color: var(--sl-400); font-size: 12px; padding: 12px;">Aucune entrée.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+</div>

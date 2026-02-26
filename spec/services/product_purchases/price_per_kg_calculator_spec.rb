@@ -101,10 +101,15 @@ RSpec.describe ProductPurchases::PricePerKgCalculator do
         p
       end
 
-      it 'falls back to 0.001 kg floor' do
+      it 'leaves package_quantity_kg at 0 and sets price_per_kg to 0' do
         described_class.call(purchase)
-        expect(purchase.package_quantity_kg).to eq(0.001)
-        expect(purchase.price_per_kg).to eq(6000.0)
+        expect(purchase.package_quantity_kg).to eq(0.0)
+        expect(purchase.price_per_kg).to eq(0)
+      end
+
+      it 'logs a warning' do
+        expect(Rails.logger).to receive(:warn).with(/conversion kg impossible/)
+        described_class.call(purchase)
       end
     end
 

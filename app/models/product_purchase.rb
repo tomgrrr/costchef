@@ -53,6 +53,7 @@ class ProductPurchase < ApplicationRecord
   # Validations personnalisées
   # ============================================
   validate :supplier_belongs_to_same_user
+  validate :conversion_kg_must_be_positive
 
   # ============================================
   # Instance Methods
@@ -70,6 +71,18 @@ class ProductPurchase < ApplicationRecord
     return unless package_unit.present? && package_quantity.present?
 
     ProductPurchases::PricePerKgCalculator.call(self)
+  end
+
+  # Vérifie que la conversion en kg a produit une valeur exploitable.
+  # Cas typique : unité "piece" sans unit_weight_kg sur le produit.
+  def conversion_kg_must_be_positive
+    return unless package_quantity_kg.present? && package_quantity_kg <= 0
+
+    errors.add(
+      :package_quantity_kg,
+      "la conversion en kg a échoué (résultat : #{package_quantity_kg}). " \
+      "Vérifiez le poids unitaire du produit pour l'unité « #{package_unit} »."
+    )
   end
 
   # Le fournisseur doit appartenir au même utilisateur que le produit
