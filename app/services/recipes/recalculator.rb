@@ -31,18 +31,28 @@ module Recipes
     def call
       return @recipe unless @recipe
 
-      total_cost = calculate_total_cost
-      raw_weight = calculate_raw_weight
-      total_weight = calculate_total_weight(raw_weight)
-      cost_per_kg = calculate_cost_per_kg(total_cost, total_weight)
+      raw_values = {
+        cached_total_cost: calculate_total_cost,
+        cached_raw_weight: calculate_raw_weight,
+        cached_total_weight: nil,
+        cached_cost_per_kg: nil
+      }
+      raw_values[:cached_total_weight] = calculate_total_weight(raw_values[:cached_raw_weight])
+      raw_values[:cached_cost_per_kg] = calculate_cost_per_kg(
+        raw_values[:cached_total_cost], raw_values[:cached_total_weight]
+      )
+
+      validate_non_negative!(raw_values)
+
+      values = {
+        cached_total_cost: raw_values[:cached_total_cost].round(2),
+        cached_raw_weight: raw_values[:cached_raw_weight].round(3),
+        cached_total_weight: raw_values[:cached_total_weight].round(3),
+        cached_cost_per_kg: raw_values[:cached_cost_per_kg].round(2)
+      }
 
       # Persistance sans callbacks (PRD Section 7.3)
-      @recipe.update_columns(
-        cached_total_cost: total_cost.round(2),
-        cached_raw_weight: raw_weight.round(3),
-        cached_total_weight: total_weight.round(3),
-        cached_cost_per_kg: cost_per_kg.round(2)
-      )
+      @recipe.update_columns(values)
 
       @recipe
     end
@@ -86,6 +96,20 @@ module Recipes
 
       # PRD : cached_total_weight = cached_raw_weight × (1 - cooking_loss_pct / 100)
       raw_weight * (1 - loss_percentage / 100.0)
+    end
+
+    # Valide qu'aucune valeur n'est nil ou négative avant persistance
+    def validate_non_negative!(values)
+      values.each do |field, value|
+        if value.nil?
+          raise ArgumentError, "Recipes::Recalculator — #{field} est nil pour Recipe##{@recipe.id}"
+        end
+
+        if value.negative?
+          raise ArgumentError,
+                "Recipes::Recalculator — #{field} est négatif (#{value}) pour Recipe##{@recipe.id}"
+        end
+      end
     end
 
     # Calcule le coût au kg final

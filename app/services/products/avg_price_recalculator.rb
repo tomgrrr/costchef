@@ -30,6 +30,8 @@ module Products
 
       avg_price = calculate_weighted_average
 
+      validate_non_negative!(:avg_price_per_kg, avg_price)
+
       # PRD D14 : jamais nil, défaut 0
       @product.update_columns(avg_price_per_kg: avg_price)
 
@@ -37,6 +39,18 @@ module Products
     end
 
     private
+
+    # Valide qu'une valeur n'est ni nil ni négative avant persistance
+    def validate_non_negative!(field, value)
+      if value.nil?
+        raise ArgumentError, "Products::AvgPriceRecalculator — #{field} est nil pour Product##{@product.id}"
+      end
+
+      if value.negative?
+        raise ArgumentError,
+              "Products::AvgPriceRecalculator — #{field} est négatif (#{value}) pour Product##{@product.id}"
+      end
+    end
 
     # Calcule la moyenne pondérée : SUM(qty_kg * price_per_kg) / SUM(qty_kg)
     def calculate_weighted_average

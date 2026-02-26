@@ -36,9 +36,12 @@ RSpec.describe ProductPurchase, type: :model do
     end
 
     context 'package_unit' do
+      let(:product_piece) { create(:product, :piece, name: 'Oeuf unit', user: user) }
+
       Units::VALID_UNITS.each do |unit|
         it "est valide avec package_unit #{unit}" do
-          purchase = build(:product_purchase, product: product, supplier: supplier, package_unit: unit)
+          prod = unit == 'piece' ? product_piece : product
+          purchase = build(:product_purchase, product: prod, supplier: supplier, package_unit: unit)
           expect(purchase).to be_valid
         end
       end
@@ -73,6 +76,25 @@ RSpec.describe ProductPurchase, type: :model do
         purchase.valid?
         expect(purchase.package_quantity_kg).to be_nil
       end
+    end
+  end
+
+  describe 'validation conversion_kg_must_be_positive' do
+    it 'est invalide quand la conversion kg donne 0 (piece sans unit_weight_kg)' do
+      purchase = build(:product_purchase,
+                       product: product, supplier: supplier,
+                       package_unit: 'piece', package_quantity: 10, package_price: 5.0)
+      allow(purchase.product).to receive(:unit_weight_kg).and_return(nil)
+
+      expect(purchase).not_to be_valid
+      expect(purchase.errors[:package_quantity_kg].join).to include('conversion en kg a échoué')
+    end
+
+    it 'est valide quand la conversion kg est positive' do
+      purchase = build(:product_purchase,
+                       product: product, supplier: supplier,
+                       package_unit: 'kg', package_quantity: 5, package_price: 10.0)
+      expect(purchase).to be_valid
     end
   end
 

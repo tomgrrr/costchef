@@ -106,6 +106,32 @@ RSpec.describe Recipes::Recalculator do
       end
     end
 
+    context 'guard: raises on nil cached value' do
+      let(:recipe) { create(:recipe, user: user, cooking_loss_percentage: 0) }
+
+      it 'raises ArgumentError when a cached field would be nil' do
+        product = create(:product, user: user, name: 'Tomate', avg_price_per_kg: 1.0)
+        create(:recipe_component, parent_recipe: recipe, component: product, quantity_kg: 1.0)
+
+        allow_any_instance_of(described_class).to receive(:calculate_cost_per_kg).and_return(nil)
+
+        expect { described_class.call(recipe) }.to raise_error(ArgumentError, /nil/)
+      end
+    end
+
+    context 'guard: raises on negative cached value' do
+      let(:recipe) { create(:recipe, user: user, cooking_loss_percentage: 0) }
+
+      it 'raises ArgumentError when a cached field would be negative' do
+        product = create(:product, user: user, name: 'Citron', avg_price_per_kg: 1.0)
+        create(:recipe_component, parent_recipe: recipe, component: product, quantity_kg: 1.0)
+
+        allow_any_instance_of(described_class).to receive(:calculate_total_cost).and_return(-5.0)
+
+        expect { described_class.call(recipe) }.to raise_error(ArgumentError, /négatif/)
+      end
+    end
+
     it 'persists via update_columns' do
       product = create(:product, user: user, avg_price_per_kg: 3.0)
       recipe = create(:recipe, user: user, cooking_loss_percentage: 0)

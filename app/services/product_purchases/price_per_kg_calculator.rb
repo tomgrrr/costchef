@@ -43,8 +43,13 @@ module ProductPurchases
         quantity, unit, product: @purchase.product
       )
 
-      # Sécurité : jamais négatif ou zéro pour éviter division par zéro
-      @purchase.package_quantity_kg = 0.001 if @purchase.package_quantity_kg <= 0
+      if @purchase.package_quantity_kg <= 0
+        Rails.logger.warn(
+          "PricePerKgCalculator — conversion kg impossible : " \
+          "product_id=#{@purchase.product_id}, unit=#{unit}, quantity=#{quantity}, " \
+          "package_quantity_kg=#{@purchase.package_quantity_kg}"
+        )
+      end
     end
 
     # Calcule le prix au kg
