@@ -58,6 +58,31 @@ RSpec.describe 'Recipes', type: :request do
         expect(response.body).to include('Aucune recette')
       end
 
+      context 'pagination' do
+        before do
+          51.times { |i| create(:recipe, name: "Recette #{format('%03d', i)}", user: user) }
+        end
+
+        it 'ne retourne pas tous les éléments sur la première page' do
+          get recipes_path
+          expect(response.body).to include('Recette 000')
+          expect(response.body).not_to include('Recette 050')
+        end
+
+        it 'respecte le paramètre page=2' do
+          get recipes_path, params: { page: 2 }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include('Recette 000')
+        end
+
+        it 'pagine les résultats de recherche' do
+          create(:recipe, name: 'Soupe', user: user)
+          get recipes_path, params: { search: 'Recette' }
+          expect(response.body).not_to include('Soupe')
+          expect(response.body).not_to include('Recette 050')
+        end
+      end
+
       it 'tab=subrecipes affiche uniquement les sous-recettes' do
         create(:recipe, name: 'Pâte brisée', user: user)
         create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)

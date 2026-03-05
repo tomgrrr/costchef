@@ -57,6 +57,31 @@ RSpec.describe 'Products', type: :request do
         get products_path, params: { search: 'inexistant' }
         expect(response.body).to include('Aucun produit trouvé')
       end
+
+      context 'pagination' do
+        before do
+          51.times { |i| create(:product, name: "Produit #{format('%03d', i)}", user: user) }
+        end
+
+        it 'ne retourne pas tous les éléments sur la première page' do
+          get products_path
+          expect(response.body).to include('Produit 000')
+          expect(response.body).not_to include('Produit 050')
+        end
+
+        it 'respecte le paramètre page=2' do
+          get products_path, params: { page: 2 }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include('Produit 000')
+        end
+
+        it 'pagine les résultats de recherche' do
+          create(:product, name: 'Beurre', user: user)
+          get products_path, params: { search: 'Produit' }
+          expect(response.body).not_to include('Beurre')
+          expect(response.body).not_to include('Produit 050')
+        end
+      end
     end
   end
 

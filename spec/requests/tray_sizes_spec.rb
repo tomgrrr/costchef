@@ -44,6 +44,19 @@ RSpec.describe 'TraySizes', type: :request do
         get tray_sizes_path
         expect(response.body).not_to include(other_tray.name)
       end
+
+      it 'retourne 200 avec plusieurs tray_sizes ayant des recettes' do
+        tray1 = create(:tray_size, name: 'Barquette S', user: user)
+        tray2 = create(:tray_size, name: 'Barquette M', user: user)
+        create(:recipe, name: 'Pâte brisée', user: user, tray_size: tray1, has_tray: true)
+        create(:recipe, name: 'Pâte sablée', user: user, tray_size: tray1, has_tray: true)
+        create(:recipe, name: 'Crème brûlée', user: user, tray_size: tray2, has_tray: true)
+
+        get tray_sizes_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('Barquette S')
+        expect(response.body).to include('Barquette M')
+      end
     end
   end
 
