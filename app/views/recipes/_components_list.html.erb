@@ -1,5 +1,6 @@
 <div id="components_<%= recipe.id %>">
   <% if recipe.recipe_components.any? %>
+    <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
@@ -44,6 +45,7 @@
         </tr>
       </tfoot>
     </table>
+    </div>
   <% else %>
     <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun composant pour le moment.</p>
   <% end %>

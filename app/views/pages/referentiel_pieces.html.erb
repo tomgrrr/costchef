@@ -1,0 +1,47 @@
+<%# Page header %>
+<div class="page-header">
+  <h1 class="page-title">Référentiel pièces</h1>
+  <div style="display: flex; gap: 8px;">
+    <%= link_to referentiel_pieces_path(format: :csv), class: "btn-outline-slate" do %>
+      <i class="bi bi-file-earmark-spreadsheet"></i> Exporter CSV
+    <% end %>
+    <%= link_to root_path, class: "btn-accent" do %>
+      <i class="bi bi-arrow-left"></i> Dashboard
+    <% end %>
+  </div>
+</div>
+
+<div style="padding: 24px;">
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title"><i class="bi bi-egg"></i> Produits à l'unité (<%= @piece_products.size %>)</h2>
+    </div>
+
+    <% if @piece_products.any? %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Poids unitaire (g)</th>
+              <th>Poids unitaire (kg)</th>
+              <th>Prix moyen (€/kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @piece_products.each do |product| %>
+              <tr>
+                <td><%= product.name %></td>
+                <td class="mono"><%= number_with_precision(product.unit_weight_kg * 1000, precision: 0) %> g</td>
+                <td class="mono"><%= number_with_precision(product.unit_weight_kg, precision: 3) %> kg</td>
+                <td class="mono"><%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p style="padding: 24px; text-align: center; color: var(--sl-400);">Aucun produit à l'unité.</p>
+    <% end %>
+  </div>
+</div>

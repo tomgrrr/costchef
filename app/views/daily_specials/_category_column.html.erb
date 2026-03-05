@@ -20,6 +20,7 @@
     <% end %>
   </div>
 
+  <div class="table-responsive">
   <table class="data-table">
     <thead>
       <tr>
@@ -52,7 +53,7 @@
             <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
               <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
                 <%= f.hidden_field :category, value: entry.category %>
-                <div style="display: flex; gap: 6px; align-items: end;">
+                <div style="display: flex; gap: 6px; align-items: end; flex-wrap: wrap;">
                   <div style="flex: 1;">
                     <label class="form-label-xs">Date</label>
                     <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
@@ -78,5 +79,6 @@
       <% end %>
     </tbody>
   </table>
+  </div>
 </div>
 </div>

@@ -13,7 +13,7 @@
     <div class="section-header">
       <h2 class="section-title"><i class="bi bi-percent"></i> Coefficient multiplicateur</h2>
     </div>
-    <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+    <div class="coeff-grid" style="padding: 20px;">
       <%# Formula card %>
       <div style="background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 6px; padding: 20px; text-align: center;">
         <span class="form-label-xs">Formule prix conseillé</span>
@@ -59,6 +59,7 @@
     <% if @tray_sizes.empty? %>
       <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucune barquette pour le moment.</p>
     <% else %>
+      <div class="table-responsive">
       <table class="data-table">
         <thead>
           <tr>
@@ -98,6 +99,7 @@
           <% end %>
         </tbody>
       </table>
+      </div>
     <% end %>
   </div>
 

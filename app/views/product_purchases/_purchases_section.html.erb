@@ -18,6 +18,7 @@
 
   <%# Existing purchases table %>
   <% if purchases.any? %>
+    <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
@@ -151,6 +152,7 @@
         <% end %>
       </tbody>
     </table>
+    </div>
   <% else %>
     <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun conditionnement pour le moment.</p>
   <% end %>
