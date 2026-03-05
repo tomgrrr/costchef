@@ -124,6 +124,20 @@ RSpec.describe 'Pages', type: :request do
         get referentiel_pieces_path
         expect(response.body).not_to include('Avocat')
       end
+
+      describe 'export CSV' do
+        it 'retourne un fichier CSV avec les produits piece' do
+          create(:product, :piece, name: 'Oeuf', unit_weight_kg: 0.06, avg_price_per_kg: 3.50, user: user)
+          get referentiel_pieces_path(format: :csv)
+
+          expect(response).to have_http_status(:ok)
+          expect(response.content_type).to include('text/csv')
+
+          lines = response.body.lines
+          expect(lines[0]).to include('Nom;Poids unitaire (g);Poids unitaire (kg);Prix moyen')
+          expect(lines[1]).to include('Oeuf;60;0.06;3.5')
+        end
+      end
     end
   end
 end

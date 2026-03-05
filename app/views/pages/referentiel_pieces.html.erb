@@ -1,9 +1,14 @@
 <%# Page header %>
 <div class="page-header">
   <h1 class="page-title">Référentiel pièces</h1>
-  <%= link_to root_path, class: "btn-accent" do %>
-    <i class="bi bi-arrow-left"></i> Dashboard
-  <% end %>
+  <div style="display: flex; gap: 8px;">
+    <%= link_to referentiel_pieces_path(format: :csv), class: "btn-outline-slate" do %>
+      <i class="bi bi-file-earmark-spreadsheet"></i> Exporter CSV
+    <% end %>
+    <%= link_to root_path, class: "btn-accent" do %>
+      <i class="bi bi-arrow-left"></i> Dashboard
+    <% end %>
+  </div>
 </div>
 
 <div style="padding: 24px;">
