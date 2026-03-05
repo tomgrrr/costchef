@@ -4,7 +4,7 @@ class TraySizesController < ApplicationController
   before_action :set_tray_size, only: %i[edit update destroy]
 
   def index
-    @tray_sizes = current_user.tray_sizes.order(:name)
+    @tray_sizes = current_user.tray_sizes.includes(:recipes).order(:name)
   end
 
   def new
