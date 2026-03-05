@@ -11,6 +11,8 @@ Rails.application.routes.draw do
 
   root to: 'pages#home'
 
+  get '/referentiel-pieces', to: 'pages#referentiel_pieces', as: :referentiel_pieces
+
   namespace :admin do
     resources :users,       only: %i[index update]
     resources :invitations, only: %i[index new create]

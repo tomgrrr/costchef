@@ -453,7 +453,7 @@ body {
 // ─── DASHBOARD ────────────────────────────────────────
 .dash-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1px;
   background: var(--sl-200);
   border: 1px solid var(--sl-200);
@@ -516,7 +516,7 @@ body {
 
 // Tablette (< 768px)
 @media (max-width: 767.98px) {
-  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid { grid-template-columns: repeat(3, 1fr); }
   .products-grid { grid-template-columns: repeat(2, 1fr); }
   .recipe-layout {
     grid-template-columns: 1fr;
@@ -543,7 +543,7 @@ body {
 
 // Mobile (< 576px)
 @media (max-width: 575.98px) {
-  .dash-grid { grid-template-columns: 1fr; }
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
   .products-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .recipe-main { padding: 12px; }

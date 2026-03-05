@@ -85,4 +85,45 @@ RSpec.describe 'Pages', type: :request do
       end
     end
   end
+
+  describe 'GET /referentiel-pieces' do
+    context 'utilisateur non connecté' do
+      it 'redirige vers la page de login' do
+        get referentiel_pieces_path
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context 'utilisateur connecté avec abonnement actif' do
+      let(:user) { create(:user, subscription_active: true) }
+      let(:other_user) { create(:user, email: 'other@example.com', subscription_active: true) }
+
+      before { sign_in user }
+
+      it 'retourne HTTP 200' do
+        get referentiel_pieces_path
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'affiche les produits piece de l utilisateur' do
+        create(:product, :piece, name: 'Oeuf', user: user)
+        get referentiel_pieces_path
+        expect(response.body).to include('Oeuf')
+      end
+
+      it 'n affiche pas les produits kg ou litre' do
+        create(:product, name: 'Farine', base_unit: 'kg', user: user)
+        create(:product, name: 'Lait', base_unit: 'l', user: user)
+        get referentiel_pieces_path
+        expect(response.body).not_to include('Farine')
+        expect(response.body).not_to include('Lait')
+      end
+
+      it 'n affiche pas les produits d un autre utilisateur' do
+        create(:product, :piece, name: 'Avocat', user: other_user)
+        get referentiel_pieces_path
+        expect(response.body).not_to include('Avocat')
+      end
+    end
+  end
 end

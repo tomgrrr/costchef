@@ -37,6 +37,13 @@
     </div>
 
     <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-egg"></i></div>
+      <div class="dash-label">Réf. pièces</div>
+      <div class="dash-count"><%= @piece_products_count %></div>
+      <%= link_to "Accéder →", referentiel_pieces_path, class: "dash-link" %>
+    </div>
+
+    <div class="dash-card">
       <div class="dash-icon"><i class="bi bi-tags"></i></div>
       <div class="dash-label">Tarifs</div>
       <div class="dash-count"><%= current_user.recipes.where(sellable_as_component: false).count %></div>
