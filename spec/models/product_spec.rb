@@ -126,6 +126,40 @@ RSpec.describe Product, type: :model do
       end
     end
 
+    describe '#simple_avg_price_per_kg' do
+      it 'retourne la moyenne simple des price_per_kg des achats actifs' do
+        product = create(:product, name: 'Farine T55', user: user)
+        supplier = create(:supplier, user: user)
+        # price_per_kg = package_price / package_quantity (unit: kg)
+        create(:product_purchase, product: product, supplier: supplier, package_quantity: 1, package_price: 2.0, package_unit: 'kg')
+        create(:product_purchase, product: product, supplier: supplier, package_quantity: 1, package_price: 4.0, package_unit: 'kg')
+        expect(product.simple_avg_price_per_kg).to eq(3.0)
+      end
+
+      it 'ignore les achats inactifs' do
+        product = create(:product, name: 'Farine T55', user: user)
+        supplier = create(:supplier, user: user)
+        create(:product_purchase, product: product, supplier: supplier, package_quantity: 1, package_price: 2.0, package_unit: 'kg')
+        create(:product_purchase, :inactive, product: product, supplier: supplier, package_quantity: 1, package_price: 10.0, package_unit: 'kg')
+        expect(product.simple_avg_price_per_kg).to eq(2.0)
+      end
+
+      it 'retourne 0 sans achats actifs' do
+        product = create(:product, name: 'Farine T55', user: user)
+        expect(product.simple_avg_price_per_kg).to eq(0)
+      end
+
+      it 'arrondit à 2 décimales' do
+        product = create(:product, name: 'Farine T55', user: user)
+        supplier = create(:supplier, user: user)
+        create(:product_purchase, product: product, supplier: supplier, package_quantity: 3, package_price: 10.0, package_unit: 'kg')
+        create(:product_purchase, product: product, supplier: supplier, package_quantity: 7, package_price: 10.0, package_unit: 'kg')
+        # price_per_kg values: 10/3 = 3.3333... and 10/7 = 1.4285...
+        # simple avg = (3.3333 + 1.4285) / 2 = 2.3809... → 2.38
+        expect(product.simple_avg_price_per_kg).to eq(2.38)
+      end
+    end
+
     describe '#recipes_count' do
       it 'retourne le bon nombre' do
         product = create(:product, name: 'Farine T55', user: user)

@@ -65,6 +65,12 @@ class Product < ApplicationRecord
     recipe_components.count
   end
 
+  # Moyenne arithmétique simple des price_per_kg des achats actifs
+  def simple_avg_price_per_kg
+    avg = product_purchases.active.average(:price_per_kg)
+    avg ? avg.round(2) : 0
+  end
+
   private
 
   def set_defaults

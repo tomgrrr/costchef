@@ -26,12 +26,12 @@
 <%# Products grid %>
 <div style="padding: 24px;">
   <% if @products.any? %>
-    <div class="products-grid">
+    <div class="products-grid" id="products_accordion">
       <% @products.each do |product| %>
         <div>
           <%= render "products/product_card", product: product %>
 
-          <div class="collapse" id="purchases_collapse_<%= product.id %>">
+          <div class="collapse" id="purchases_collapse_<%= product.id %>" data-bs-parent="#products_accordion">
             <%= turbo_frame_tag "purchases_#{product.id}" do %>
               <%= render "product_purchases/purchases_section",
                     product: product,
