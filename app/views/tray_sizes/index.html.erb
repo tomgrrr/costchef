@@ -37,7 +37,7 @@
         </p>
         <%= form_with url: settings_path, method: :patch do |f| %>
           <label class="form-label-xs">Coefficient actuel</label>
-          <div style="display: flex; gap: 8px; align-items: center; max-width: 260px;">
+          <div class="coeff-input-group">
             <span class="mono" style="color: var(--sl-400); font-size: 16px;">×</span>
             <%= number_field_tag 'user[markup_coefficient]', current_user.markup_coefficient,
                 step: 0.1, min: 0.1, class: 'form-control form-control-sm mono', style: 'font-size: 16px; font-weight: 600; max-width: 100px;' %>

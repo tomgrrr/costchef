@@ -250,6 +250,55 @@ RSpec.describe Recipe, type: :model do
     end
   end
 
+  describe '#demotion_alert_message' do
+    it 'retourne le message quand sellable_as_component passe de true→false avec des parents' do
+      subrecipe = create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+      parent = create(:recipe, name: 'Mille-feuille', user: user)
+      create(:recipe_component, parent_recipe: parent, component: subrecipe)
+
+      subrecipe.update!(sellable_as_component: false)
+
+      expect(subrecipe.demotion_alert_message).to include('1 recette(s) parente(s)')
+    end
+
+    it 'retourne nil si pas de parent_recipe_components' do
+      subrecipe = create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+
+      subrecipe.update!(sellable_as_component: false)
+
+      expect(subrecipe.demotion_alert_message).to be_nil
+    end
+
+    it 'retourne nil si sellable_as_component ne change pas' do
+      subrecipe = create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+      parent = create(:recipe, name: 'Mille-feuille', user: user)
+      create(:recipe_component, parent_recipe: parent, component: subrecipe)
+
+      subrecipe.update!(name: 'Crème anglaise')
+
+      expect(subrecipe.demotion_alert_message).to be_nil
+    end
+
+    it 'retourne nil si le changement est false→true (promotion)' do
+      recipe = create(:recipe, name: 'Pâte brisée', sellable_as_component: false, user: user)
+
+      recipe.update!(sellable_as_component: true)
+
+      expect(recipe.demotion_alert_message).to be_nil
+    end
+
+    it 'inclut le bon count avec plusieurs parents' do
+      subrecipe = create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+      create(:recipe_component, parent_recipe: create(:recipe, name: 'Mille-feuille', user: user), component: subrecipe)
+      create(:recipe_component, parent_recipe: create(:recipe, name: 'Paris-Brest', user: user), component: subrecipe)
+      create(:recipe_component, parent_recipe: create(:recipe, name: 'Éclair', user: user), component: subrecipe)
+
+      subrecipe.update!(sellable_as_component: false)
+
+      expect(subrecipe.demotion_alert_message).to include('3 recette(s) parente(s)')
+    end
+  end
+
   describe '#calculated_raw_weight' do
     it 'retourne la somme des quantity_kg de tous les composants' do
       recipe = create(:recipe, name: 'Pâte brisée', user: user)

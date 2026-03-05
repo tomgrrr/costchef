@@ -161,6 +161,18 @@ class Recipe < ApplicationRecord
   # Prix de vente
   # ============================================
 
+  # Message d'alerte si la recette vient d'être rétrogradée de sous-recette
+  # et qu'elle était utilisée dans des recettes parentes
+  def demotion_alert_message
+    changes = previous_changes[:sellable_as_component]
+    return nil unless changes
+    return nil unless changes == [true, false]
+    return nil unless parent_recipe_components.exists?
+
+    count = parent_recipe_components.count
+    "Cette recette était utilisée comme sous-recette dans #{count} recette(s) parente(s). Vérifiez leur cohérence."
+  end
+
   # Prix de vente conseillé (PRD Section 8.1)
   # Sans barquette: cost_per_kg * coefficient
   # Avec barquette: (cost_per_kg * coefficient) + tray_price

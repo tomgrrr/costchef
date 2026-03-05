@@ -96,5 +96,14 @@ RSpec.describe TraySize, type: :model do
       create(:recipe, name: 'Pâte sablée', user: user, tray_size: tray_size)
       expect(tray_size.recipes_count).to eq(2)
     end
+
+    it 'fonctionne correctement avec des recettes eager-loadées' do
+      tray_size = create(:tray_size, user: user)
+      create(:recipe, name: 'Pâte brisée', user: user, tray_size: tray_size)
+      create(:recipe, name: 'Pâte sablée', user: user, tray_size: tray_size)
+
+      loaded = TraySize.includes(:recipes).find(tray_size.id)
+      expect(loaded.recipes_count).to eq(2)
+    end
   end
 end

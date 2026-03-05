@@ -39,8 +39,18 @@
             <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
             <td>
               <div class="row-actions" style="opacity: 1;">
-                <a href="#" class="action-btn" title="Modifier"
-                   onclick="document.getElementById('display-<%= category %>-<%= entry.id %>').classList.add('d-none'); document.getElementById('edit-<%= category %>-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-pencil"></i></a>
+                <span data-controller="toggle-edit"
+                      data-action="click->toggle-edit#toggle"
+                      data-toggle-edit-target-param="display-<%= category %>-<%= entry.id %>">
+                  <%= link_to "#",
+                        class: "action-btn",
+                        title: "Modifier",
+                        data: { controller: "toggle-edit",
+                                action: "click->toggle-edit#toggle",
+                                toggle_edit_target_param: "edit-#{category}-#{entry.id}" } do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                </span>
                 <%= button_to daily_special_path(entry), method: :delete,
                       data: { turbo_confirm: 'Supprimer cette entrée ?' },
                       class: 'action-btn danger', title: 'Supprimer' do %>
@@ -67,8 +77,19 @@
                     <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
                   </div>
                   <%= f.submit 'OK', class: 'btn-slate' %>
-                  <a href="#" class="btn-outline-slate" title="Annuler" style="padding: 7px 10px;"
-                     onclick="document.getElementById('edit-<%= category %>-<%= entry.id %>').classList.add('d-none'); document.getElementById('display-<%= category %>-<%= entry.id %>').classList.remove('d-none')"><i class="bi bi-x-lg"></i></a>
+                  <span data-controller="toggle-edit"
+                        data-action="click->toggle-edit#toggle"
+                        data-toggle-edit-target-param="display-<%= category %>-<%= entry.id %>">
+                    <%= link_to "#",
+                          class: "btn-outline-slate",
+                          title: "Annuler",
+                          style: "padding: 7px 10px;",
+                          data: { controller: "toggle-edit",
+                                  action: "click->toggle-edit#toggle",
+                                  toggle_edit_target_param: "edit-#{category}-#{entry.id}" } do %>
+                      <i class="bi bi-x-lg"></i>
+                    <% end %>
+                  </span>
                 </div>
               <% end %>
             </td>

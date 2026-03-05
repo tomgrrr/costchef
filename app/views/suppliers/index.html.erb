@@ -15,9 +15,8 @@
     <%= f.text_field :search,
           value: params[:search],
           placeholder: "Rechercher un fournisseur...",
-          class: "form-control form-control-sm",
-          style: "font-size: 12px; max-width: 300px;",
-          class: "flex-grow-1 flex-md-grow-0" %>
+          class: "form-control form-control-sm search-input flex-grow-1 flex-md-grow-0",
+          style: "font-size: 12px;" %>
     <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
       <%= link_to "✕", suppliers_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
@@ -83,6 +82,11 @@
         </table>
         </div>
       </div>
+      <% if @pagy&.pages.to_i > 1 %>
+        <div style="display: flex; justify-content: center; padding: 16px 0;">
+          <%== pagy_bootstrap_nav(@pagy) %>
+        </div>
+      <% end %>
     <% end %>
 
     <%# Fournisseurs inactifs %>

@@ -37,7 +37,7 @@ class TraySize < ApplicationRecord
   # ============================================
 
   def recipes_count
-    recipes.count
+    recipes.size
   end
 
   private

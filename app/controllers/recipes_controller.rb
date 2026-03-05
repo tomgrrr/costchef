@@ -5,11 +5,13 @@ class RecipesController < ApplicationController
 
   def index
     @tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
-    @recipes = current_user.recipes
-                           .includes(:recipe_components, :tray_size)
-                           .where(sellable_as_component: @tab == 'subrecipes')
-                           .order(:cached_cost_per_kg)
-    @recipes = @recipes.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
+    scope = current_user.recipes
+                        .includes(:recipe_components, :tray_size)
+                        .where(sellable_as_component: @tab == 'subrecipes')
+                        .order(:cached_cost_per_kg)
+    scope = scope.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
+
+    @pagy, @recipes = pagy(scope)
   end
 
   def tarifs
@@ -48,12 +50,9 @@ class RecipesController < ApplicationController
   end
 
   def update
-    was_subrecipe = @recipe.sellable_as_component?
-    parent_count = was_subrecipe ? @recipe.parent_recipes_count : 0
-
     if @recipe.update(recipe_params)
       recalculate_if_needed
-      alert_msg = subrecipe_demotion_alert(was_subrecipe, parent_count)
+      alert_msg = @recipe.demotion_alert_message
       respond_to do |format|
         format.turbo_stream { @recipe.reload }
         format.html { redirect_to @recipe, notice: "Recette mise à jour.", alert: alert_msg }
@@ -109,10 +108,5 @@ class RecipesController < ApplicationController
     Recalculations::Dispatcher.recipe_changed(@recipe)
   end
 
-  def subrecipe_demotion_alert(was_subrecipe, parent_count)
-    return nil unless was_subrecipe && !@recipe.sellable_as_component? && parent_count.positive?
-
-    "Cette recette était utilisée comme sous-recette dans #{parent_count} recette(s) parente(s). Vérifiez leur cohérence."
-  end
 
 end

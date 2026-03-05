@@ -4,10 +4,12 @@ class ProductsController < ApplicationController
   before_action :set_product, only: %i[edit update destroy]
 
   def index
-    @products = current_user.products
-                            .includes(product_purchases: :supplier)
-                            .order(:name)
-    @products = @products.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
+    @pagy, @products = pagy(
+      current_user.products
+                  .includes(product_purchases: :supplier)
+                  .order(:name)
+                  .then { |scope| params[:search].present? ? scope.where("name ILIKE ?", "%#{params[:search]}%") : scope }
+    )
   end
 
   def new

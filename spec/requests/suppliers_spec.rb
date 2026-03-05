@@ -44,6 +44,31 @@ RSpec.describe 'Suppliers', type: :request do
         get suppliers_path
         expect(response.body).not_to include(other_supplier.name)
       end
+
+      context 'pagination' do
+        before do
+          51.times { |i| create(:supplier, name: "Fournisseur #{format('%03d', i)}", user: user) }
+        end
+
+        it 'ne retourne pas tous les éléments sur la première page' do
+          get suppliers_path
+          expect(response.body).to include('Fournisseur 000')
+          expect(response.body).not_to include('Fournisseur 050')
+        end
+
+        it 'respecte le paramètre page=2' do
+          get suppliers_path, params: { page: 2 }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include('Fournisseur 000')
+        end
+
+        it 'pagine les résultats de recherche' do
+          create(:supplier, name: 'Pomona', user: user)
+          get suppliers_path, params: { search: 'Fournisseur' }
+          expect(response.body).not_to include('Pomona')
+          expect(response.body).not_to include('Fournisseur 050')
+        end
+      end
     end
   end
 
