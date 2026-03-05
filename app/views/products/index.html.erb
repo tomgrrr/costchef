@@ -15,8 +15,7 @@
     <%= f.text_field :search,
           value: params[:search],
           placeholder: "Rechercher un produit...",
-          class: "form-control form-control-sm search-input flex-grow-1 flex-md-grow-0",
-          style: "font-size: 12px;" %>
+          class: "form-control form-control-sm flex-grow-1 flex-md-grow-0" %>
     <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
       <%= link_to "✕", products_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
