@@ -503,3 +503,48 @@ body {
   transition: color 0.15s;
 }
 .dash-card .dash-link:hover { color: var(--accent); }
+
+// ─── RESPONSIVE ─────────────────────────────────────
+
+// Utility class for coefficient grid
+.coeff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+// Tablette (< 768px)
+@media (max-width: 767.98px) {
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
+  .recipe-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .ds-grid { grid-template-columns: 1fr; }
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .page-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  .navbar { padding: 0 12px; }
+  .tab-bar {
+    overflow-x: auto;
+    padding: 0 12px;
+  }
+  .coeff-grid { grid-template-columns: 1fr; }
+  .search-bar .form-control { max-width: none !important; }
+}
+
+// Mobile (< 576px)
+@media (max-width: 575.98px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .products-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .recipe-main { padding: 12px; }
+}

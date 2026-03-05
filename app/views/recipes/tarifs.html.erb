@@ -20,6 +20,7 @@
 <div style="padding: 24px;">
   <% if @recipes.any? %>
     <div class="section-card">
+      <div class="table-responsive">
       <table class="data-table">
         <thead>
           <tr>
@@ -62,6 +63,7 @@
           <% end %>
         </tbody>
       </table>
+      </div>
     </div>
   <% else %>
     <p style="color: var(--sl-400); text-align: center; margin-top: 24px; font-size: 13px;">Aucune recette pour le moment.</p>

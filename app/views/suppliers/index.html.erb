@@ -10,13 +10,14 @@
 </div>
 
 <%# Search bar %>
-<div style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
+<div class="search-bar" style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
   <%= form_with url: suppliers_path, method: :get, class: "d-flex align-items-center gap-2" do |f| %>
     <%= f.text_field :search,
           value: params[:search],
           placeholder: "Rechercher un fournisseur...",
           class: "form-control form-control-sm",
-          style: "max-width: 300px; font-size: 12px;" %>
+          style: "font-size: 12px; max-width: 300px;",
+          class: "flex-grow-1 flex-md-grow-0" %>
     <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
       <%= link_to "✕", suppliers_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
@@ -43,6 +44,7 @@
         <div class="section-header">
           <h2 class="section-title">Actifs</h2>
         </div>
+        <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
@@ -79,6 +81,7 @@
             <% end %>
           </tbody>
         </table>
+        </div>
       </div>
     <% end %>
 
@@ -88,6 +91,7 @@
         <div class="section-header">
           <h2 class="section-title">Inactifs</h2>
         </div>
+        <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
@@ -118,6 +122,7 @@
             <% end %>
           </tbody>
         </table>
+        </div>
       </div>
     <% end %>
 
