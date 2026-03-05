@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
+  include Pagy::Backend
+
   # PRD Module 1 : Authentification obligatoire pour tout l'application
   before_action :authenticate_user!
 

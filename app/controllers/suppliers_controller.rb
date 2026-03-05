@@ -6,8 +6,8 @@ class SuppliersController < ApplicationController
   def index
     base = current_user.suppliers
     base = base.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
-    @active_suppliers = base.where(active: true).order(:name)
-    @inactive_suppliers = base.where(active: false).order(:name)
+    @pagy, @active_suppliers   = pagy(base.where(active: true).order(:name))
+    @inactive_suppliers        = base.where(active: false).order(:name)
   end
 
   def new

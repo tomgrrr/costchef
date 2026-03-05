@@ -125,4 +125,9 @@
       <% end %>
     </p>
   <% end %>
+  <% if @pagy&.pages.to_i > 1 %>
+    <div style="display: flex; justify-content: center; padding: 16px 0;">
+      <%== pagy_bootstrap_nav(@pagy) %>
+    </div>
+  <% end %>
 </div>
