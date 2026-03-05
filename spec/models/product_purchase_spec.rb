@@ -36,20 +36,65 @@ RSpec.describe ProductPurchase, type: :model do
     end
 
     context 'package_unit' do
-      let(:product_piece) { create(:product, :piece, name: 'Oeuf unit', user: user) }
-
-      Units::VALID_UNITS.each do |unit|
-        it "est valide avec package_unit #{unit}" do
-          prod = unit == 'piece' ? product_piece : product
-          purchase = build(:product_purchase, product: prod, supplier: supplier, package_unit: unit)
-          expect(purchase).to be_valid
-        end
-      end
-
       it 'est invalide avec package_unit invalide' do
         purchase = build(:product_purchase, product: product, supplier: supplier, package_unit: 'tonne')
         expect(purchase).not_to be_valid
         expect(purchase.errors[:package_unit]).to be_present
+      end
+    end
+
+    context 'package_unit_matches_base_unit' do
+      let(:product_kg) { create(:product, name: 'Farine', base_unit: 'kg', user: user) }
+      let(:product_l) { create(:product, :liquid, name: 'Huile', user: user) }
+      let(:product_piece) { create(:product, :piece, name: 'Oeuf', user: user) }
+
+      context 'produit en kg' do
+        %w[kg g].each do |unit|
+          it "accepte #{unit}" do
+            purchase = build(:product_purchase, product: product_kg, supplier: supplier, package_unit: unit)
+            expect(purchase).to be_valid
+          end
+        end
+
+        %w[l cl ml piece].each do |unit|
+          it "refuse #{unit}" do
+            purchase = build(:product_purchase, product: product_kg, supplier: supplier, package_unit: unit)
+            expect(purchase).not_to be_valid
+            expect(purchase.errors[:package_unit].join).to include('compatible')
+          end
+        end
+      end
+
+      context 'produit en l' do
+        %w[l cl ml].each do |unit|
+          it "accepte #{unit}" do
+            purchase = build(:product_purchase, product: product_l, supplier: supplier, package_unit: unit)
+            expect(purchase).to be_valid
+          end
+        end
+
+        %w[kg g piece].each do |unit|
+          it "refuse #{unit}" do
+            purchase = build(:product_purchase, product: product_l, supplier: supplier, package_unit: unit)
+            expect(purchase).not_to be_valid
+            expect(purchase.errors[:package_unit].join).to include('compatible')
+          end
+        end
+      end
+
+      context 'produit en piece' do
+        it 'accepte piece' do
+          purchase = build(:product_purchase, product: product_piece, supplier: supplier, package_unit: 'piece')
+          expect(purchase).to be_valid
+        end
+
+        %w[kg g l cl ml].each do |unit|
+          it "refuse #{unit}" do
+            purchase = build(:product_purchase, product: product_piece, supplier: supplier, package_unit: unit)
+            expect(purchase).not_to be_valid
+            expect(purchase.errors[:package_unit].join).to include('compatible')
+          end
+        end
       end
     end
 
@@ -81,10 +126,12 @@ RSpec.describe ProductPurchase, type: :model do
 
   describe 'validation conversion_kg_must_be_positive' do
     it 'est invalide quand la conversion kg donne 0 (piece sans unit_weight_kg)' do
+      product_piece = create(:product, :piece, name: 'Oeuf conv', user: user)
+      allow(product_piece).to receive(:unit_weight_kg).and_return(nil)
+
       purchase = build(:product_purchase,
-                       product: product, supplier: supplier,
+                       product: product_piece, supplier: supplier,
                        package_unit: 'piece', package_quantity: 10, package_price: 5.0)
-      allow(purchase.product).to receive(:unit_weight_kg).and_return(nil)
 
       expect(purchase).not_to be_valid
       expect(purchase.errors[:package_quantity_kg].join).to include('conversion en kg a échoué')

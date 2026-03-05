@@ -54,6 +54,7 @@ class ProductPurchase < ApplicationRecord
   # ============================================
   validate :supplier_belongs_to_same_user
   validate :conversion_kg_must_be_positive
+  validate :package_unit_matches_base_unit
 
   # ============================================
   # Instance Methods
@@ -83,6 +84,16 @@ class ProductPurchase < ApplicationRecord
       "la conversion en kg a échoué (résultat : #{package_quantity_kg}). " \
       "Vérifiez le poids unitaire du produit pour l'unité « #{package_unit} »."
     )
+  end
+
+  # L'unité de conditionnement doit être compatible avec le base_unit du produit
+  def package_unit_matches_base_unit
+    return unless product && package_unit.present?
+
+    allowed = Units.allowed_for(product.base_unit)
+    return if allowed.include?(package_unit)
+
+    errors.add(:package_unit, "n'est pas compatible avec l'unité de base du produit (#{product.base_unit})")
   end
 
   # Le fournisseur doit appartenir au même utilisateur que le produit
