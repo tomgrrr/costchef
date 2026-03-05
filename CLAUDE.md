@@ -94,7 +94,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | Controller | Routes | Key Logic |
 |-----------|--------|-----------|
 | `ApplicationController` | Base | `authenticate_user!`, `ensure_subscription!`, `record_not_found` rescue |
-| `PagesController` | `GET /` (home), `GET /subscription_required` | Dashboard with resource counts |
+| `PagesController` | `GET /` (home), `GET /subscription_required`, `GET /referentiel-pieces` (HTML + CSV) | Dashboard with resource counts, Référentiel Pièces view with CSV export |
 | `SignupsController` | `GET/POST /signup` | Token-based invitation signup, skips auth + subscription |
 | `ProductsController` | CRUD `/products` | Search (ILIKE), blocks delete if used in recipes |
 | `SuppliersController` | CRUD + `activate/deactivate` | Soft-delete, force destroy with cascade recalc |
@@ -136,9 +136,9 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Subscription gate** (`ensure_subscription!`) in `ApplicationController` — redirects to `/subscription_required` if `subscription_active == false`.
 - **Admin namespace** (`/admin`) inherits from `Admin::BaseController` with `require_admin!` check + `skip_before_action :ensure_subscription!`.
 - **SignupsController** — skips both `authenticate_user!` and `ensure_subscription!`. Validates invitation token (`valid_for_signup?`: not used + not expired). On success: creates user, calls `invitation.mark_as_used!`, auto sign-in.
-- **PagesController** — `home` (root, requires auth + subscription, shows counters), `subscription_required` (requires auth only).
+- **PagesController** — `home` (root, requires auth + subscription, shows counters), `subscription_required` (requires auth only), `referentiel_pieces` (requires auth + subscription, piece-based products list + CSV export).
 
-### Test Suite (438 specs)
+### Test Suite (458 specs)
 
 **Setup:**
 - `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
@@ -160,7 +160,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/models/recipe_component_spec.rb` — 34 examples. Validations (quantity, unit, type, uniqueness), business validations (sellable, max_depth, self/circular ref, same_user), instance methods.
 - `spec/models/daily_special_spec.rb` — 15 examples. Validations, scopes, averages.
 - `spec/models/tray_size_spec.rb` — 13 examples. Validations, associations, nullify on delete.
-- `spec/requests/pages_spec.rb` — 8 examples. GET / (auth, subscription gate, counters) + GET /subscription_required.
+- `spec/requests/pages_spec.rb` — 14 examples. GET / (auth, subscription gate, counters) + GET /subscription_required + GET /referentiel-pieces (auth, piece products, isolation, CSV export).
 - `spec/requests/signups_spec.rb` — 17 examples. GET /signup + POST /signup.
 - `spec/requests/products_spec.rb` — 21 examples. Index (auth, search), POST, PATCH, DELETE.
 - `spec/requests/suppliers_spec.rb` — 28 examples. Index, POST, PATCH, activate/deactivate, DELETE, force destroy, isolation.
