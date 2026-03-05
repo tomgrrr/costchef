@@ -281,12 +281,15 @@ body {
 // ─── PRODUCTS GRID ────────────────────────────────────
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1px;
   background: var(--sl-200);
   border: 1px solid var(--sl-200);
   border-radius: 6px;
-  overflow: hidden;
+}
+
+.products-grid > div:has(.collapse.show) {
+  grid-column: 1 / -1;
 }
 
 .product-card {
@@ -405,6 +408,33 @@ body {
   align-items: end;
 }
 
+// Variantes form-row pour purchases
+.form-row-purchase-edit {
+  grid-template-columns: 1fr 1fr auto 1fr auto auto;
+}
+.form-row-purchase-add {
+  grid-template-columns: 1fr 1fr auto 1fr auto;
+}
+
+// Search input
+.search-input {
+  max-width: 300px;
+}
+
+// Coeff & tray inline groups
+.coeff-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 260px;
+}
+.tray-price-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 180px;
+}
+
 .add-component-form .form-control:focus,
 .add-component-form .form-select:focus {
   border-color: var(--accent);
@@ -514,10 +544,21 @@ body {
   align-items: start;
 }
 
+// Petit desktop / tablette paysage (< 1024px)
+@media (max-width: 1023.98px) {
+  .recipe-layout { grid-template-columns: 1fr 280px; }
+  .form-row { grid-template-columns: 1fr 1fr auto auto; gap: 8px; }
+  .form-row-purchase-edit { grid-template-columns: 1fr 1fr auto; }
+  .form-row-purchase-add { grid-template-columns: 1fr 1fr auto; }
+  .page-header { flex-wrap: wrap; gap: 8px; }
+  .ds-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid { grid-template-columns: repeat(3, 1fr); }
+  .coeff-grid { grid-template-columns: 1fr; }
+}
+
 // Tablette (< 768px)
 @media (max-width: 767.98px) {
   .dash-grid { grid-template-columns: repeat(3, 1fr); }
-  .products-grid { grid-template-columns: repeat(2, 1fr); }
   .recipe-layout {
     grid-template-columns: 1fr;
     min-height: auto;
@@ -532,13 +573,18 @@ body {
     gap: 8px;
     padding: 12px 16px;
   }
-  .navbar { padding: 0 12px; }
+  .navbar { padding: 0 12px; height: auto; min-height: 48px; }
   .tab-bar {
     overflow-x: auto;
     padding: 0 12px;
   }
   .coeff-grid { grid-template-columns: 1fr; }
   .search-bar .form-control { max-width: none !important; }
+  .form-row-purchase-edit,
+  .form-row-purchase-add { grid-template-columns: 1fr 1fr; }
+  .search-input { max-width: none; }
+  .coeff-input-group { max-width: none; }
+  .tray-price-group { max-width: none; }
 }
 
 // Mobile (< 576px)
@@ -546,5 +592,7 @@ body {
   .dash-grid { grid-template-columns: repeat(2, 1fr); }
   .products-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
+  .form-row-purchase-edit,
+  .form-row-purchase-add { grid-template-columns: 1fr; }
   .recipe-main { padding: 12px; }
 }

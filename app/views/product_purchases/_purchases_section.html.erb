@@ -92,7 +92,7 @@
                               method: :patch do |f| %>
                   <%= hidden_field_tag :product_id, product.id %>
                   <% edit_suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
-                  <div class="form-row" style="grid-template-columns: 1fr 1fr auto 1fr auto auto;"
+                  <div class="form-row form-row-purchase-edit"
                        data-controller="supplier-search"
                        data-supplier-search-suppliers-value="<%= edit_suppliers_json %>"
                        data-supplier-search-selected-value="<%= purchase.supplier_id %>">
@@ -169,7 +169,7 @@
                     data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
         <%= hidden_field_tag :product_id, product.id %>
         <% suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
-        <div class="form-row" style="grid-template-columns: 1fr 1fr auto 1fr auto;"
+        <div class="form-row form-row-purchase-add"
              data-controller="supplier-search"
              data-supplier-search-suppliers-value="<%= suppliers_json %>">
           <div style="position: relative;">
