@@ -1,0 +1,55 @@
+<%# Page header %>
+<div class="page-header">
+  <h1 class="page-title">Écarts Types</h1>
+  <span class="mono" style="color: var(--sl-400);">Seuil critique : <%= @threshold %> %</span>
+</div>
+
+<div style="padding: 24px;">
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title"><i class="bi bi-graph-up"></i> Variabilité des prix (CV%)</h2>
+      <span class="mono" style="color: var(--sl-400);"><%= @product_entries.size %> produit<%= 's' if @product_entries.size > 1 %></span>
+    </div>
+
+    <% if @product_entries.empty? %>
+      <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun produit pour le moment.</p>
+    <% else %>
+      <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>PON (€/kg)</th>
+            <th>MOY (€/kg)</th>
+            <th>Écart Type (CV%)</th>
+            <th>Achats actifs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @product_entries.each do |entry| %>
+            <tr>
+              <td style="font-weight: 500; color: var(--sl-900);"><%= entry[:product].name %></td>
+              <td><span class="mono" style="color: var(--cc-success);"><%= number_with_precision(entry[:product].avg_price_per_kg, precision: 2) %></span></td>
+              <td><span class="mono" style="color: var(--accent-dim);"><%= number_with_precision(entry[:product].simple_avg_price_per_kg, precision: 2) %></span></td>
+              <td>
+                <% if entry[:cv] %>
+                  <span class="mono" style="color: <%= entry[:cv] > @threshold ? 'var(--cc-danger)' : 'var(--sl-700)' %>; font-weight: <%= entry[:cv] > @threshold ? '600' : '400' %>;">
+                    <%= entry[:cv] %> %
+                  </span>
+                <% else %>
+                  <span style="color: var(--sl-400); font-style: italic; font-size: 11px;">N/A</span>
+                <% end %>
+              </td>
+              <td><span class="mono" style="color: var(--sl-500);"><%= entry[:active_count] %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      </div>
+
+      <div style="padding: 12px 16px;">
+        <%== pagy_bootstrap_nav(@pagy) %>
+      </div>
+    <% end %>
+  </div>
+</div>

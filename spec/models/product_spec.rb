@@ -172,6 +172,36 @@ RSpec.describe Product, type: :model do
     end
   end
 
+  describe '#high_variability?' do
+    let(:supplier) { create(:supplier, user: user) }
+
+    it 'retourne true quand le CV dépasse le seuil' do
+      user.update!(price_variability_threshold: 10.0)
+      product = create(:product, name: 'Beurre', user: user)
+      # prix/kg = 2.0 et 10.0 → CV = 66.67% > 10%
+      create(:product_purchase, product: product, supplier: supplier,
+             package_quantity: 1, package_price: 2.0, package_unit: 'kg')
+      create(:product_purchase, product: product, supplier: supplier,
+             package_quantity: 1, package_price: 10.0, package_unit: 'kg')
+      expect(product.high_variability?).to be(true)
+    end
+
+    it 'retourne false quand le CV est sous le seuil' do
+      user.update!(price_variability_threshold: 100.0)
+      product = create(:product, name: 'Farine', user: user)
+      create(:product_purchase, product: product, supplier: supplier,
+             package_quantity: 1, package_price: 5.0, package_unit: 'kg')
+      create(:product_purchase, product: product, supplier: supplier,
+             package_quantity: 1, package_price: 5.5, package_unit: 'kg')
+      expect(product.high_variability?).to be(false)
+    end
+
+    it 'retourne false quand le CV est nil (< 2 achats)' do
+      product = create(:product, name: 'Sel', user: user)
+      expect(product.high_variability?).to be(false)
+    end
+  end
+
   describe 'defaults (after_initialize)' do
     it 'base_unit par défaut kg' do
       product = Product.new

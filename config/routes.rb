@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   root to: 'pages#home'
 
   get '/referentiel-pieces', to: 'pages#referentiel_pieces', as: :referentiel_pieces
+  get '/ecarts-types', to: 'standard_deviations#index', as: :standard_deviations
 
   namespace :admin do
     resources :users,       only: %i[index update]

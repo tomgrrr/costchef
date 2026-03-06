@@ -71,6 +71,13 @@ class Product < ApplicationRecord
     avg ? avg.round(2) : 0
   end
 
+  def high_variability?
+    cv = Products::VariabilityCalculator.call(self)
+    return false if cv.nil?
+
+    cv > user.price_variability_threshold
+  end
+
   private
 
   def set_defaults

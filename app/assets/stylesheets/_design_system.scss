@@ -183,6 +183,21 @@ body {
   text-transform: uppercase; letter-spacing: 0.04em;
 }
 
+.badge-variability {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
 .badge-warning-sl {
   background: #fef3c7; color: #92400e;
   border: 1px solid #fde68a;
