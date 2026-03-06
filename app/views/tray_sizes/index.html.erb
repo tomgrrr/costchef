@@ -49,6 +49,41 @@
     </div>
   </div>
 
+  <%# Variability threshold section %>
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title"><i class="bi bi-exclamation-triangle"></i> Seuil de variabilité</h2>
+    </div>
+    <div class="coeff-grid" style="padding: 20px;">
+      <%# Explanation card %>
+      <div style="background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 6px; padding: 20px; text-align: center;">
+        <span class="form-label-xs">Coefficient de Variation (CV%)</span>
+        <div style="font-weight: 600; font-size: 14px; color: var(--sl-900); margin: 12px 0;">écart-type / moyenne × 100</div>
+        <div style="border-top: 1px solid var(--sl-200); padding-top: 12px; margin-top: 12px;">
+          <span style="font-size: 11px; color: var(--sl-400);">Les produits dont le CV% dépasse ce seuil seront signalés avec un badge rouge.</span>
+        </div>
+      </div>
+
+      <%# Threshold form %>
+      <div>
+        <p style="font-size: 12px; color: var(--sl-600); margin-bottom: 16px;">
+          Ce seuil détermine à partir de quel coefficient de variation (CV%)
+          un produit est considéré comme ayant une forte variabilité de prix.
+        </p>
+        <%= form_with url: settings_path, method: :patch do |f| %>
+          <label class="form-label-xs">Seuil actuel</label>
+          <div class="coeff-input-group">
+            <span class="mono" style="color: var(--sl-400); font-size: 16px;">%</span>
+            <%= number_field_tag 'user[price_variability_threshold]', current_user.price_variability_threshold,
+                step: 1, min: 0, max: 100, class: 'form-control form-control-sm mono', style: 'font-size: 16px; font-weight: 600; max-width: 100px;' %>
+            <%= f.submit 'Enregistrer', class: 'btn-slate' %>
+          </div>
+          <span style="font-size: 10px; color: var(--sl-400); margin-top: 4px; display: block;">Défaut : 10%</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
   <%# Tray sizes table %>
   <div class="section-card">
     <div class="section-header">

@@ -18,6 +18,6 @@ class SettingsController < ApplicationController
   private
 
   def markup_params
-    params.require(:user).permit(:markup_coefficient)
+    params.require(:user).permit(:markup_coefficient, :price_variability_threshold)
   end
 end

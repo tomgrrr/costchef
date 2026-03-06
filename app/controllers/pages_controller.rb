@@ -11,6 +11,7 @@ class PagesController < ApplicationController
     @suppliers_count      = current_user.suppliers.count
     @tray_sizes_count     = current_user.tray_sizes.count
     @piece_products_count = current_user.products.where(base_unit: 'piece').count
+    @high_variability_count = current_user.products.includes(:product_purchases).select(&:high_variability?).size
   end
 
   def referentiel_pieces

@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   root to: 'pages#home'
 
   get '/referentiel-pieces', to: 'pages#referentiel_pieces', as: :referentiel_pieces
+  get '/ecarts-types', to: 'standard_deviations#index', as: :standard_deviations
 
   namespace :admin do
     resources :users,       only: %i[index update]
@@ -36,8 +37,12 @@ Rails.application.routes.draw do
   get 'recipes/tarifs', to: 'recipes#tarifs', as: 'tarifs_recipes'
 
   resources :recipes do
+    collection do
+      get :export_all_excel
+    end
     member do
       post :duplicate
+      get :export_excel
     end
     resources :recipe_components, only: %i[create update destroy]
   end

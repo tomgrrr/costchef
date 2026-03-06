@@ -29,6 +29,11 @@ class User < ApplicationRecord
             presence: true,
             numericality: { greater_than_or_equal_to: 0.1 }
 
+  # Seuil de variabilité des prix (CV%), obligatoire, défaut 10.0
+  validates :price_variability_threshold,
+            presence: true,
+            numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+
   # ============================================
   # Callbacks
   # ============================================
@@ -38,5 +43,6 @@ class User < ApplicationRecord
 
   def set_defaults
     self.markup_coefficient ||= 1.0
+    self.price_variability_threshold ||= 10.0
   end
 end

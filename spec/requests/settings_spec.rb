@@ -65,6 +65,17 @@ RSpec.describe 'Settings', type: :request do
         expect(flash[:alert]).to be_present
       end
 
+      it 'met à jour le price_variability_threshold avec une valeur valide' do
+        patch settings_path, params: { user: { price_variability_threshold: 25.0 } }
+        expect(user.reload.price_variability_threshold).to eq(25.0)
+      end
+
+      it 'refuse un price_variability_threshold > 100' do
+        patch settings_path, params: { user: { price_variability_threshold: 150.0 } }
+        expect(user.reload.price_variability_threshold).to eq(10.0)
+        expect(flash[:alert]).to be_present
+      end
+
       it 'ignore les paramètres non autorisés (admin)' do
         patch settings_path, params: { user: { markup_coefficient: 2.0, admin: true } }
         user.reload
