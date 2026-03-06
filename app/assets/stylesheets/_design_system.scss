@@ -183,10 +183,11 @@ body {
   text-transform: uppercase; letter-spacing: 0.04em;
 }
 
+.product-card .badge-variability,
 .badge-variability {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: var(--cc-danger);
+  color: white;
+  border: 1px solid #dc2626;
   padding: 3px 8px;
   border-radius: 3px;
   font-size: 10px;
