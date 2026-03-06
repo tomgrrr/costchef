@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class RecipesController < ApplicationController
-  before_action :set_recipe, only: %i[show edit update destroy duplicate]
+  before_action :set_recipe, only: %i[show edit update destroy duplicate export_excel]
 
   def index
     @tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
@@ -78,6 +78,16 @@ class RecipesController < ApplicationController
     end
   end
 
+  def export_excel
+    @recipe = current_user.recipes
+                          .includes(recipe_components: :component)
+                          .find(params[:id])
+
+    send_data generate_recipe_xlsx(@recipe),
+              filename: "recette-#{@recipe.name.parameterize}-#{Date.today}.xlsx",
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  end
+
   def duplicate
     new_recipe = Recipes::Duplicator.call(@recipe)
     if new_recipe.save
@@ -108,5 +118,39 @@ class RecipesController < ApplicationController
     Recalculations::Dispatcher.recipe_changed(@recipe)
   end
 
+  def generate_recipe_xlsx(recipe)
+    package = ::Axlsx::Package.new
+    wb = package.workbook
 
+    wb.add_worksheet(name: "Recette") do |sheet|
+      title_style = sheet.styles.add_style(b: true, sz: 16)
+      bold_style = sheet.styles.add_style(b: true)
+      header_style = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
+      decimal3_style = sheet.styles.add_style(format_code: "0.000")
+      decimal2_style = sheet.styles.add_style(format_code: "0.00")
+      total_style = sheet.styles.add_style(b: true, border: { style: :thin, color: "94A3B8", edges: [:top] })
+      total_dec3_style = sheet.styles.add_style(b: true, format_code: "0.000", border: { style: :thin, color: "94A3B8", edges: [:top] })
+      total_dec2_style = sheet.styles.add_style(b: true, format_code: "0.00", border: { style: :thin, color: "94A3B8", edges: [:top] })
+
+      sheet.add_row ["Recette : #{recipe.name}"], style: [title_style]
+      sheet.add_row recipe.description.present? ? [recipe.description] : []
+      sheet.add_row ["Perte à la cuisson : #{recipe.cooking_loss_percentage}%"], style: [bold_style]
+      sheet.add_row []
+      sheet.add_row ["Type", "Ingrédient", "Quantité (kg)", "Unité", "Coût ligne (€)"],
+                    style: [header_style, header_style, header_style, header_style, header_style]
+
+      recipe.recipe_components.each do |rc|
+        type_label = rc.recipe_component? ? "Sous-recette" : "Produit"
+        sheet.add_row [type_label, rc.component.name, rc.quantity_kg, rc.quantity_unit, rc.line_cost],
+                      style: [nil, nil, decimal3_style, nil, decimal2_style]
+      end
+
+      sheet.add_row ["", "TOTAL", recipe.cached_raw_weight, "", recipe.cached_total_cost],
+                    style: [total_style, total_style, total_dec3_style, total_style, total_dec2_style]
+
+      sheet.column_widths 14, 30, 16, 10, 16
+    end
+
+    package.to_stream.string
+  end
 end
