@@ -88,6 +88,19 @@ class RecipesController < ApplicationController
               type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   end
 
+  def export_all_excel
+    tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
+    recipes = current_user.recipes
+                          .includes(recipe_components: :component)
+                          .where(sellable_as_component: tab == 'subrecipes')
+                          .order(:name)
+
+    prefix = tab == 'subrecipes' ? 'sous-recettes' : 'recettes'
+    send_data generate_all_recipes_xlsx(recipes),
+              filename: "#{prefix}-#{Date.today}.xlsx",
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  end
+
   def duplicate
     new_recipe = Recipes::Duplicator.call(@recipe)
     if new_recipe.save
@@ -149,6 +162,63 @@ class RecipesController < ApplicationController
                     style: [total_style, total_style, total_dec3_style, total_style, total_dec2_style]
 
       sheet.column_widths 14, 30, 16, 10, 16
+    end
+
+    package.to_stream.string
+  end
+
+  def generate_all_recipes_xlsx(recipes)
+    package = ::Axlsx::Package.new
+    wb = package.workbook
+
+    header_style = nil
+    decimal2 = nil
+    decimal3 = nil
+
+    wb.add_worksheet(name: "Résumé") do |sheet|
+      header_style = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
+      decimal2 = sheet.styles.add_style(format_code: "0.00")
+      decimal3 = sheet.styles.add_style(format_code: "0.000")
+
+      sheet.add_row ["Recette", "Coût total (€)", "Poids final (kg)", "Coût/kg (€)", "Perte cuisson (%)"],
+                    style: Array.new(5, header_style)
+
+      recipes.each do |recipe|
+        sheet.add_row [
+          recipe.name,
+          recipe.cached_total_cost,
+          recipe.cached_total_weight,
+          recipe.cached_cost_per_kg,
+          recipe.cooking_loss_percentage
+        ], style: [nil, decimal2, decimal3, decimal2, nil]
+      end
+
+      sheet.column_widths 30, 16, 16, 14, 16
+    end
+
+    wb.add_worksheet(name: "Détail ingrédients") do |sheet|
+      header_style2 = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
+      dec3 = sheet.styles.add_style(format_code: "0.000")
+      dec2 = sheet.styles.add_style(format_code: "0.00")
+
+      sheet.add_row ["Recette", "Type", "Ingrédient", "Quantité (kg)", "Unité", "Coût ligne (€)"],
+                    style: Array.new(6, header_style2)
+
+      recipes.each do |recipe|
+        recipe.recipe_components.each do |rc|
+          type_label = rc.recipe_component? ? "Sous-recette" : "Produit"
+          sheet.add_row [
+            recipe.name,
+            type_label,
+            rc.component.name,
+            rc.quantity_kg,
+            rc.quantity_unit,
+            rc.line_cost
+          ], style: [nil, nil, nil, dec3, nil, dec2]
+        end
+      end
+
+      sheet.column_widths 30, 14, 30, 16, 10, 16
     end
 
     package.to_stream.string

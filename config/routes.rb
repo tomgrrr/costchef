@@ -37,8 +37,12 @@ Rails.application.routes.draw do
   get 'recipes/tarifs', to: 'recipes#tarifs', as: 'tarifs_recipes'
 
   resources :recipes do
+    collection do
+      get :export_all_excel
+    end
     member do
       post :duplicate
+      get :export_excel
     end
     resources :recipe_components, only: %i[create update destroy]
   end

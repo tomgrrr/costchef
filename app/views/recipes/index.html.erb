@@ -4,15 +4,20 @@
     <h1 class="page-title">Recettes</h1>
     <span class="mono" style="color: var(--sl-400);"><%= @recipes.size %> recette<%= 's' if @recipes.size > 1 %></span>
   </div>
-  <% if @tab == 'subrecipes' %>
-    <%= link_to new_recipe_path(type: "subrecipe"), class: "btn-accent" do %>
-      <i class="bi bi-plus-lg"></i> Nouvelle sous-recette
+  <div class="d-flex align-items-center gap-2">
+    <%= link_to export_all_excel_recipes_path(tab: @tab), class: "btn-outline-slate" do %>
+      <i class="bi bi-file-earmark-spreadsheet"></i> Excel
     <% end %>
-  <% else %>
-    <%= link_to new_recipe_path, class: "btn-accent" do %>
-      <i class="bi bi-plus-lg"></i> Nouvelle recette
+    <% if @tab == 'subrecipes' %>
+      <%= link_to new_recipe_path(type: "subrecipe"), class: "btn-accent" do %>
+        <i class="bi bi-plus-lg"></i> Nouvelle sous-recette
+      <% end %>
+    <% else %>
+      <%= link_to new_recipe_path, class: "btn-accent" do %>
+        <i class="bi bi-plus-lg"></i> Nouvelle recette
+      <% end %>
     <% end %>
-  <% end %>
+  </div>
 </div>
 
 <%# Tab bar %>

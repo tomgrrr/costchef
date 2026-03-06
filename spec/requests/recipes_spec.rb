@@ -334,6 +334,68 @@ RSpec.describe 'Recipes', type: :request do
     end
   end
 
+  describe 'GET /recipes/:id/export_excel' do
+    context 'non connecté' do
+      it 'redirige vers login' do
+        recipe = create(:recipe, name: 'Pâte brisée', user: user)
+        get export_excel_recipe_path(recipe)
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context 'connecté' do
+      before { sign_in user }
+
+      it 'retourne un fichier xlsx' do
+        recipe = create(:recipe, name: 'Pâte brisée', user: user)
+        get export_excel_recipe_path(recipe)
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      end
+
+      it "redirige vers root_path pour une recette d'un autre user" do
+        other_recipe = create(:recipe, name: 'Crème brûlée', user: other_user)
+        get export_excel_recipe_path(other_recipe)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe 'GET /recipes/export_all_excel' do
+    context 'non connecté' do
+      it 'redirige vers login' do
+        get export_all_excel_recipes_path
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context 'connecté' do
+      before { sign_in user }
+
+      it 'retourne un fichier xlsx' do
+        create(:recipe, name: 'Pâte brisée', user: user)
+        get export_all_excel_recipes_path
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      end
+
+      it "n'inclut pas les recettes d'un autre user" do
+        create(:recipe, name: 'Secret Recipe', user: other_user)
+        get export_all_excel_recipes_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body.force_encoding('UTF-8')).not_to include('Secret Recipe')
+      end
+
+      it 'filtre les sous-recettes avec tab=subrecipes' do
+        create(:recipe, name: 'Pâte brisée', user: user)
+        create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+        get export_all_excel_recipes_path, params: { tab: 'subrecipes' }
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      end
+    end
+  end
+
   describe 'POST /recipes/:id/duplicate' do
     before do
       sign_in user
