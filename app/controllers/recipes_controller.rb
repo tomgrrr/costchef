@@ -133,47 +133,13 @@ class RecipesController < ApplicationController
 
   def generate_recipe_xlsx(recipe)
     package = ::Axlsx::Package.new
-    wb = package.workbook
-
-    wb.add_worksheet(name: "Recette") do |sheet|
-      title_style = sheet.styles.add_style(b: true, sz: 16)
-      bold_style = sheet.styles.add_style(b: true)
-      header_style = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
-      decimal3_style = sheet.styles.add_style(format_code: "0.000")
-      decimal2_style = sheet.styles.add_style(format_code: "0.00")
-      total_style = sheet.styles.add_style(b: true, border: { style: :thin, color: "94A3B8", edges: [:top] })
-      total_dec3_style = sheet.styles.add_style(b: true, format_code: "0.000", border: { style: :thin, color: "94A3B8", edges: [:top] })
-      total_dec2_style = sheet.styles.add_style(b: true, format_code: "0.00", border: { style: :thin, color: "94A3B8", edges: [:top] })
-
-      sheet.add_row ["Recette : #{recipe.name}"], style: [title_style]
-      sheet.add_row recipe.description.present? ? [recipe.description] : []
-      sheet.add_row ["Perte à la cuisson : #{recipe.cooking_loss_percentage}%"], style: [bold_style]
-      sheet.add_row []
-      sheet.add_row ["Type", "Ingrédient", "Quantité (kg)", "Unité", "Coût ligne (€)"],
-                    style: [header_style, header_style, header_style, header_style, header_style]
-
-      recipe.recipe_components.each do |rc|
-        type_label = rc.recipe_component? ? "Sous-recette" : "Produit"
-        sheet.add_row [type_label, rc.component.name, rc.quantity_kg, rc.quantity_unit, rc.line_cost],
-                      style: [nil, nil, decimal3_style, nil, decimal2_style]
-      end
-
-      sheet.add_row ["", "TOTAL", recipe.cached_raw_weight, "", recipe.cached_total_cost],
-                    style: [total_style, total_style, total_dec3_style, total_style, total_dec2_style]
-
-      sheet.column_widths 14, 30, 16, 10, 16
-    end
-
+    add_recipe_worksheet(package.workbook, recipe, sheet_name: "Recette")
     package.to_stream.string
   end
 
   def generate_all_recipes_xlsx(recipes)
     package = ::Axlsx::Package.new
     wb = package.workbook
-
-    header_style = nil
-    decimal2 = nil
-    decimal3 = nil
 
     wb.add_worksheet(name: "Résumé") do |sheet|
       header_style = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
@@ -196,31 +162,54 @@ class RecipesController < ApplicationController
       sheet.column_widths 30, 16, 16, 14, 16
     end
 
-    wb.add_worksheet(name: "Détail ingrédients") do |sheet|
-      header_style2 = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
-      dec3 = sheet.styles.add_style(format_code: "0.000")
-      dec2 = sheet.styles.add_style(format_code: "0.00")
-
-      sheet.add_row ["Recette", "Type", "Ingrédient", "Quantité (kg)", "Unité", "Coût ligne (€)"],
-                    style: Array.new(6, header_style2)
-
-      recipes.each do |recipe|
-        recipe.recipe_components.each do |rc|
-          type_label = rc.recipe_component? ? "Sous-recette" : "Produit"
-          sheet.add_row [
-            recipe.name,
-            type_label,
-            rc.component.name,
-            rc.quantity_kg,
-            rc.quantity_unit,
-            rc.line_cost
-          ], style: [nil, nil, nil, dec3, nil, dec2]
-        end
-      end
-
-      sheet.column_widths 30, 14, 30, 16, 10, 16
+    used_names = Set.new(["Résumé"])
+    recipes.each do |recipe|
+      sheet_name = unique_sheet_name(recipe.name.truncate(31), used_names)
+      used_names.add(sheet_name)
+      add_recipe_worksheet(wb, recipe, sheet_name: sheet_name)
     end
 
     package.to_stream.string
+  end
+
+  def add_recipe_worksheet(wb, recipe, sheet_name:)
+    wb.add_worksheet(name: sheet_name) do |sheet|
+      title_style = sheet.styles.add_style(b: true, sz: 16)
+      bold_style = sheet.styles.add_style(b: true)
+      header_style = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
+      decimal3_style = sheet.styles.add_style(format_code: "0.000")
+      decimal2_style = sheet.styles.add_style(format_code: "0.00")
+      total_style = sheet.styles.add_style(b: true, border: { style: :thin, color: "94A3B8", edges: [:top] })
+      total_dec3_style = sheet.styles.add_style(b: true, format_code: "0.000", border: { style: :thin, color: "94A3B8", edges: [:top] })
+      total_dec2_style = sheet.styles.add_style(b: true, format_code: "0.00", border: { style: :thin, color: "94A3B8", edges: [:top] })
+
+      sheet.add_row ["Recette : #{recipe.name}"], style: [title_style]
+      sheet.add_row recipe.description.present? ? [recipe.description] : []
+      sheet.add_row ["Perte à la cuisson : #{recipe.cooking_loss_percentage}%"], style: [bold_style]
+      sheet.add_row []
+      sheet.add_row ["Type", "Ingrédient", "Quantité (kg)", "Unité", "Coût ligne (€)"],
+                    style: Array.new(5, header_style)
+
+      recipe.recipe_components.each do |rc|
+        type_label = rc.recipe_component? ? "Sous-recette" : "Produit"
+        sheet.add_row [type_label, rc.component.name, rc.quantity_kg, rc.quantity_unit, rc.line_cost],
+                      style: [nil, nil, decimal3_style, nil, decimal2_style]
+      end
+
+      sheet.add_row ["", "TOTAL", recipe.cached_raw_weight, "", recipe.cached_total_cost],
+                    style: [total_style, total_style, total_dec3_style, total_style, total_dec2_style]
+
+      sheet.column_widths 14, 30, 16, 10, 16
+    end
+  end
+
+  def unique_sheet_name(name, used_names)
+    return name unless used_names.include?(name)
+
+    (2..).each do |n|
+      suffix = " (#{n})"
+      candidate = name.truncate(31 - suffix.length) + suffix
+      return candidate unless used_names.include?(candidate)
+    end
   end
 end
