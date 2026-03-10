@@ -346,9 +346,16 @@ RSpec.describe 'Recipes', type: :request do
     context 'connecté' do
       before { sign_in user }
 
-      it 'retourne un fichier xlsx' do
+      it 'retourne un fichier xlsx sans coûts par défaut' do
         recipe = create(:recipe, name: 'Pâte brisée', user: user)
         get export_excel_recipe_path(recipe)
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      end
+
+      it 'retourne un fichier xlsx avec coûts quand detailed=1' do
+        recipe = create(:recipe, name: 'Pâte brisée', user: user)
+        get export_excel_recipe_path(recipe, detailed: 1)
         expect(response).to have_http_status(:ok)
         expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       end
@@ -372,9 +379,16 @@ RSpec.describe 'Recipes', type: :request do
     context 'connecté' do
       before { sign_in user }
 
-      it 'retourne un fichier xlsx' do
+      it 'retourne un fichier xlsx sans coûts par défaut' do
         create(:recipe, name: 'Pâte brisée', user: user)
         get export_all_excel_recipes_path
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      end
+
+      it 'retourne un fichier xlsx avec coûts quand detailed=1' do
+        create(:recipe, name: 'Pâte brisée', user: user)
+        get export_all_excel_recipes_path, params: { detailed: 1 }
         expect(response).to have_http_status(:ok)
         expect(response.content_type).to include('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       end

@@ -16,9 +16,15 @@
           form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
       <i class="bi bi-copy"></i> Dupliquer
     <% end %>
-    <%= link_to export_excel_recipe_path(@recipe), class: "btn-outline-slate" do %>
-      <i class="bi bi-file-earmark-spreadsheet"></i> Excel
-    <% end %>
+    <div class="dropdown d-inline-block">
+      <button class="btn-outline-slate dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+      </button>
+      <ul class="dropdown-menu">
+        <li><%= link_to "Sans coûts", export_excel_recipe_path(@recipe), class: "dropdown-item" %></li>
+        <li><%= link_to "Avec coûts", export_excel_recipe_path(@recipe, detailed: 1), class: "dropdown-item" %></li>
+      </ul>
+    </div>
     <%= link_to edit_recipe_path(@recipe), class: "btn-outline-slate" do %>
       <i class="bi bi-pencil"></i> Modifier
     <% end %>
