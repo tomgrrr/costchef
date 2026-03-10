@@ -26,7 +26,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :products, except: [:show]
+  resources :products
 
   resources :product_purchases, only: %i[create update destroy] do
     member do

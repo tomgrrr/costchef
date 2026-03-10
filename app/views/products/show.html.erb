@@ -1,0 +1,111 @@
+<%# Page header %>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    <h1 class="page-title"><%= @product.name %></h1>
+    <span class="badge-produit"><%= @product.base_unit %></span>
+  </div>
+  <div class="d-flex gap-2">
+    <%= link_to products_path, class: "btn-outline-slate" do %>
+      <i class="bi bi-arrow-left"></i> Retour
+    <% end %>
+    <%= link_to edit_product_path(@product), class: "btn-outline-slate" do %>
+      <i class="bi bi-pencil"></i> Modifier
+    <% end %>
+    <% if @product.used_in_recipes? %>
+      <span class="btn-outline-slate disabled" title="Utilisé dans <%= @product.recipes_count %> recette(s)">
+        <i class="bi bi-trash"></i> Supprimer
+      </span>
+    <% else %>
+      <%= button_to product_path(@product),
+            method: :delete,
+            class: "btn-outline-slate",
+            form: { data: { turbo_confirm: "Supprimer ce produit ?" } } do %>
+        <i class="bi bi-trash"></i> Supprimer
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%# Two-column layout %>
+<div class="recipe-layout">
+  <%# Main column %>
+  <div class="recipe-main">
+    <%= turbo_frame_tag "purchases_#{@product.id}" do %>
+      <%= render "product_purchases/purchases_section",
+            product: @product,
+            purchases: @purchases,
+            new_purchase: @new_purchase,
+            suppliers: @suppliers %>
+    <% end %>
+  </div>
+
+  <%# Sidebar %>
+  <div class="recipe-sidebar">
+    <%# Prix section %>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Prix</div>
+      <% if @product.avg_price_per_kg.to_f > 0 || @product.simple_avg_price_per_kg.to_f > 0 %>
+        <div class="info-grid">
+          <% if @product.avg_price_per_kg.to_f > 0 %>
+            <div class="info-row">
+              <span class="info-label">PON (pondéré)</span>
+              <span class="info-value">
+                <span class="mono" style="color: var(--cc-success); font-weight: 600;">
+                  <%= number_with_precision(@product.avg_price_per_kg, precision: 2) %> €/kg
+                </span>
+              </span>
+            </div>
+          <% end %>
+          <% if @product.simple_avg_price_per_kg.to_f > 0 %>
+            <div class="info-row">
+              <span class="info-label">MOY (simple)</span>
+              <span class="info-value">
+                <span class="mono" style="color: var(--cc-danger); font-weight: 600;">
+                  <%= number_with_precision(@product.simple_avg_price_per_kg, precision: 2) %> €/kg
+                </span>
+              </span>
+            </div>
+          <% end %>
+        </div>
+        <% if @product.high_variability? %>
+          <div style="margin-top: 8px;">
+            <div class="badge-variability">
+              <i class="bi bi-exclamation-triangle-fill"></i> Forte variabilité
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div style="margin-top: 4px;">
+          <span class="badge-warning-sl">
+            <i class="bi bi-exclamation-triangle"></i> Prix non défini
+          </span>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Informations section %>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Informations</div>
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">Unité de base</span>
+          <span class="info-value"><%= @product.base_unit %></span>
+        </div>
+        <% if @product.piece_unit? %>
+          <div class="info-row">
+            <span class="info-label">Poids unitaire</span>
+            <span class="info-value"><span class="mono"><%= number_with_precision(@product.unit_weight_kg, precision: 3, strip_insignificant_zeros: true) %> kg</span></span>
+          </div>
+        <% end %>
+        <div class="info-row">
+          <span class="info-label">Conditionnements actifs</span>
+          <span class="info-value"><%= @product.product_purchases.active.count %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Recettes</span>
+          <span class="info-value"><%= @product.recipes_count %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

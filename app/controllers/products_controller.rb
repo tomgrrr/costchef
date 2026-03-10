@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProductsController < ApplicationController
-  before_action :set_product, only: %i[edit update destroy]
+  before_action :set_product, only: %i[show edit update destroy]
 
   def index
     @pagy, @products = pagy(
@@ -10,6 +10,12 @@ class ProductsController < ApplicationController
                   .order(:name)
                   .then { |scope| params[:search].present? ? scope.where("name ILIKE ?", "%#{params[:search]}%") : scope }
     )
+  end
+
+  def show
+    @purchases = @product.product_purchases.includes(:supplier).order(:created_at)
+    @new_purchase = ProductPurchase.new
+    @suppliers = current_user.suppliers.active.order(:name)
   end
 
   def new
