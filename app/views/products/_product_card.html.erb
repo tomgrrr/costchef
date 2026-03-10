@@ -51,13 +51,16 @@
       <%= product.product_purchases.active.count %> conditionnement(s) actif(s)
     </div>
 
-    <%# Stock button %>
-    <button class="stock-btn"
+    <%# Stock button: collapse on desktop, link to show on mobile %>
+    <button class="stock-btn d-none d-md-block"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#purchases_collapse_<%= product.id %>"
             aria-expanded="false">
       <i class="bi bi-box-seam"></i> Gérer les conditionnements
     </button>
+    <%= link_to product_path(product), class: "stock-btn d-md-none", data: { turbo_frame: "_top" } do %>
+      <i class="bi bi-box-seam"></i> Gérer les conditionnements
+    <% end %>
   </div>
 <% end %>
