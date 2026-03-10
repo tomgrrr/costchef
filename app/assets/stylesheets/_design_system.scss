@@ -304,7 +304,13 @@ body {
   border-radius: 6px;
 }
 
-.products-grid > div:has(.collapse.show) {
+.products-grid > div:has(.collapse.show),
+.products-grid > div:has(.collapsing) {
+  display: contents;
+}
+
+.products-grid > div > .collapse.show,
+.products-grid > div > .collapsing {
   grid-column: 1 / -1;
 }
 
@@ -615,7 +621,6 @@ body {
 // Mobile (< 576px)
 @media (max-width: 575.98px) {
   .dash-grid { grid-template-columns: repeat(2, 1fr); }
-  .products-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .form-row-purchase-edit,
   .form-row-purchase-add { grid-template-columns: 1fr; }
