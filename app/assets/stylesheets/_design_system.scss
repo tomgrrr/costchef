@@ -313,11 +313,16 @@ body {
   padding: 16px;
   position: relative;
   transition: background 0.1s;
+  height: 175px;
+  display: flex;
+  flex-direction: column;
 }
 .product-card:hover { background: var(--sl-50); }
 
+.product-card .product-card-badge-slot { min-height: 20px; margin-bottom: 8px; }
+.product-card .badge-variability { margin-bottom: 0; }
 .product-card .p-unit  { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-.product-card .p-name  { font-size: 13px; font-weight: 600; color: var(--sl-900); margin-bottom: 8px; }
+.product-card .p-name  { font-size: 13px; font-weight: 600; color: var(--sl-900); margin-bottom: 8px; flex: 1; }
 .product-card .p-price-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .product-card .p-price-simple { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: var(--cc-danger); }
 .product-card .p-price { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 500; color: var(--cc-success); }

@@ -21,11 +21,13 @@
     <%# Unit badge %>
     <div class="p-unit"><%= product.base_unit %></div>
 
-    <% if product.high_variability? %>
-      <div class="badge-variability">
-        <i class="bi bi-exclamation-triangle-fill"></i> Forte variabilité
-      </div>
-    <% end %>
+    <div class="product-card-badge-slot">
+      <% if product.high_variability? %>
+        <div class="badge-variability">
+          <i class="bi bi-exclamation-triangle-fill"></i> Forte variabilité
+        </div>
+      <% end %>
+    </div>
 
     <%# Name %>
     <div class="p-name"><%= product.name %></div>
