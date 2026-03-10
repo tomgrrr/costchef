@@ -85,6 +85,61 @@ RSpec.describe 'Products', type: :request do
     end
   end
 
+  describe 'GET /products/:id' do
+    before { sign_in user }
+
+    it 'retourne HTTP 200' do
+      product = create(:product, name: 'Farine T55', user: user)
+      get product_path(product)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'affiche le nom du produit' do
+      product = create(:product, name: 'Farine T55', user: user)
+      get product_path(product)
+      expect(response.body).to include('Farine T55')
+    end
+
+    it 'affiche les prix PON et MOY quand des achats existent' do
+      product = create(:product, name: 'Farine T55', user: user, avg_price_per_kg: 2.50)
+      get product_path(product)
+      expect(response.body).to include('PON')
+      expect(response.body).to include('2.50')
+    end
+
+    it 'affiche "Prix non défini" sans achats' do
+      product = create(:product, name: 'Farine T55', user: user)
+      get product_path(product)
+      expect(response.body).to include('Prix non défini')
+    end
+
+    it 'affiche le poids unitaire pour un produit pièce' do
+      product = create(:product, :piece, name: 'Oeuf', user: user)
+      get product_path(product)
+      expect(response.body).to include('Poids unitaire')
+    end
+
+    it "n'affiche pas le poids unitaire pour un produit kg" do
+      product = create(:product, name: 'Farine T55', base_unit: 'kg', user: user)
+      get product_path(product)
+      expect(response.body).not_to include('Poids unitaire')
+    end
+
+    it 'désactive la suppression si le produit est utilisé dans une recette' do
+      product = create(:product, name: 'Farine T55', user: user)
+      recipe = create(:recipe, name: 'Pâte', user: user)
+      create(:recipe_component, parent_recipe: recipe, component: product)
+      get product_path(product)
+      expect(response.body).to include('Utilisé dans')
+    end
+
+    it "redirige vers root_path pour un produit d'un autre user" do
+      other_product = create(:product, name: 'Beurre', user: other_user)
+      get product_path(other_product)
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
   describe 'POST /products' do
     before { sign_in user }
 
