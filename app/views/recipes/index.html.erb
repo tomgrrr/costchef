@@ -69,31 +69,43 @@
             <th></th>
           </tr>
         </thead>
-        <tbody data-controller="clickable-row">
+        <tbody>
           <% @recipes.each do |recipe| %>
-            <tr data-href="<%= recipe_path(recipe) %>" data-action="click->clickable-row#click" class="clickable-row">
+            <tr>
               <td>
-                <%= link_to recipe.name, recipe_path(recipe), style: "color: var(--sl-900); font-weight: 500; text-decoration: none;" %>
-              </td>
-              <td>
-                <% if recipe.cached_cost_per_kg.present? && recipe.cached_cost_per_kg > 0 %>
-                  <span class="mono"><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %>&nbsp;€/kg</span>
-                <% else %>
-                  <span class="badge-warning-sl">Non calculé</span>
+                <%= link_to recipe_path(recipe), style: "color: var(--sl-900); font-weight: 500; text-decoration: none; display: block;" do %>
+                  <%= recipe.name %>
                 <% end %>
               </td>
               <td>
-                <% if recipe.cached_total_weight.present? %>
-                  <span class="mono"><%= number_with_precision(recipe.cached_total_weight, precision: 3) %>&nbsp;kg</span>
-                <% else %>
-                  <span class="mono" style="color: var(--sl-400);">&mdash;</span>
+                <%= link_to recipe_path(recipe), style: "color: inherit; text-decoration: none; display: block;" do %>
+                  <% if recipe.cached_cost_per_kg.present? && recipe.cached_cost_per_kg > 0 %>
+                    <span class="mono"><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %>&nbsp;€/kg</span>
+                  <% else %>
+                    <span class="badge-warning-sl">Non calculé</span>
+                  <% end %>
                 <% end %>
               </td>
-              <td><span class="mono"><%= recipe.cooking_loss_percentage || 0 %>&nbsp;%</span></td>
+              <td>
+                <%= link_to recipe_path(recipe), style: "color: inherit; text-decoration: none; display: block;" do %>
+                  <% if recipe.cached_total_weight.present? %>
+                    <span class="mono"><%= number_with_precision(recipe.cached_total_weight, precision: 3) %>&nbsp;kg</span>
+                  <% else %>
+                    <span class="mono" style="color: var(--sl-400);">&mdash;</span>
+                  <% end %>
+                <% end %>
+              </td>
+              <td>
+                <%= link_to recipe_path(recipe), style: "color: inherit; text-decoration: none; display: block;" do %>
+                  <span class="mono"><%= recipe.cooking_loss_percentage || 0 %>&nbsp;%</span>
+                <% end %>
+              </td>
               <% unless @tab == 'subrecipes' %>
                 <td>
-                  <% if recipe.has_tray? %>
-                    <span class="badge-produit">Oui</span>
+                  <%= link_to recipe_path(recipe), style: "color: inherit; text-decoration: none; display: block;" do %>
+                    <% if recipe.has_tray? %>
+                      <span class="badge-produit">Oui</span>
+                    <% end %>
                   <% end %>
                 </td>
               <% end %>
