@@ -36,7 +36,7 @@
     <% if product.simple_avg_price_per_kg.to_f > 0 || product.avg_price_per_kg.to_f > 0 %>
       <div class="p-price-row">
         <span class="p-price"><span class="p-price-label">PON</span> <%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €/kg</span>
-        <span class="p-price-simple"><span class="p-price-label p-price-label--red">MOY</span> <%= number_with_precision(product.simple_avg_price_per_kg, precision: 2) %> €/kg</span>
+        <span class="p-price-simple"><span class="p-price-label p-price-label--blue">MOY</span> <%= number_with_precision(product.simple_avg_price_per_kg, precision: 2) %> €/kg</span>
       </div>
     <% else %>
       <div class="p-price">
