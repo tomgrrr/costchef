@@ -117,3 +117,5 @@ group :test do
   # Nettoyage DB entre tests
   gem 'database_cleaner-active_record'
 end
+
+gem "letter_opener", group: :development
