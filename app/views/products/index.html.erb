@@ -31,7 +31,7 @@
         <div>
           <%= render "products/product_card", product: product %>
 
-          <div class="collapse d-none d-md-block" id="purchases_collapse_<%= product.id %>" data-bs-parent="#products_accordion">
+          <div class="collapse" id="purchases_collapse_<%= product.id %>" data-bs-parent="#products_accordion">
             <%= turbo_frame_tag "purchases_#{product.id}" do %>
               <%= render "product_purchases/purchases_section",
                     product: product,

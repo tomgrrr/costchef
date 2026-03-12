@@ -9,6 +9,8 @@ Rails.application.routes.draw do
   get   '/subscription_required', to: 'pages#subscription_required',
         as: :subscription_required
 
+  get '/health', to: 'health#show'
+
   root to: 'pages#home'
 
   get '/referentiel-pieces', to: 'pages#referentiel_pieces', as: :referentiel_pieces

@@ -99,10 +99,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | `ApplicationController` | Base | `authenticate_user!`, `ensure_subscription!`, `record_not_found` rescue, `Pagy::Backend` (pagination) |
 | `PagesController` | `GET /` (home), `GET /subscription_required`, `GET /referentiel-pieces` (HTML + CSV) | Dashboard with resource counts, Référentiel Pièces view with CSV export |
 | `SignupsController` | `GET/POST /signup` | Token-based invitation signup, skips auth + subscription |
-| `ProductsController` | CRUD `/products` | Search (ILIKE), Pagy pagination, blocks delete if used in recipes |
+| `ProductsController` | CRUD `/products` (incl. show) | Search (ILIKE), Pagy pagination, show page with pricing sidebar (PON/MOY), blocks delete if used in recipes |
 | `SuppliersController` | CRUD + `activate/deactivate` | Soft-delete, Pagy pagination (active suppliers), force destroy with cascade recalc |
 | `ProductPurchasesController` | CRUD + `toggle_active` | Turbo Streams responses, triggers Dispatcher |
-| `RecipesController` | CRUD + `duplicate` + `export_excel`, `GET /recipes/tarifs` | Tab filtering (recipes/subrecipes), Pagy pagination, conditional recalc, demotion alert via `Recipe#demotion_alert_message`, Excel export (.xlsx via caxlsx) |
+| `RecipesController` | CRUD + `duplicate` + `export_excel` + `export_all_excel`, `GET /recipes/tarifs` | Tab filtering (recipes/subrecipes), Pagy pagination, conditional recalc, demotion alert via `Recipe#demotion_alert_message`, Excel export (.xlsx via caxlsx): single recipe or all recipes, optional `detailed` param for costs |
 | `RecipeComponentsController` | Nested CRUD under recipes | Unit conversion via `Units::Converter`, Turbo Streams, Dispatcher |
 | `TraySizesController` | CRUD `/tray_sizes` | Simple packaging sizes, eager-loads recipes (`includes(:recipes)`) |
 | `StandardDeviationsController` | `GET /ecarts-types` | Variability index: CV% per product, sorted DESC, N/A products at bottom, Pagy array pagination |
@@ -110,7 +110,13 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | `DailySpecialsController` | CRUD `/daily_specials` | Category-based entries (meat/fish/side), averages |
 | `Admin::BaseController` | Base admin | `require_admin!`, skips `ensure_subscription!` |
 | `Admin::UsersController` | `GET/PATCH /admin/users` | Manage subscription fields (all users accessible) |
-| `Admin::InvitationsController` | CRUD `/admin/invitations` | Create invitations, sends `InvitationMailer` async |
+| `Admin::InvitationsController` | CRUD `/admin/invitations` | Create invitations, sends `InvitationMailer.invite_user` async via `deliver_later` |
+
+### Mailers
+
+- **ApplicationMailer** — `from:` ENV `MAILER_FROM_ADDRESS`, `reply_to:` ENV `MAILER_REPLY_TO`.
+- **InvitationMailer** — `invite_user(invitation)`: sends signup link with token. HTML + text templates with CostChef branding.
+- **Dev:** `letter_opener` gem opens emails in browser. **Prod:** SMTP via ENV variables (`SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_USERNAME`, `SMTP_PASSWORD`). **Test:** `:test` delivery method.
 
 ### Deletion Rules
 
@@ -132,8 +138,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
   - `supplier_search_controller.js` — Autocomplete supplier search
   - `tray_toggle_controller.js` — Toggle tray size wrapper visibility
 - **Views:** ERB templates with Bootstrap 5 components
-  - Product card displays two prices: PON (weighted avg, green) and MOY (simple avg, cyan)
-  - Products index uses Bootstrap accordion (`data-bs-parent`) — only one product's purchases section open at a time
+  - Product card displays two prices: PON (weighted avg, green) and MOY (simple avg, blue/cyan)
+  - Product show page: two-column layout with purchases list + pricing sidebar (PON, MOY, variability badge)
+  - Products index uses Bootstrap accordion (`data-bs-parent`) — only one product's purchases section open at a time (desktop only, hidden on mobile)
+  - Recipes index: rows are clickable links (native `link_to`, no Stimulus controller)
   - Purchase form `package_unit` select is filtered by `Units.allowed_for(product.base_unit)`
 - **Turbo Streams:** Used by ProductPurchasesController and RecipeComponentsController for dynamic updates
 
@@ -151,7 +159,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Paginated index actions:** `ProductsController#index`, `RecipesController#index`, `SuppliersController#index` (active suppliers only), `StandardDeviationsController#index` (pagy_array).
 - **Views:** `pagy_bootstrap_nav(@pagy)` in `products/index`, `recipes/index`, `suppliers/index`.
 
-### Test Suite (517 specs)
+### Test Suite (536 specs)
 
 **Setup:**
 - `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
@@ -175,10 +183,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/models/tray_size_spec.rb` — 14 examples. Validations, associations, nullify on delete, eager-loaded recipes_count.
 - `spec/requests/pages_spec.rb` — 14 examples. GET / (auth, subscription gate, counters) + GET /subscription_required + GET /referentiel-pieces (auth, piece products, isolation, CSV export).
 - `spec/requests/signups_spec.rb` — 17 examples. GET /signup + POST /signup.
-- `spec/requests/products_spec.rb` — 24 examples. Index (auth, search, pagination), POST, PATCH, DELETE.
+- `spec/requests/products_spec.rb` — 32 examples. Index (auth, search, pagination), show (pricing, isolation, 404), POST, PATCH, DELETE.
 - `spec/requests/suppliers_spec.rb` — 31 examples. Index (pagination), POST, PATCH, activate/deactivate, DELETE, force destroy, isolation.
 - `spec/requests/product_purchases_spec.rb` — 21 examples. POST, PATCH, DELETE, toggle_active with turbo_stream.
-- `spec/requests/recipes_spec.rb` — 48 examples. Index (auth, search, tabs, pagination), show, new, create, edit, update, destroy, duplicate, export_excel, tarifs.
+- `spec/requests/recipes_spec.rb` — 53 examples. Index (auth, search, tabs, pagination), show, new, create, edit, update, destroy, duplicate, export_excel, export_all_excel, tarifs.
 - `spec/requests/recipe_components_spec.rb` — 28 examples. POST (kg, g, sub-recipe), PATCH, DELETE with turbo_stream + isolation.
 - `spec/requests/tray_sizes_spec.rb` — 19 examples. CRUD + association handling + eager-loaded index.
 - `spec/requests/daily_specials_spec.rb` — 13 examples. CRUD by category.
@@ -186,10 +194,11 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/requests/settings_spec.rb` — 10 examples. Edit + update markup_coefficient + price_variability_threshold.
 - `spec/requests/admin/invitations_spec.rb` — 13 examples. Index/new/create with auth + email validation + have_enqueued_mail.
 - `spec/requests/admin/users_spec.rb` — 9 examples. Index + update (subscription_active, notes, non-admin blocked).
+- `spec/mailers/invitation_mailer_spec.rb` — 5 examples. Subject, recipient, sender, signup link with token, expiration mention.
 
 ### Key Dependencies
 
 **Backend:** Rails 7.1.6, Devise, Pagy, Puma, PostgreSQL (pg), Sprockets-Rails, Importmap-Rails, caxlsx (Excel export)
 **Frontend:** Turbo-Rails, Stimulus-Rails, cssbundling-rails, Bootstrap 5.3, Bootstrap Icons, Sass, PostCSS + Autoprefixer
-**Dev:** Pry-Rails, Better Errors, Bullet (N+1 detection), RuboCop ~1.68 + rubocop-rails ~2.27
+**Dev:** Pry-Rails, Better Errors, Bullet (N+1 detection), RuboCop ~1.68 + rubocop-rails ~2.27, letter_opener (email preview)
 **Test:** RSpec-Rails, FactoryBot, Faker, Shoulda-Matchers, Capybara, Selenium, DatabaseCleaner

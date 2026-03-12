@@ -63,6 +63,11 @@ gem 'devise'
 gem 'caxlsx'
 
 # ============================================
+# COSTCHEF - Security
+# ============================================
+gem 'rack-attack'
+
+# ============================================
 # COSTCHEF - Development & Test
 # ============================================
 group :development, :test do
@@ -117,3 +122,5 @@ group :test do
   # Nettoyage DB entre tests
   gem 'database_cleaner-active_record'
 end
+
+gem "letter_opener", group: :development
