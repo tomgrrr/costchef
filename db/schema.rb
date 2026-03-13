@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_06_114925) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_13_133308) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -152,10 +152,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_06_114925) do
     t.datetime "updated_at", null: false
     t.decimal "markup_coefficient", precision: 5, scale: 2, default: "1.0", null: false
     t.decimal "price_variability_threshold", precision: 5, scale: 2, default: "10.0", null: false
+    t.integer "failed_attempts", default: 0, null: false
+    t.string "unlock_token"
+    t.datetime "locked_at"
     t.index ["admin"], name: "index_users_on_admin"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["subscription_active"], name: "index_users_on_subscription_active"
+    t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
   add_foreign_key "daily_specials", "users", on_delete: :cascade

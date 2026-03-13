@@ -69,7 +69,6 @@ Rails.application.configure do
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   config.active_job.queue_adapter = :async
-  config.solid_queue.connects_to = { database: { writing: :queue } }
   # config.active_job.queue_name_prefix = "costchef_production"
 
   config.action_mailer.perform_caching = false
@@ -89,12 +88,13 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
+  config.hosts = [
+    "costchef.fr",
+    "www.costchef.fr",
+    ENV["APP_HOST"]
+  ].compact
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   # ============================================
   # ACTION MAILER - SMTP CONFIGURATION

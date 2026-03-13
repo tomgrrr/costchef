@@ -7,7 +7,8 @@ class User < ApplicationRecord
 
   # Devise modules
   devise :database_authenticatable, :registerable,
-        :recoverable, :rememberable, :validatable
+        :recoverable, :rememberable, :validatable,
+        :lockable, :timeoutable
 
   # ============================================
   # Associations (PRD Section 6.10)
