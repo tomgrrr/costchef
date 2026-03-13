@@ -16,6 +16,16 @@ class Rack::Attack
     req.ip if req.path == "/signup" && req.post?
   end
 
+  # Throttle password reset attempts by IP: 5 requests per minute
+  throttle("password_resets/ip", limit: 5, period: 60.seconds) do |req|
+    req.ip if req.path == "/users/password" && req.post?
+  end
+
+  # Throttle admin invitation creation by IP: 5 requests per minute
+  throttle("admin_invitations/ip", limit: 5, period: 60.seconds) do |req|
+    req.ip if req.path == "/admin/invitations" && req.post?
+  end
+
   # Custom throttle response
   self.throttled_responder = lambda do |_req|
     [
