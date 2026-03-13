@@ -42,7 +42,7 @@ bin/rails console         # Interactive Ruby shell
 
 ### Data Model (Multi-tenant with user isolation)
 
-- **User** — Owns everything. `markup_coefficient` (default 1.0, min 0.1). `price_variability_threshold` (default 10.0, 0-100, CV% threshold for price alerts). Auth via Devise. Fields: `first_name`, `last_name`, `company_name`, `admin` (boolean), `subscription_active/started_at/expires_at/notes`.
+- **User** — Owns everything. `markup_coefficient` (default 1.0, min 0.1). `price_variability_threshold` (default 10.0, 0-100, CV% threshold for price alerts). Auth via Devise (`:lockable`, `:timeoutable`). Fields: `first_name`, `last_name`, `company_name`, `admin` (boolean), `subscription_active/started_at/expires_at/notes`, `failed_attempts`, `locked_at`, `unlock_token`.
 - **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required (> 0); must be absent otherwise. `avg_price_per_kg` (default 0, >= 0). Methods: `piece_unit?`, `used_in_recipes?`, `recipes_count`, `simple_avg_price_per_kg` (arithmetic mean of active purchases' `price_per_kg`, rounded to 2 decimals), `high_variability?` (delegates to `Products::VariabilityCalculator`, returns true if CV% > user's `price_variability_threshold`).
 - **ProductPurchase** — Price history. `package_unit` restricted to units compatible with product's `base_unit` (via `Units.allowed_for`). `package_quantity_kg` and `price_per_kg` are calculated by `PricePerKgCalculator` (via `before_validation`). `active` boolean filters obsolete prices. Scopes: `active`, `inactive`. Method: `toggle_active!`. Custom validations: `supplier_belongs_to_same_user`, `package_unit_matches_base_unit`.
 - **Recipe** — Cost calculations with 4 cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_raw_weight`). `cooking_loss_percentage` (0-100, default 0). `sellable_as_component` controls sub-recipe eligibility. `has_tray` + `tray_size_id` for packaging. Scopes: `usable_as_subrecipe`, `by_cost_per_kg`, `by_cost_per_kg_desc`. Methods: `subrecipe?`, `used_as_subrecipe?`, `parent_recipes_count`, `has_subrecipes?`, `product_components`, `subrecipe_components`, `calculated_*` (4 calculation methods), `suggested_selling_price`, `demotion_alert_message` (returns warning string when `sellable_as_component` changes true→false and parent recipes exist, nil otherwise). Validations: `tray_size_consistency`, `tray_size_belongs_to_same_user`, `subrecipe_cannot_have_tray`.
@@ -130,6 +130,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **CSS:** Sass compiled via `cssbundling-rails` → `app/assets/builds/application.css`
   - Entry point: `app/assets/stylesheets/application.bootstrap.scss` → imports Bootstrap 5, Bootstrap Icons, `_design_system.scss`
   - Design system: IBM Plex Sans/Mono fonts, slate color palette (`--sl-50` to `--sl-950`), accent cyan (`--accent: #22d3ee`), 13px base font
+  - Responsive breakpoints in `_design_system.scss`:
+    - `< 1024px` — Narrower recipe sidebar (280px), compact forms, navbar wraps, collapsible grids
+    - `< 768px` — Single-column layouts (recipe, products grid, ds-grid), sidebar stacks below with border-top, `data-table` gets `min-width: 600px` (scrolls in `.table-responsive`), `recipe-main` has `min-width: 0` (grid shrink fix), `section-card` has `overflow: hidden`
+    - `< 576px` — Dashboard 2-col grid, single-column forms, compact recipe padding
 - **JS:** Stimulus controllers in `app/javascript/controllers/`:
   - `unit_select_controller.js` — Toggle weight field for piece-based products
   - `unified_search_controller.js` — Combined product/sub-recipe search modal
@@ -147,7 +151,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 
 ### Auth & Access
 
-- **Devise** for authentication, signup by invitation only (registration route skipped).
+- **Devise** for authentication, signup by invitation only (registration route skipped). Min password 8 chars. Modules: `:lockable` (5 attempts, 1h unlock), `:timeoutable` (30min inactivity). Mailer sender from ENV `MAILER_FROM_ADDRESS`.
+- **Rack::Attack** rate limiting (`config/initializers/rack_attack.rb`): login 5/min (by IP + email), signup 3/min, password reset 5/min, admin invitations 5/min. Custom 429 response in French. Disabled in test env (enabled explicitly in `rack_attack_spec`).
+- **CSP** (`config/initializers/content_security_policy.rb`): strict directives, Google Fonts in `font-src`/`style-src`, no CDN Bootstrap Icons (bundled locally).
+- **Production hardening**: `config.hosts` DNS rebinding protection, ActionCable set to `async` (not redis, unused), no `solid_queue` (removed orphan config).
 - **Subscription gate** (`ensure_subscription!`) in `ApplicationController` — redirects to `/subscription_required` if `subscription_active == false`.
 - **Admin namespace** (`/admin`) inherits from `Admin::BaseController` with `require_admin!` check + `skip_before_action :ensure_subscription!`.
 - **SignupsController** — skips both `authenticate_user!` and `ensure_subscription!`. Validates invitation token (`valid_for_signup?`: not used + not expired). On success: creates user, calls `invitation.mark_as_used!`, auto sign-in.
@@ -159,7 +166,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Paginated index actions:** `ProductsController#index`, `RecipesController#index`, `SuppliersController#index` (active suppliers only), `StandardDeviationsController#index` (pagy_array).
 - **Views:** `pagy_bootstrap_nav(@pagy)` in `products/index`, `recipes/index`, `suppliers/index`.
 
-### Test Suite (536 specs)
+### Test Suite (553 specs)
 
 **Setup:**
 - `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
@@ -194,11 +201,13 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/requests/settings_spec.rb` — 10 examples. Edit + update markup_coefficient + price_variability_threshold.
 - `spec/requests/admin/invitations_spec.rb` — 13 examples. Index/new/create with auth + email validation + have_enqueued_mail.
 - `spec/requests/admin/users_spec.rb` — 9 examples. Index + update (subscription_active, notes, non-admin blocked).
+- `spec/requests/rack_attack_spec.rb` — 5 examples. Login, signup, password reset throttling.
+- `spec/deployment/pre_deploy_spec.rb` — 12 examples. Secrets/gitignore, .env.example completeness, schema.rb currency, production config safety, CSP headers, Docker best practices.
 - `spec/mailers/invitation_mailer_spec.rb` — 5 examples. Subject, recipient, sender, signup link with token, expiration mention.
 
 ### Key Dependencies
 
-**Backend:** Rails 7.1.6, Devise, Pagy, Puma, PostgreSQL (pg), Sprockets-Rails, Importmap-Rails, caxlsx (Excel export)
+**Backend:** Rails 7.1.6, Devise, Pagy, Puma, PostgreSQL (pg), Rack::Attack, Sprockets-Rails, Importmap-Rails, caxlsx (Excel export)
 **Frontend:** Turbo-Rails, Stimulus-Rails, cssbundling-rails, Bootstrap 5.3, Bootstrap Icons, Sass, PostCSS + Autoprefixer
 **Dev:** Pry-Rails, Better Errors, Bullet (N+1 detection), RuboCop ~1.68 + rubocop-rails ~2.27, letter_opener (email preview)
 **Test:** RSpec-Rails, FactoryBot, Faker, Shoulda-Matchers, Capybara, Selenium, DatabaseCleaner
