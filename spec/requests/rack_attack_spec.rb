@@ -8,6 +8,7 @@ RSpec.describe "Rack::Attack", type: :request do
 
   after do
     Rack::Attack.reset!
+    Rack::Attack.enabled = false
   end
 
   describe "POST /users/sign_in throttling by IP" do
