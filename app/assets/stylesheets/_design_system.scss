@@ -618,6 +618,14 @@ body {
   .tray-price-group { max-width: none; }
   .products-grid { grid-template-columns: 1fr; }
   .product-card { height: auto; }
+  .recipe-sidebar {
+    border-left: none;
+    border-top: 1px solid var(--sl-200);
+  }
+  .page-header .d-flex.gap-2 { flex-wrap: wrap; }
+  .data-table { min-width: 600px; }
+  .recipe-main { min-width: 0; }
+  .section-card { overflow: hidden; }
 }
 
 // Mobile (< 576px)
