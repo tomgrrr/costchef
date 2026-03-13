@@ -616,6 +616,8 @@ body {
   .search-input { max-width: none; }
   .coeff-input-group { max-width: none; }
   .tray-price-group { max-width: none; }
+  .products-grid { grid-template-columns: 1fr; }
+  .product-card { height: auto; }
 }
 
 // Mobile (< 576px)
