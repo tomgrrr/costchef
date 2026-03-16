@@ -1,14 +1,16 @@
 databases:
   - name: costchef-db
-    plan: basic
+    plan: basic-256mb
     databaseName: costchef
     user: costchef
+    region: frankfurt
 
 services:
   - type: web
     name: costchef
     runtime: ruby
-    plan: free
+    plan: starter
+    region: frankfurt
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
     healthCheckPath: /health
