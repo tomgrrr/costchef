@@ -2,6 +2,10 @@
 
 # Manages daily special entries (meat, fish, side) for cost tracking.
 class DailySpecialsController < ApplicationController
+  MEAT_PORTION_KG      = 0.200
+  MEAT_SIDE_PORTION_KG = 0.200
+  FISH_PORTION_KG      = 0.150
+  FISH_SIDE_PORTION_KG = 0.350
   def index
     load_entries
     load_averages
@@ -42,6 +46,8 @@ class DailySpecialsController < ApplicationController
     @meat_average = current_user.daily_specials.meat_average
     @fish_average = current_user.daily_specials.fish_average
     @side_average = current_user.daily_specials.side_average
+    @meat_portion_cost = (@meat_average * MEAT_PORTION_KG) + (@side_average * MEAT_SIDE_PORTION_KG)
+    @fish_portion_cost = (@fish_average * FISH_PORTION_KG) + (@side_average * FISH_SIDE_PORTION_KG)
   end
 
   def daily_special_params

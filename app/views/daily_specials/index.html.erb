@@ -28,24 +28,27 @@
       </div>
       <div style="padding: 16px 20px;">
         <div class="summary-row">
-          <span class="s-label">Viande + Accompagnement — coût</span>
-          <span class="s-value"><%= number_with_precision(@meat_average + @side_average, precision: 2) %> €</span>
+          <span class="s-label">Viande + Accompagnement — coût portion 400g</span>
+          <span class="s-value"><%= number_with_precision(@meat_portion_cost, precision: 2) %> €</span>
         </div>
         <div class="summary-row">
           <span class="s-label">Viande + Accompagnement — prix conseillé</span>
-          <span class="s-value accent"><%= number_with_precision((@meat_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
+          <span class="s-value accent"><%= number_with_precision(@meat_portion_cost * current_user.markup_coefficient, precision: 2) %> €</span>
         </div>
         <div class="summary-row">
-          <span class="s-label">Poisson + Accompagnement — coût</span>
-          <span class="s-value"><%= number_with_precision(@fish_average + @side_average, precision: 2) %> €</span>
+          <span class="s-label">Poisson + Accompagnement — coût portion 400g</span>
+          <span class="s-value"><%= number_with_precision(@fish_portion_cost, precision: 2) %> €</span>
         </div>
         <div class="summary-row">
           <span class="s-label">Poisson + Accompagnement — prix conseillé</span>
-          <span class="s-value accent"><%= number_with_precision((@fish_average + @side_average) * current_user.markup_coefficient, precision: 2) %> €</span>
+          <span class="s-value accent"><%= number_with_precision(@fish_portion_cost * current_user.markup_coefficient, precision: 2) %> €</span>
         </div>
         <div class="summary-row" style="border-bottom: none; margin-top: 4px;">
           <span class="s-label">Coefficient appliqué</span>
           <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
+        </div>
+        <div class="mono" style="color: var(--sl-400); font-size: 11px; margin-top: 8px;">
+          Portionnement : Viande 200g+200g / Poisson 150g+350g
         </div>
       </div>
     </div>

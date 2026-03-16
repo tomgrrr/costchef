@@ -33,6 +33,21 @@ RSpec.describe 'DailySpecials', type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it 'affiche les coûts par portion 400g correctement calculés' do
+        create(:daily_special, user: user, category: 'meat', item_name: 'Bœuf', cost_per_kg: 20.0)
+        create(:daily_special, user: user, category: 'fish', item_name: 'Saumon', cost_per_kg: 30.0)
+        create(:daily_special, user: user, category: 'side', item_name: 'Riz', cost_per_kg: 5.0)
+
+        get daily_specials_path
+
+        # meat portion: 20.0 * 0.200 + 5.0 * 0.200 = 5.00
+        # fish portion: 30.0 * 0.150 + 5.0 * 0.350 = 6.25
+        expect(response.body).to include('coût portion 400g')
+        expect(response.body).to include('5.00 €')
+        expect(response.body).to include('6.25 €')
+        expect(response.body).to include('Portionnement')
+      end
+
       it "n'expose pas les entrées d'un autre user" do
         create(:daily_special, user: user, item_name: 'Entrecôte')
         create(:daily_special, user: other_user, item_name: 'Poulet secret')
