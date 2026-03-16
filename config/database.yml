@@ -79,6 +79,4 @@ test:
 #
 production:
   <<: *default
-  database: costchef_production
-  username: costchef
-  password: <%= ENV["COSTCHEF_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>
