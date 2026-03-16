@@ -1,0 +1,39 @@
+databases:
+  - name: costchef-db
+    plan: starter
+    databaseName: costchef
+    user: costchef
+
+services:
+  - type: web
+    name: costchef
+    runtime: ruby
+    plan: starter
+    buildCommand: bin/render-build.sh
+    startCommand: bundle exec puma -C config/puma.rb
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: costchef-db
+          property: connectionString
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: APP_HOST
+        sync: false
+      - key: MAILER_FROM_ADDRESS
+        sync: false
+      - key: MAILER_REPLY_TO
+        sync: false
+      - key: SMTP_ADDRESS
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_DOMAIN
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false

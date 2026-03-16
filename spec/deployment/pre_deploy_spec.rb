@@ -137,29 +137,25 @@ RSpec.describe "Pre-deployment checklist" do
     end
   end
 
-  # ── 6. Docker ────────────────────────────────────────────────────────
+  # ── 6. Render ────────────────────────────────────────────────────────
 
-  describe "Docker" do
-    let(:dockerfile) { File.read(root.join("Dockerfile")) }
-    let(:entrypoint) { File.read(root.join("bin/docker-entrypoint")) }
+  describe "Render" do
+    let(:build_script) { File.read(root.join("bin/render-build.sh")) }
+    let(:render_yaml) { File.read(root.join("render.yaml")) }
 
-    it "runs as non-root user" do
-      expect(dockerfile).to match(/^USER\s+\S+/), "Dockerfile should switch to a non-root user"
-      # Ensure USER is not root
-      user_lines = dockerfile.scan(/^USER\s+(.+)/).flatten
-      user_lines.each do |user|
-        expect(user.strip).not_to eq("root"), "Dockerfile should not run as root"
-      end
+    it "build script runs db:migrate" do
+      expect(build_script).to include("db:migrate"),
+        "Render build script should run db:migrate for automatic migrations"
     end
 
-    it "entrypoint runs db:prepare" do
-      expect(entrypoint).to include("db:prepare"),
-        "Docker entrypoint should run db:prepare for automatic migrations"
+    it "build script precompiles assets" do
+      expect(build_script).to include("assets:precompile"),
+        "Render build script should precompile assets"
     end
 
-    it "assets are precompiled during build" do
-      expect(dockerfile).to include("assets:precompile"),
-        "Dockerfile should precompile assets"
+    it "build script is executable" do
+      expect(File.executable?(root.join("bin/render-build.sh"))).to be(true),
+        "bin/render-build.sh should be executable"
     end
   end
 end

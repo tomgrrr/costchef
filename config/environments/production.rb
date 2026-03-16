@@ -93,6 +93,7 @@ Rails.application.configure do
     "www.costchef.fr",
     ENV["APP_HOST"]
   ].compact
+  config.hosts << /.*\.onrender\.com/
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/health" } }
 
