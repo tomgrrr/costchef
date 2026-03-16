@@ -45,7 +45,7 @@ bin/rails console         # Interactive Ruby shell
 - **User** — Owns everything. `markup_coefficient` (default 1.0, min 0.1). `price_variability_threshold` (default 10.0, 0-100, CV% threshold for price alerts). Auth via Devise (`:lockable`, `:timeoutable`). Fields: `first_name`, `last_name`, `company_name`, `admin` (boolean), `subscription_active/started_at/expires_at/notes`, `failed_attempts`, `locked_at`, `unlock_token`.
 - **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required (> 0); must be absent otherwise. `avg_price_per_kg` (default 0, >= 0). Methods: `piece_unit?`, `used_in_recipes?`, `recipes_count`, `simple_avg_price_per_kg` (arithmetic mean of active purchases' `price_per_kg`, rounded to 2 decimals), `high_variability?` (delegates to `Products::VariabilityCalculator`, returns true if CV% > user's `price_variability_threshold`).
 - **ProductPurchase** — Price history. `package_unit` restricted to units compatible with product's `base_unit` (via `Units.allowed_for`). `package_quantity_kg` and `price_per_kg` are calculated by `PricePerKgCalculator` (via `before_validation`). `active` boolean filters obsolete prices. Scopes: `active`, `inactive`. Method: `toggle_active!`. Custom validations: `supplier_belongs_to_same_user`, `package_unit_matches_base_unit`.
-- **Recipe** — Cost calculations with 4 cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_raw_weight`). `cooking_loss_percentage` (0-100, default 0). `sellable_as_component` controls sub-recipe eligibility. `has_tray` + `tray_size_id` for packaging. Scopes: `usable_as_subrecipe`, `by_cost_per_kg`, `by_cost_per_kg_desc`. Methods: `subrecipe?`, `used_as_subrecipe?`, `parent_recipes_count`, `has_subrecipes?`, `product_components`, `subrecipe_components`, `calculated_*` (4 calculation methods), `suggested_selling_price`, `demotion_alert_message` (returns warning string when `sellable_as_component` changes true→false and parent recipes exist, nil otherwise). Validations: `tray_size_consistency`, `tray_size_belongs_to_same_user`, `subrecipe_cannot_have_tray`.
+- **Recipe** — Cost calculations with 4 cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_raw_weight`). `cooking_loss_percentage` (0-100, default 0). `sellable_as_component` controls sub-recipe eligibility. `has_tray` + `tray_size_id` for packaging. `sold_by_unit` (boolean, default false) + `unit_reference_weight_kg` (decimal, nullable) for unit pricing. Scopes: `usable_as_subrecipe`, `by_cost_per_kg`, `by_cost_per_kg_desc`. Methods: `subrecipe?`, `used_as_subrecipe?`, `parent_recipes_count`, `has_subrecipes?`, `product_components`, `subrecipe_components`, `calculated_*` (4 calculation methods), `suggested_selling_price`, `unit_cost` (cost_per_kg × unit_weight, nil if N/A), `unit_selling_price` (selling_price × unit_weight, nil if N/A), `demotion_alert_message` (returns warning string when `sellable_as_component` changes true→false and parent recipes exist, nil otherwise). Validations: `tray_size_consistency`, `tray_size_belongs_to_same_user`, `subrecipe_cannot_have_tray`, `unit_reference_weight_consistency` (weight required and > 0 when sold_by_unit), `subrecipe_cannot_be_sold_by_unit`.
 - **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). `quantity_kg` (> 0) + `quantity_unit` validated against `Units::VALID_UNITS`. Unique constraint on `[parent_recipe_id, component_type, component_id]`. **Max 1 level of sub-recipe depth.** Validations: `validate_subrecipe_is_sellable`, `validate_max_depth`, `validate_no_self_reference`, `validate_no_circular_reference`, `validate_same_user`. Methods: `recipe_component?`, `product_component?`, `line_cost`.
 - **Supplier** — Linked to ProductPurchases. Soft-delete via `active` flag. Scopes: `active`, `inactive`. Methods: `deactivate!`, `activate!`, `has_purchases?`, `force_destroy!` (returns impacted product_ids).
 - **TraySize** — Optional recipe association. `before_destroy` nullifies `tray_size_id` and sets `has_tray=false` on related recipes. Method: `recipes_count`.
@@ -102,7 +102,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | `ProductsController` | CRUD `/products` (incl. show) | Search (ILIKE), Pagy pagination, show page with pricing sidebar (PON/MOY), blocks delete if used in recipes |
 | `SuppliersController` | CRUD + `activate/deactivate` | Soft-delete, Pagy pagination (active suppliers), force destroy with cascade recalc |
 | `ProductPurchasesController` | CRUD + `toggle_active` | Turbo Streams responses, triggers Dispatcher |
-| `RecipesController` | CRUD + `duplicate` + `export_excel` + `export_all_excel`, `GET /recipes/tarifs` | Tab filtering (recipes/subrecipes), Pagy pagination, conditional recalc, demotion alert via `Recipe#demotion_alert_message`, Excel export (.xlsx via caxlsx): single recipe or all recipes, optional `detailed` param for costs |
+| `RecipesController` | CRUD + `duplicate` + `export_excel` + `export_all_excel`, `GET /recipes/tarifs` | Tab filtering (recipes/subrecipes), Pagy pagination, conditional recalc, demotion alert via `Recipe#demotion_alert_message`, Excel export (.xlsx via caxlsx): single recipe or all recipes, optional `detailed` param for costs, `sold_by_unit` g→kg conversion in params + cleanup when unchecked |
 | `RecipeComponentsController` | Nested CRUD under recipes | Unit conversion via `Units::Converter`, Turbo Streams, Dispatcher |
 | `TraySizesController` | CRUD `/tray_sizes` | Simple packaging sizes, eager-loads recipes (`includes(:recipes)`) |
 | `StandardDeviationsController` | `GET /ecarts-types` | Variability index: CV% per product, sorted DESC, N/A products at bottom, Pagy array pagination |
@@ -141,6 +141,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
   - `char_counter_controller.js` — Character count for textareas
   - `supplier_search_controller.js` — Autocomplete supplier search
   - `tray_toggle_controller.js` — Toggle tray size wrapper visibility
+  - `unit_toggle_controller.js` — Toggle unit weight field for sold-by-unit recipes
 - **Views:** ERB templates with Bootstrap 5 components
   - Product card displays two prices: PON (weighted avg, green) and MOY (simple avg, blue/cyan)
   - Product show page: two-column layout with purchases list + pricing sidebar (PON, MOY, variability badge)
@@ -166,10 +167,10 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Paginated index actions:** `ProductsController#index`, `RecipesController#index`, `SuppliersController#index` (active suppliers only), `StandardDeviationsController#index` (pagy_array).
 - **Views:** `pagy_bootstrap_nav(@pagy)` in `products/index`, `recipes/index`, `suppliers/index`.
 
-### Test Suite (554 specs)
+### Test Suite (570 specs)
 
 **Setup:**
-- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
+- `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`/`:sold_by_unit`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
 - `spec/support/devise.rb` — Includes `Devise::Test::IntegrationHelpers` for request specs.
 - `spec/support/database_cleaner.rb` + `spec/support/factory_bot.rb` — Standard config.
 - `shoulda-matchers` configured for RSpec + Rails.
@@ -184,7 +185,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/models/correctifs_spec.rb` — 12 examples. RecipeComponent quantity_unit, ProductPurchase calculated fields + package_unit, Supplier#force_destroy!, DailySpecial averages.
 - `spec/models/product_spec.rb` — 30 examples. Validations (name, base_unit, avg_price_per_kg), unit_weight_kg, methods, defaults, simple_avg_price_per_kg.
 - `spec/models/product_purchase_spec.rb` — 36 examples. Validations, supplier_belongs_to_same_user, package_unit_matches_base_unit, scopes, toggle_active!, defaults.
-- `spec/models/recipe_spec.rb` — 45 examples. Validations (name, description, cooking_loss, tray_size), defaults, scopes, business methods, calculations, demotion_alert_message.
+- `spec/models/recipe_spec.rb` — 57 examples. Validations (name, description, cooking_loss, tray_size, sold_by_unit), defaults, scopes, business methods, calculations, demotion_alert_message, unit_cost, unit_selling_price.
 - `spec/models/recipe_component_spec.rb` — 34 examples. Validations (quantity, unit, type, uniqueness), business validations (sellable, max_depth, self/circular ref, same_user), instance methods.
 - `spec/models/daily_special_spec.rb` — 15 examples. Validations, scopes, averages.
 - `spec/models/tray_size_spec.rb` — 14 examples. Validations, associations, nullify on delete, eager-loaded recipes_count.
@@ -193,7 +194,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/requests/products_spec.rb` — 32 examples. Index (auth, search, pagination), show (pricing, isolation, 404), POST, PATCH, DELETE.
 - `spec/requests/suppliers_spec.rb` — 31 examples. Index (pagination), POST, PATCH, activate/deactivate, DELETE, force destroy, isolation.
 - `spec/requests/product_purchases_spec.rb` — 21 examples. POST, PATCH, DELETE, toggle_active with turbo_stream.
-- `spec/requests/recipes_spec.rb` — 53 examples. Index (auth, search, tabs, pagination), show, new, create, edit, update, destroy, duplicate, export_excel, export_all_excel, tarifs.
+- `spec/requests/recipes_spec.rb` — 58 examples. Index (auth, search, tabs, pagination), show, new, create (incl. sold_by_unit g→kg), edit, update (incl. sold_by_unit), destroy, duplicate, export_excel, export_all_excel, tarifs.
 - `spec/requests/recipe_components_spec.rb` — 28 examples. POST (kg, g, sub-recipe), PATCH, DELETE with turbo_stream + isolation.
 - `spec/requests/tray_sizes_spec.rb` — 19 examples. CRUD + association handling + eager-loaded index.
 - `spec/requests/daily_specials_spec.rb` — 14 examples. CRUD by category, 400g portion cost calculation.

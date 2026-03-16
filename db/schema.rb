@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_13_133308) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_16_161813) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -104,6 +104,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_13_133308) do
     t.boolean "has_tray", default: false, null: false
     t.bigint "tray_size_id"
     t.decimal "cached_raw_weight", precision: 10, scale: 3
+    t.boolean "sold_by_unit", default: false, null: false
+    t.decimal "unit_reference_weight_kg", precision: 10, scale: 3
     t.index ["cached_cost_per_kg"], name: "index_recipes_on_cached_cost_per_kg"
     t.index ["name"], name: "index_recipes_on_name"
     t.index ["tray_size_id"], name: "index_recipes_on_tray_size_id"

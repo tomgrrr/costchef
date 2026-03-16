@@ -191,6 +191,22 @@ RSpec.describe 'Recipes', type: :request do
           .to change(user.recipes, :count).by(1)
       end
     end
+
+    context 'avec sold_by_unit' do
+      it 'crée la recette et convertit grammes en kg' do
+        post recipes_path, params: { recipe: { name: 'Quiche', sold_by_unit: '1', unit_reference_weight_kg: '250' } }
+        recipe = Recipe.last
+        expect(recipe.sold_by_unit).to be(true)
+        expect(recipe.unit_reference_weight_kg).to eq(0.250)
+      end
+
+      it 'nettoie le poids si sold_by_unit est décoché' do
+        post recipes_path, params: { recipe: { name: 'Quiche', sold_by_unit: '0', unit_reference_weight_kg: '250' } }
+        recipe = Recipe.last
+        expect(recipe.sold_by_unit).to be(false)
+        expect(recipe.unit_reference_weight_kg).to be_nil
+      end
+    end
   end
 
   describe 'GET /recipes/:id/edit' do
@@ -271,6 +287,21 @@ RSpec.describe 'Recipes', type: :request do
         patch recipe_path(subrecipe), params: { recipe: { sellable_as_component: false } }
         expect(response).to redirect_to(subrecipe)
         expect(flash[:alert]).to be_nil
+      end
+    end
+
+    context 'mise à jour sold_by_unit' do
+      it 'convertit grammes en kg' do
+        patch recipe_path(recipe), params: { recipe: { sold_by_unit: '1', unit_reference_weight_kg: '300' } }
+        expect(recipe.reload.sold_by_unit).to be(true)
+        expect(recipe.reload.unit_reference_weight_kg).to eq(0.300)
+      end
+
+      it 'nettoie le poids quand sold_by_unit décoché' do
+        recipe.update_columns(sold_by_unit: true, unit_reference_weight_kg: 0.250)
+        patch recipe_path(recipe), params: { recipe: { sold_by_unit: '0', unit_reference_weight_kg: '250' } }
+        expect(recipe.reload.sold_by_unit).to be(false)
+        expect(recipe.reload.unit_reference_weight_kg).to be_nil
       end
     end
 

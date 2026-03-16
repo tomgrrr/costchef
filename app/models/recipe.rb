@@ -86,6 +86,8 @@ class Recipe < ApplicationRecord
   validate :tray_size_consistency
   validate :tray_size_belongs_to_same_user
   validate :subrecipe_cannot_have_tray
+  validate :unit_reference_weight_consistency
+  validate :subrecipe_cannot_be_sold_by_unit
 
   # ============================================
   # Callbacks
@@ -173,6 +175,22 @@ class Recipe < ApplicationRecord
     "Cette recette était utilisée comme sous-recette dans #{count} recette(s) parente(s). Vérifiez leur cohérence."
   end
 
+  # Coût unitaire (sold_by_unit)
+  def unit_cost
+    return nil unless sold_by_unit? && unit_reference_weight_kg.present?
+    return nil unless cached_cost_per_kg
+
+    cached_cost_per_kg * unit_reference_weight_kg
+  end
+
+  # Prix de vente unitaire (sold_by_unit)
+  def unit_selling_price
+    return nil unless sold_by_unit? && unit_reference_weight_kg.present?
+    return nil unless suggested_selling_price
+
+    suggested_selling_price * unit_reference_weight_kg
+  end
+
   # Prix de vente conseillé (PRD Section 8.1)
   # Sans barquette: cost_per_kg * coefficient
   # Avec barquette: (cost_per_kg * coefficient) + tray_price
@@ -194,6 +212,7 @@ class Recipe < ApplicationRecord
     self.cooking_loss_percentage ||= 0
     self.sellable_as_component ||= false
     self.has_tray ||= false
+    self.sold_by_unit ||= false
   end
 
   # Une sous-recette ne peut pas avoir de barquette
@@ -207,6 +226,22 @@ class Recipe < ApplicationRecord
   def tray_size_consistency
     if has_tray && tray_size_id.nil?
       errors.add(:tray_size_id, "doit être sélectionnée si l'option barquette est active")
+    end
+  end
+
+  # Si sold_by_unit, le poids de référence doit être présent et > 0
+  def unit_reference_weight_consistency
+    return unless sold_by_unit?
+
+    if unit_reference_weight_kg.blank? || unit_reference_weight_kg <= 0
+      errors.add(:unit_reference_weight_kg, "doit être présent et supérieur à 0 pour une vente à l'unité")
+    end
+  end
+
+  # Une sous-recette ne peut pas être vendue à l'unité
+  def subrecipe_cannot_be_sold_by_unit
+    if sellable_as_component && sold_by_unit?
+      errors.add(:sold_by_unit, "Une sous-recette ne peut pas être vendue à l'unité")
     end
   end
 

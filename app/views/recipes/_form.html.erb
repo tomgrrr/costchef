@@ -73,6 +73,26 @@
               { class: "form-select" } %>
       </div>
     </div>
+
+    <div class="mb-3" data-controller="unit-toggle">
+      <div class="form-check">
+        <%= f.check_box :sold_by_unit,
+              class: "form-check-input",
+              data: { unit_toggle_target: "checkbox", action: "change->unit-toggle#toggle" } %>
+        <%= f.label :sold_by_unit, "Vendue à l'unité", class: "form-check-label" %>
+      </div>
+
+      <div class="mt-2" data-unit-toggle-target="wrapper" style="display: none;">
+        <%= f.label :unit_reference_weight_kg, "Poids de référence (g)", class: "form-label" %>
+        <div class="input-group">
+          <%= f.number_field :unit_reference_weight_kg,
+                class: "form-control",
+                min: 1, step: 1,
+                value: recipe.unit_reference_weight_kg ? (recipe.unit_reference_weight_kg * 1000).round : nil %>
+          <span class="input-group-text">g</span>
+        </div>
+      </div>
+    </div>
   <% end %>
 
   <div class="d-flex gap-2">

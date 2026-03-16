@@ -53,6 +53,27 @@
           <span class="s-value accent"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</span>
         </div>
       <% end %>
+
+      <% if recipe.sold_by_unit? && recipe.unit_reference_weight_kg.present? %>
+        <div class="summary-row">
+          <span class="s-label">Poids unité</span>
+          <span class="s-value"><%= (recipe.unit_reference_weight_kg * 1000).round %> g</span>
+        </div>
+
+        <% if recipe.unit_cost.present? %>
+          <div class="summary-row">
+            <span class="s-label">Coût à l'unité</span>
+            <span class="s-value"><%= number_with_precision(recipe.unit_cost, precision: 2) %> €</span>
+          </div>
+        <% end %>
+
+        <% if recipe.unit_selling_price.present? %>
+          <div class="summary-row">
+            <span class="s-label">Prix de vente à l'unité</span>
+            <span class="s-value accent"><%= number_with_precision(recipe.unit_selling_price, precision: 2) %> €</span>
+          </div>
+        <% end %>
+      <% end %>
     <% end %>
   </div>
 </div>

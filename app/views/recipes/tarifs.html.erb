@@ -27,6 +27,7 @@
             <th>Recette</th>
             <th>Coût de revient (€/kg)</th>
             <th>Prix de vente conseillé (€/kg)</th>
+            <th>Prix unité</th>
             <th>Barquette</th>
           </tr>
         </thead>
@@ -46,6 +47,14 @@
               <td>
                 <% if recipe.suggested_selling_price %>
                   <span class="mono" style="color: var(--cc-success); font-weight: 600;"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %>&nbsp;€/kg</span>
+                <% else %>
+                  <span class="mono" style="color: var(--sl-400);">&mdash;</span>
+                <% end %>
+              </td>
+              <td>
+                <% if recipe.unit_selling_price.present? %>
+                  <span class="mono" style="color: var(--cc-success); font-weight: 600;"><%= number_with_precision(recipe.unit_selling_price, precision: 2) %>&nbsp;€</span>
+                  <span class="mono" style="color: var(--sl-400); font-size: 11px;">(<%= (recipe.unit_reference_weight_kg * 1000).round %>&nbsp;g)</span>
                 <% else %>
                   <span class="mono" style="color: var(--sl-400);">&mdash;</span>
                 <% end %>
