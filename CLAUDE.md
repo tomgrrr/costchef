@@ -107,7 +107,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | `TraySizesController` | CRUD `/tray_sizes` | Simple packaging sizes, eager-loads recipes (`includes(:recipes)`) |
 | `StandardDeviationsController` | `GET /ecarts-types` | Variability index: CV% per product, sorted DESC, N/A products at bottom, Pagy array pagination |
 | `SettingsController` | `GET/PATCH /settings` | User `markup_coefficient` + `price_variability_threshold` update (redirects to tray_sizes) |
-| `DailySpecialsController` | CRUD `/daily_specials` | Category-based entries (meat/fish/side), averages |
+| `DailySpecialsController` | CRUD `/daily_specials` | Category-based entries (meat/fish/side), averages, 400g portion cost calculation (meat 200g+200g, fish 150g+350g) with markup pricing |
 | `Admin::BaseController` | Base admin | `require_admin!`, skips `ensure_subscription!` |
 | `Admin::UsersController` | `GET/PATCH /admin/users` | Manage subscription fields (all users accessible) |
 | `Admin::InvitationsController` | CRUD `/admin/invitations` | Create invitations, sends `InvitationMailer.invite_user` async via `deliver_later` |
@@ -166,7 +166,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Paginated index actions:** `ProductsController#index`, `RecipesController#index`, `SuppliersController#index` (active suppliers only), `StandardDeviationsController#index` (pagy_array).
 - **Views:** `pagy_bootstrap_nav(@pagy)` in `products/index`, `recipes/index`, `suppliers/index`.
 
-### Test Suite (553 specs)
+### Test Suite (554 specs)
 
 **Setup:**
 - `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
@@ -196,7 +196,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/requests/recipes_spec.rb` — 53 examples. Index (auth, search, tabs, pagination), show, new, create, edit, update, destroy, duplicate, export_excel, export_all_excel, tarifs.
 - `spec/requests/recipe_components_spec.rb` — 28 examples. POST (kg, g, sub-recipe), PATCH, DELETE with turbo_stream + isolation.
 - `spec/requests/tray_sizes_spec.rb` — 19 examples. CRUD + association handling + eager-loaded index.
-- `spec/requests/daily_specials_spec.rb` — 13 examples. CRUD by category.
+- `spec/requests/daily_specials_spec.rb` — 14 examples. CRUD by category, 400g portion cost calculation.
 - `spec/requests/standard_deviations_spec.rb` — 6 examples. Auth, subscription, success, user isolation, CV DESC sort, N/A at bottom.
 - `spec/requests/settings_spec.rb` — 10 examples. Edit + update markup_coefficient + price_variability_threshold.
 - `spec/requests/admin/invitations_spec.rb` — 13 examples. Index/new/create with auth + email validation + have_enqueued_mail.
