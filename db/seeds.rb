@@ -6,6 +6,8 @@
 # Exécution : bin/rails db:seed
 # =============================================================================
 
+abort("Seeds bloqués en production ! Utilisez FORCE_SEED=true pour forcer.") if Rails.env.production? && ENV["FORCE_SEED"] != "true"
+
 puts "Création des utilisateurs de test..."
 
 # Utilisateur Admin avec abonnement actif

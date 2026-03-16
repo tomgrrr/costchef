@@ -1,7 +1,12 @@
 <%# Page header %>
 <div class="page-header">
   <h1 class="page-title">Écarts Types</h1>
-  <span class="mono" style="color: var(--sl-400);">Seuil critique : <%= @threshold %> %</span>
+  <div style="display: flex; gap: 8px; align-items: center;">
+    <span class="mono" style="color: var(--sl-400);">Seuil critique : <%= @threshold %> %</span>
+    <%= link_to root_path, class: "btn-accent" do %>
+      <i class="bi bi-arrow-left"></i> Dashboard
+    <% end %>
+  </div>
 </div>
 
 <div style="padding: 24px;">
