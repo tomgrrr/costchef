@@ -120,6 +120,13 @@
               <% end %>
             </span>
           </div>
+
+          <% if @recipe.sold_by_unit? && @recipe.unit_reference_weight_kg.present? %>
+            <div class="info-row">
+              <span class="info-label">Vendue à l'unité</span>
+              <span class="info-value">Oui — <%= (@recipe.unit_reference_weight_kg * 1000).round %> g</span>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </div>

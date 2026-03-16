@@ -112,6 +112,36 @@ RSpec.describe Recipe, type: :model do
       end
     end
 
+    context 'sold_by_unit' do
+      it 'valide si sold_by_unit: true et poids > 0' do
+        recipe = build(:recipe, :sold_by_unit, user: user)
+        expect(recipe).to be_valid
+      end
+
+      it 'invalide si sold_by_unit: true et poids nil' do
+        recipe = build(:recipe, sold_by_unit: true, unit_reference_weight_kg: nil, user: user)
+        expect(recipe).not_to be_valid
+        expect(recipe.errors[:unit_reference_weight_kg]).to be_present
+      end
+
+      it 'invalide si sold_by_unit: true et poids = 0' do
+        recipe = build(:recipe, sold_by_unit: true, unit_reference_weight_kg: 0, user: user)
+        expect(recipe).not_to be_valid
+        expect(recipe.errors[:unit_reference_weight_kg]).to be_present
+      end
+
+      it 'valide si sold_by_unit: false et poids nil' do
+        recipe = build(:recipe, sold_by_unit: false, unit_reference_weight_kg: nil, user: user)
+        expect(recipe).to be_valid
+      end
+
+      it 'invalide si sous-recette et sold_by_unit: true' do
+        recipe = build(:recipe, sellable_as_component: true, sold_by_unit: true, unit_reference_weight_kg: 0.250, user: user)
+        expect(recipe).not_to be_valid
+        expect(recipe.errors[:sold_by_unit]).to be_present
+      end
+    end
+
     context 'tray_size_belongs_to_same_user' do
       it 'invalide si tray_size appartient à other_user' do
         other_tray = create(:tray_size, name: 'M', user: other_user)
@@ -141,6 +171,11 @@ RSpec.describe Recipe, type: :model do
     it 'has_tray vaut false par défaut' do
       recipe = Recipe.new
       expect(recipe.has_tray).to be(false)
+    end
+
+    it 'sold_by_unit vaut false par défaut' do
+      recipe = Recipe.new
+      expect(recipe.sold_by_unit).to be(false)
     end
   end
 
@@ -296,6 +331,42 @@ RSpec.describe Recipe, type: :model do
       subrecipe.update!(sellable_as_component: false)
 
       expect(subrecipe.demotion_alert_message).to include('3 recette(s) parente(s)')
+    end
+  end
+
+  describe '#unit_cost' do
+    it 'retourne cached_cost_per_kg * unit_reference_weight_kg' do
+      recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: 20, user: user)
+      expect(recipe.unit_cost).to eq(5.0) # 20 * 0.250
+    end
+
+    it 'retourne nil si sold_by_unit est false' do
+      recipe = build(:recipe, sold_by_unit: false, cached_cost_per_kg: 20, user: user)
+      expect(recipe.unit_cost).to be_nil
+    end
+
+    it 'retourne nil si cached_cost_per_kg est nil' do
+      recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: nil, user: user)
+      expect(recipe.unit_cost).to be_nil
+    end
+  end
+
+  describe '#unit_selling_price' do
+    it 'retourne suggested_selling_price * unit_reference_weight_kg' do
+      user_markup = create(:user, email: 'markup_unit@test.fr', markup_coefficient: 2.0)
+      recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: 20, user: user_markup)
+      # suggested_selling_price = 20 * 2.0 = 40, unit_selling_price = 40 * 0.250 = 10
+      expect(recipe.unit_selling_price).to eq(10.0)
+    end
+
+    it 'retourne nil si sold_by_unit est false' do
+      recipe = build(:recipe, sold_by_unit: false, cached_cost_per_kg: 20, user: user)
+      expect(recipe.unit_selling_price).to be_nil
+    end
+
+    it 'retourne nil si suggested_selling_price est nil' do
+      recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: nil, user: user)
+      expect(recipe.unit_selling_price).to be_nil
     end
   end
 

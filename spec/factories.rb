@@ -98,6 +98,11 @@ FactoryBot.define do
       name { 'Crème pâtissière' }
       sellable_as_component { true }
     end
+
+    trait :sold_by_unit do
+      sold_by_unit { true }
+      unit_reference_weight_kg { 0.250 }
+    end
   end
 
   factory :recipe_component do

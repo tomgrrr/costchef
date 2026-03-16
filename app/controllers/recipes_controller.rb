@@ -120,10 +120,23 @@ class RecipesController < ApplicationController
   end
 
   def recipe_params
-    params.require(:recipe).permit(
+    permitted = params.require(:recipe).permit(
       :name, :description, :cooking_loss_percentage,
-      :sellable_as_component, :has_tray, :tray_size_id
+      :sellable_as_component, :has_tray, :tray_size_id,
+      :sold_by_unit, :unit_reference_weight_kg
     )
+
+    # Convertir grammes → kg (le formulaire envoie des grammes)
+    if permitted[:unit_reference_weight_kg].present?
+      permitted[:unit_reference_weight_kg] = permitted[:unit_reference_weight_kg].to_f / 1000.0
+    end
+
+    # Nettoyer le poids si sold_by_unit est décoché
+    if permitted[:sold_by_unit] == '0' || permitted[:sold_by_unit] == false
+      permitted[:unit_reference_weight_kg] = nil
+    end
+
+    permitted
   end
 
   def recalculate_if_needed
