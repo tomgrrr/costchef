@@ -36,7 +36,7 @@ yarn watch:css            # Watch mode (included in bin/dev)
 bin/rails console         # Interactive Ruby shell
 ```
 
-**Seed users:** `admin@costchef.fr`, `christophe@traiteur.fr`, `laurent@nouveau.fr` (all `password123`)
+**Seed users:** `admin@costchef.fr`, `tom.grenie@gmail.com` (admins), `christophe@traiteur.fr`, `laurent@nouveau.fr` (all `password123`)
 
 ## Architecture
 

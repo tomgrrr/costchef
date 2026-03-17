@@ -26,6 +26,22 @@ admin.assign_attributes(
 admin.save!
 puts "  - Admin: admin@costchef.fr (mot de passe: password123)"
 
+# Compte admin personnel (production)
+tom = User.find_or_initialize_by(email: "tom.grenie@gmail.com")
+tom.assign_attributes(
+  password: "password123",
+  password_confirmation: "password123",
+  first_name: "Tom",
+  last_name: "Grenié",
+  company_name: "CostChef",
+  subscription_active: true,
+  subscription_started_at: Date.today,
+  subscription_expires_at: nil,
+  admin: true
+)
+tom.save!
+puts "  - Admin perso: tom.grenie@gmail.com (mot de passe: password123)"
+
 # Utilisateur avec abonnement actif
 user_active = User.find_or_initialize_by(email: "christophe@traiteur.fr")
 user_active.assign_attributes(
