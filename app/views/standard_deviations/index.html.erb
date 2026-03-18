@@ -9,6 +9,16 @@
   </div>
 </div>
 
+<div class="search-bar" style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
+  <%= form_with url: standard_deviations_path, method: :get, class: "d-flex align-items-center gap-2" do |f| %>
+    <%= f.text_field :search, value: params[:search], placeholder: "Rechercher un produit...", class: "form-control form-control-sm flex-grow-1 flex-md-grow-0" %>
+    <%= f.submit "Rechercher", class: "btn-outline-slate" %>
+    <% if params[:search].present? %>
+      <%= link_to "✕", standard_deviations_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
+    <% end %>
+  <% end %>
+</div>
+
 <div style="padding: 24px;">
   <div class="section-card">
     <div class="section-header">
@@ -17,7 +27,13 @@
     </div>
 
     <% if @product_entries.empty? %>
-      <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun produit pour le moment.</p>
+      <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">
+        <% if params[:search].present? %>
+          Aucun produit trouvé pour "<%= params[:search] %>".
+        <% else %>
+          Aucun produit pour le moment.
+        <% end %>
+      </p>
     <% else %>
       <div class="table-responsive">
       <table class="data-table">

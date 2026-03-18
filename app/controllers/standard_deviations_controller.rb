@@ -3,6 +3,7 @@
 class StandardDeviationsController < ApplicationController
   def index
     products = current_user.products.includes(:product_purchases)
+    products = products.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
 
     with_cv = []
     without_cv = []
