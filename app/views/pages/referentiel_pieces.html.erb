@@ -26,6 +26,7 @@
               <th>Poids unitaire (g)</th>
               <th>Poids unitaire (kg)</th>
               <th>Prix moyen (€/kg)</th>
+              <th style="width: 50px;"></th>
             </tr>
           </thead>
           <tbody>
@@ -35,6 +36,40 @@
                 <td class="mono"><%= number_with_precision(product.unit_weight_kg * 1000, precision: 0) %> g</td>
                 <td class="mono"><%= number_with_precision(product.unit_weight_kg, precision: 3) %> kg</td>
                 <td class="mono"><%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €</td>
+                <td>
+                  <%= link_to "#",
+                        class: "action-btn",
+                        title: "Modifier le poids",
+                        data: { controller: "toggle-edit",
+                                action: "click->toggle-edit#toggle",
+                                toggle_edit_target_param: "edit_piece_#{product.id}" } do %>
+                    <i class="bi bi-pencil"></i>
+                  <% end %>
+                </td>
+              </tr>
+              <tr id="edit_piece_<%= product.id %>" class="d-none">
+                <td colspan="5">
+                  <%= form_with model: product, url: product_path(product), method: :patch, local: true do |f| %>
+                    <%= hidden_field_tag :return_to, "referentiel_pieces" %>
+                    <%= hidden_field_tag :input_unit, "g" %>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <label class="form-label-xs" style="margin: 0; white-space: nowrap;">Poids (g)</label>
+                      <%= f.number_field :unit_weight_kg,
+                            value: (product.unit_weight_kg * 1000).round(0),
+                            class: "form-control-sm",
+                            style: "width: 120px;",
+                            step: 1,
+                            min: 1 %>
+                      <button type="submit" class="btn-slate" style="padding: 4px 12px; font-size: 12px;">Enregistrer</button>
+                      <%= link_to "Annuler", "#",
+                            class: "btn-outline-slate",
+                            style: "padding: 4px 12px; font-size: 12px;",
+                            data: { controller: "toggle-edit",
+                                    action: "click->toggle-edit#toggle",
+                                    toggle_edit_target_param: "edit_piece_#{product.id}" } %>
+                    </div>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>

@@ -35,8 +35,13 @@ class ProductsController < ApplicationController
   def edit; end
 
   def update
+    convert_unit_weight_from_grams if params[:input_unit] == "g"
+
     if @product.update(product_params)
-      redirect_to products_path, notice: "Produit mis à jour."
+      trigger_recalculation_if_weight_changed
+      redirect_to update_redirect_path, notice: "Produit mis à jour."
+    elsif params[:return_to] == "referentiel_pieces"
+      redirect_to referentiel_pieces_path, alert: @product.errors.full_messages.join(", ")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -60,5 +65,22 @@ class ProductsController < ApplicationController
 
   def product_params
     params.require(:product).permit(:name, :base_unit, :unit_weight_kg)
+  end
+
+  def convert_unit_weight_from_grams
+    weight_g = params.dig(:product, :unit_weight_kg)
+    return unless weight_g.present?
+
+    params[:product][:unit_weight_kg] = weight_g.to_f / 1000
+  end
+
+  def update_redirect_path
+    params[:return_to] == "referentiel_pieces" ? referentiel_pieces_path : products_path
+  end
+
+  def trigger_recalculation_if_weight_changed
+    return unless @product.saved_change_to_unit_weight_kg?
+
+    Recalculations::Dispatcher.full_product_recalculation(@product)
   end
 end
