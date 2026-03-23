@@ -43,10 +43,10 @@ bin/rails console         # Interactive Ruby shell
 ### Data Model (Multi-tenant with user isolation)
 
 - **User** — Owns everything. `markup_coefficient` (default 1.0, min 0.1). `price_variability_threshold` (default 10.0, 0-100, CV% threshold for price alerts). Auth via Devise (`:lockable`, `:timeoutable`). Fields: `first_name`, `last_name`, `company_name`, `admin` (boolean), `subscription_active/started_at/expires_at/notes`, `failed_attempts`, `locked_at`, `unlock_token`.
-- **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required (> 0); must be absent otherwise. `avg_price_per_kg` (default 0, >= 0). Methods: `piece_unit?`, `used_in_recipes?`, `recipes_count`, `simple_avg_price_per_kg` (arithmetic mean of active purchases' `price_per_kg`, rounded to 2 decimals), `high_variability?` (delegates to `Products::VariabilityCalculator`, returns true if CV% > user's `price_variability_threshold`).
+- **Product** — Ingredient library. `base_unit` among `[kg, l, piece]`. If `piece`, `unit_weight_kg` is required (> 0); must be absent otherwise. `avg_price_per_kg` (default 0, >= 0). `dehydrated` (boolean, default false) + `rehydration_coefficient` (decimal, nullable) for dehydrated products (kg only). If `dehydrated`, coefficient is required and must be > 1; `before_validation` clears coefficient when unchecked. Validation: `dehydrated_only_for_kg`. Methods: `piece_unit?`, `used_in_recipes?`, `recipes_count`, `simple_avg_price_per_kg` (arithmetic mean of active purchases' `price_per_kg`, rounded to 2 decimals), `high_variability?` (delegates to `Products::VariabilityCalculator`, returns true if CV% > user's `price_variability_threshold`).
 - **ProductPurchase** — Price history. `package_unit` restricted to units compatible with product's `base_unit` (via `Units.allowed_for`). `package_quantity_kg` and `price_per_kg` are calculated by `PricePerKgCalculator` (via `before_validation`). `active` boolean filters obsolete prices. Scopes: `active`, `inactive`. Method: `toggle_active!`. Custom validations: `supplier_belongs_to_same_user`, `package_unit_matches_base_unit`.
 - **Recipe** — Cost calculations with 4 cached metrics (`cached_total_cost`, `cached_total_weight`, `cached_cost_per_kg`, `cached_raw_weight`). `cooking_loss_percentage` (0-100, default 0). `sellable_as_component` controls sub-recipe eligibility. `has_tray` + `tray_size_id` for packaging. `sold_by_unit` (boolean, default false) + `unit_reference_weight_kg` (decimal, nullable) for unit pricing. Scopes: `usable_as_subrecipe`, `by_cost_per_kg`, `by_cost_per_kg_desc`. Methods: `subrecipe?`, `used_as_subrecipe?`, `parent_recipes_count`, `has_subrecipes?`, `product_components`, `subrecipe_components`, `calculated_*` (4 calculation methods), `suggested_selling_price`, `unit_cost` (cost_per_kg × unit_weight, nil if N/A), `unit_selling_price` (selling_price × unit_weight, nil if N/A), `demotion_alert_message` (returns warning string when `sellable_as_component` changes true→false and parent recipes exist, nil otherwise). Validations: `tray_size_consistency`, `tray_size_belongs_to_same_user`, `subrecipe_cannot_have_tray`, `unit_reference_weight_consistency` (weight required and > 0 when sold_by_unit), `subrecipe_cannot_be_sold_by_unit`.
-- **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). `quantity_kg` (> 0) + `quantity_unit` validated against `Units::VALID_UNITS`. Unique constraint on `[parent_recipe_id, component_type, component_id]`. **Max 1 level of sub-recipe depth.** Validations: `validate_subrecipe_is_sellable`, `validate_max_depth`, `validate_no_self_reference`, `validate_no_circular_reference`, `validate_same_user`. Methods: `recipe_component?`, `product_component?`, `line_cost`.
+- **RecipeComponent** — Polymorphic join (`component_type`: Product or Recipe). `quantity_kg` (> 0) + `quantity_unit` validated against `Units::VALID_UNITS`. Unique constraint on `[parent_recipe_id, component_type, component_id]`. **Max 1 level of sub-recipe depth.** Validations: `validate_subrecipe_is_sellable`, `validate_max_depth`, `validate_no_self_reference`, `validate_no_circular_reference`, `validate_same_user`. Methods: `recipe_component?`, `product_component?`, `effective_weight_kg` (returns `quantity_kg × rehydration_coefficient` for dehydrated products, `quantity_kg` otherwise), `line_cost` (always uses dry `quantity_kg`, unaffected by rehydration).
 - **Supplier** — Linked to ProductPurchases. Soft-delete via `active` flag. Scopes: `active`, `inactive`. Methods: `deactivate!`, `activate!`, `has_purchases?`, `force_destroy!` (returns impacted product_ids).
 - **TraySize** — Optional recipe association. `before_destroy` nullifies `tray_size_id` and sets `has_tray=false` on related recipes. Method: `recipes_count`.
 - **DailySpecial** — Independent history. `CATEGORIES = %w[meat fish side]`. Scopes: `meats`, `fishes`, `sides`. Class methods: `average_cost_per_kg_for(category)`, `meat_average`, `fish_average`, `side_average`.
@@ -63,7 +63,7 @@ Key relationships:
 
 - **Short methods:** Max 10 lines per method. Decompose into private sub-methods.
 - **Single Responsibility (SRP):** One service = one action.
-- **Zero ActiveRecord callbacks** for business logic/calculations — everything goes through Services. Exception: `ProductPurchase#before_validation` calls `PricePerKgCalculator` for derived field calculation.
+- **Zero ActiveRecord callbacks** for business logic/calculations — everything goes through Services. Exceptions: `ProductPurchase#before_validation` calls `PricePerKgCalculator` for derived field calculation; `Product#before_validation` clears `rehydration_coefficient` when `dehydrated` is unchecked.
 - **Fail Fast:** Validate inputs at service entry, raise explicit errors.
 
 ### Service Layer & Calculation Cascade
@@ -81,7 +81,7 @@ Services (7 total):
 1. `ProductPurchases::PricePerKgCalculator.call(purchase)` — Calculates `package_quantity_kg` and `price_per_kg`. Delegates conversion to `Units::Converter`. Guards against division by zero. Does NOT persist.
 2. `Products::VariabilityCalculator.call(product)` — Returns coefficient of variation (CV%) of active purchases' `price_per_kg`. Population stddev (÷ N). Returns `nil` if < 2 active purchases or mean ≤ 0. Rounded to 2 decimals. Does NOT persist.
 3. `Products::AvgPriceRecalculator.call(product)` — Weighted average of active purchases (`SUM(qty_kg × price_per_kg) / SUM(qty_kg)`). Rounded to 4 decimals. Persists via `update_columns`. Raises `ArgumentError` if result is nil or negative.
-4. `Recipes::Recalculator.call(recipe)` — Recalculates the 4 `cached_*` fields. Rounding: cost→2 decimals, weight→3 decimals. Persists via `update_columns`. Does NOT cascade to parents.
+4. `Recipes::Recalculator.call(recipe)` — Recalculates the 4 `cached_*` fields. `calculate_raw_weight` uses `effective_weight_kg` (applies rehydration coefficient for dehydrated products); `calculate_total_cost` uses dry `quantity_kg` via `line_cost` (cost unaffected by rehydration). Rounding: cost→2 decimals, weight→3 decimals. Persists via `update_columns`. Does NOT cascade to parents.
 5. `Recipes::Duplicator.call(recipe)` — Shallow copy of recipe + components, appends " (copie)" to name. Returns unsaved object.
 6. `Recalculations::Dispatcher` — Orchestrates cascade and propagates to parent recipes (max 1 level).
    - `.product_purchase_changed(purchase, product: nil)` — AvgPrice → recipes using product → parent recipes
@@ -99,7 +99,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | `ApplicationController` | Base | `authenticate_user!`, `ensure_subscription!`, `record_not_found` rescue, `Pagy::Backend` (pagination) |
 | `PagesController` | `GET /` (home), `GET /subscription_required`, `GET /referentiel-pieces` (HTML + CSV) | Dashboard with resource counts, Référentiel Pièces view with CSV export |
 | `SignupsController` | `GET/POST /signup` | Token-based invitation signup, skips auth + subscription |
-| `ProductsController` | CRUD `/products` (incl. show) | Search (ILIKE), Pagy pagination, show page with pricing sidebar (PON/MOY), blocks delete if used in recipes |
+| `ProductsController` | CRUD `/products` (incl. show) | Search (ILIKE), Pagy pagination, show page with pricing sidebar (PON/MOY), blocks delete if used in recipes, permits `dehydrated`/`rehydration_coefficient`, triggers `Dispatcher.full_product_recalculation` on coefficient/dehydrated change |
 | `SuppliersController` | CRUD + `activate/deactivate` | Soft-delete, Pagy pagination (active suppliers), force destroy with cascade recalc |
 | `ProductPurchasesController` | CRUD + `toggle_active` | Turbo Streams responses, triggers Dispatcher |
 | `RecipesController` | CRUD + `duplicate` + `export_excel` + `export_all_excel`, `GET /recipes/tarifs` | Tab filtering (recipes/subrecipes), Pagy pagination, conditional recalc, demotion alert via `Recipe#demotion_alert_message`, Excel export (.xlsx via caxlsx): single recipe or all recipes, optional `detailed` param for costs, `sold_by_unit` g→kg conversion in params + cleanup when unchecked |
@@ -135,7 +135,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
     - `< 768px` — Single-column layouts (recipe, products grid, ds-grid), sidebar stacks below with border-top, `data-table` gets `min-width: 600px` (scrolls in `.table-responsive`), `recipe-main` has `min-width: 0` (grid shrink fix), `section-card` has `overflow: hidden`
     - `< 576px` — Dashboard 2-col grid, single-column forms, compact recipe padding
 - **JS:** Stimulus controllers in `app/javascript/controllers/`:
-  - `unit_select_controller.js` — Toggle weight field for piece-based products
+  - `unit_select_controller.js` — Toggle weight field (piece), dehydrated checkbox + coefficient field (kg only)
   - `unified_search_controller.js` — Combined product/sub-recipe search modal
   - `toggle_edit_controller.js` — Toggle edit row visibility
   - `char_counter_controller.js` — Character count for textareas
@@ -167,7 +167,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Paginated index actions:** `ProductsController#index`, `RecipesController#index`, `SuppliersController#index` (active suppliers only), `StandardDeviationsController#index` (pagy_array).
 - **Views:** `pagy_bootstrap_nav(@pagy)` in `products/index`, `recipes/index`, `suppliers/index`.
 
-### Test Suite (570 specs)
+### Test Suite (589 specs)
 
 **Setup:**
 - `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`/`:sold_by_unit`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
@@ -181,17 +181,17 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - Product factory has a uniqueness constraint on `name` per user — use distinct names when creating multiple products (not `create_list`).
 
 **Spec files:**
-- `spec/services/` — 8 service specs (Units module, Units::Converter, PricePerKgCalculator, VariabilityCalculator, AvgPriceRecalculator, Recalculator, Duplicator, Dispatcher). 64 examples.
+- `spec/services/` — 8 service specs (Units module, Units::Converter, PricePerKgCalculator, VariabilityCalculator, AvgPriceRecalculator, Recalculator, Duplicator, Dispatcher). 66 examples.
 - `spec/models/correctifs_spec.rb` — 12 examples. RecipeComponent quantity_unit, ProductPurchase calculated fields + package_unit, Supplier#force_destroy!, DailySpecial averages.
-- `spec/models/product_spec.rb` — 30 examples. Validations (name, base_unit, avg_price_per_kg), unit_weight_kg, methods, defaults, simple_avg_price_per_kg.
+- `spec/models/product_spec.rb` — 37 examples. Validations (name, base_unit, avg_price_per_kg), unit_weight_kg, methods, defaults, simple_avg_price_per_kg, dehydration (validations, cleanup).
 - `spec/models/product_purchase_spec.rb` — 36 examples. Validations, supplier_belongs_to_same_user, package_unit_matches_base_unit, scopes, toggle_active!, defaults.
 - `spec/models/recipe_spec.rb` — 57 examples. Validations (name, description, cooking_loss, tray_size, sold_by_unit), defaults, scopes, business methods, calculations, demotion_alert_message, unit_cost, unit_selling_price.
-- `spec/models/recipe_component_spec.rb` — 34 examples. Validations (quantity, unit, type, uniqueness), business validations (sellable, max_depth, self/circular ref, same_user), instance methods.
+- `spec/models/recipe_component_spec.rb` — 37 examples. Validations (quantity, unit, type, uniqueness), business validations (sellable, max_depth, self/circular ref, same_user), instance methods (effective_weight_kg, line_cost).
 - `spec/models/daily_special_spec.rb` — 15 examples. Validations, scopes, averages.
 - `spec/models/tray_size_spec.rb` — 14 examples. Validations, associations, nullify on delete, eager-loaded recipes_count.
 - `spec/requests/pages_spec.rb` — 14 examples. GET / (auth, subscription gate, counters) + GET /subscription_required + GET /referentiel-pieces (auth, piece products, isolation, CSV export).
 - `spec/requests/signups_spec.rb` — 17 examples. GET /signup + POST /signup.
-- `spec/requests/products_spec.rb` — 32 examples. Index (auth, search, pagination), show (pricing, isolation, 404), POST, PATCH, DELETE.
+- `spec/requests/products_spec.rb` — 35 examples. Index (auth, search, pagination), show (pricing, isolation, 404), POST (incl. dehydrated), PATCH (incl. coefficient recalc), DELETE.
 - `spec/requests/suppliers_spec.rb` — 31 examples. Index (pagination), POST, PATCH, activate/deactivate, DELETE, force destroy, isolation.
 - `spec/requests/product_purchases_spec.rb` — 21 examples. POST, PATCH, DELETE, toggle_active with turbo_stream.
 - `spec/requests/recipes_spec.rb` — 58 examples. Index (auth, search, tabs, pagination), show, new, create (incl. sold_by_unit g→kg), edit, update (incl. sold_by_unit), destroy, duplicate, export_excel, export_all_excel, tarifs.

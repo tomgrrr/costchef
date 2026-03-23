@@ -35,6 +35,30 @@
       </div>
     </div>
 
+    <%# Produit déshydraté (visible uniquement si kg) %>
+    <div class="mb-3 <%= 'd-none' unless product.base_unit == 'kg' %>" data-unit-select-target="dehydratedField">
+      <div class="form-check">
+        <%= f.check_box :dehydrated,
+              class: "form-check-input",
+              data: { action: "change->unit-select#toggleDehydrated" } %>
+        <%= f.label :dehydrated, "Produit déshydraté", class: "form-check-label fw-semibold" %>
+      </div>
+      <div data-unit-select-target="coefficientField" class="mt-2 <%= 'd-none' unless product.dehydrated? %>">
+        <%= f.label :rehydration_coefficient,
+              "Coefficient de réhydratation",
+              class: "form-label" %>
+        <%= f.number_field :rehydration_coefficient,
+              step: "0.1", min: "1.1",
+              class: "form-control #{'is-invalid' if product.errors[:rehydration_coefficient].any?}",
+              placeholder: "Ex: 2.5",
+              style: "max-width: 200px;" %>
+        <div class="form-text">Multiplie le poids dans les recettes. Ex: 2.5 = le produit prend ×2.5 son poids sec.</div>
+        <% if product.errors[:rehydration_coefficient].any? %>
+          <div class="invalid-feedback"><%= product.errors[:rehydration_coefficient].first %></div>
+        <% end %>
+      </div>
+    </div>
+
     <%# Poids unitaire (visible uniquement si piece) %>
     <div class="mb-3" data-unit-select-target="weightField">
       <%= f.label :unit_weight_kg,

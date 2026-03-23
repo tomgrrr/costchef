@@ -64,7 +64,7 @@ class ProductsController < ApplicationController
   end
 
   def product_params
-    params.require(:product).permit(:name, :base_unit, :unit_weight_kg)
+    params.require(:product).permit(:name, :base_unit, :unit_weight_kg, :dehydrated, :rehydration_coefficient)
   end
 
   def convert_unit_weight_from_grams
@@ -79,7 +79,9 @@ class ProductsController < ApplicationController
   end
 
   def trigger_recalculation_if_weight_changed
-    return unless @product.saved_change_to_unit_weight_kg?
+    return unless @product.saved_change_to_unit_weight_kg? ||
+                  @product.saved_change_to_rehydration_coefficient? ||
+                  @product.saved_change_to_dehydrated?
 
     Recalculations::Dispatcher.full_product_recalculation(@product)
   end

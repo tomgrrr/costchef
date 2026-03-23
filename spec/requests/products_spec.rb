@@ -195,6 +195,19 @@ RSpec.describe 'Products', type: :request do
       end
     end
 
+    context 'base_unit kg avec dehydrated et coefficient' do
+      it 'crée le produit déshydraté' do
+        expect {
+          post products_path, params: { product: {
+            name: 'Couscous', base_unit: 'kg', dehydrated: true, rehydration_coefficient: 3.0
+          } }
+        }.to change(user.products, :count).by(1)
+        product = user.products.last
+        expect(product.dehydrated).to be(true)
+        expect(product.rehydration_coefficient.to_f).to eq(3.0)
+      end
+    end
+
     context "nom déjà pris par un autre user" do
       before { create(:product, name: 'Farine T55', user: other_user) }
 
@@ -235,6 +248,25 @@ RSpec.describe 'Products', type: :request do
         patch product_path(product), params: { product: { base_unit: 'kg', unit_weight_kg: nil } }
         expect(product.reload.base_unit).to eq('kg')
         expect(product.unit_weight_kg).to be_nil
+      end
+    end
+
+    context 'modification du coefficient de réhydratation' do
+      let!(:dehydrated_product) do
+        create(:product, name: 'Couscous', base_unit: 'kg', dehydrated: true,
+                         rehydration_coefficient: 2.0, user: user)
+      end
+
+      it 'déclenche une recalculation quand le coefficient change' do
+        recipe = create(:recipe, name: 'Taboulé', user: user)
+        create(:recipe_component, parent_recipe: recipe, component: dehydrated_product, quantity_kg: 0.5)
+        Recipes::Recalculator.call(recipe)
+
+        patch product_path(dehydrated_product), params: { product: { rehydration_coefficient: 3.0 } }
+        expect(dehydrated_product.reload.rehydration_coefficient.to_f).to eq(3.0)
+        recipe.reload
+        # raw_weight = 0.5 * 3.0 = 1.5
+        expect(recipe.cached_raw_weight.to_f).to eq(1.5)
       end
     end
 

@@ -132,9 +132,9 @@ class Recipe < ApplicationRecord
   # Méthodes de calcul (utilisées par le service Recalculator)
   # ============================================
 
-  # Poids brut total (somme des quantity_kg de tous les composants)
+  # Poids brut total (avec réhydratation pour produits déshydratés)
   def calculated_raw_weight
-    recipe_components.sum(:quantity_kg)
+    recipe_components.includes(:component).sum(&:effective_weight_kg)
   end
 
   # Poids total après cuisson (avec perte)

@@ -54,6 +54,37 @@ RSpec.describe Recipes::Recalculator do
       end
     end
 
+    context 'with dehydrated product' do
+      let(:dehydrated) do
+        create(:product, user: user, name: 'Couscous', avg_price_per_kg: 4.0,
+                         dehydrated: true, rehydration_coefficient: 3.0)
+      end
+      let(:recipe) { create(:recipe, user: user, cooking_loss_percentage: 0) }
+
+      before do
+        create(:recipe_component, parent_recipe: recipe, component: dehydrated, quantity_kg: 0.5)
+      end
+
+      it 'applies rehydration coefficient to raw weight' do
+        described_class.call(recipe)
+        recipe.reload
+
+        # raw_weight = 0.5 * 3.0 = 1.5
+        expect(recipe.cached_raw_weight.to_f).to eq(1.5)
+        expect(recipe.cached_total_weight.to_f).to eq(1.5)
+      end
+
+      it 'does NOT apply coefficient to cost (stays based on dry weight)' do
+        described_class.call(recipe)
+        recipe.reload
+
+        # total_cost = 0.5 * 4.0 = 2.0 (dry weight × price)
+        expect(recipe.cached_total_cost.to_f).to eq(2.0)
+        # cost_per_kg = 2.0 / 1.5 = 1.3333
+        expect(recipe.cached_cost_per_kg.to_f).to be_within(0.01).of(1.33)
+      end
+    end
+
     context 'with empty recipe (0 components)' do
       let(:recipe) { create(:recipe, user: user) }
 

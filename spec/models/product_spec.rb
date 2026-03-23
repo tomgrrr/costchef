@@ -202,6 +202,54 @@ RSpec.describe Product, type: :model do
     end
   end
 
+  describe 'déshydratation' do
+    it 'dehydrated par défaut false' do
+      product = Product.new
+      expect(product.dehydrated).to be(false)
+    end
+
+    it 'valide avec dehydrated: true + coefficient > 1 + base_unit: kg' do
+      product = build(:product, name: 'Couscous', base_unit: 'kg', dehydrated: true,
+                                rehydration_coefficient: 2.5, user: user)
+      expect(product).to be_valid
+    end
+
+    it 'invalide si dehydrated: true sans coefficient' do
+      product = build(:product, name: 'Couscous', base_unit: 'kg', dehydrated: true,
+                                rehydration_coefficient: nil, user: user)
+      expect(product).not_to be_valid
+      expect(product.errors[:rehydration_coefficient]).to be_present
+    end
+
+    it 'invalide si coefficient <= 1' do
+      product = build(:product, name: 'Couscous', base_unit: 'kg', dehydrated: true,
+                                rehydration_coefficient: 1.0, user: user)
+      expect(product).not_to be_valid
+      expect(product.errors[:rehydration_coefficient]).to be_present
+    end
+
+    it 'invalide si dehydrated: true + base_unit: l' do
+      product = build(:product, name: 'Bouillon', base_unit: 'l', dehydrated: true,
+                                rehydration_coefficient: 2.0, user: user)
+      expect(product).not_to be_valid
+      expect(product.errors[:dehydrated]).to be_present
+    end
+
+    it 'invalide si dehydrated: true + base_unit: piece' do
+      product = build(:product, name: 'Champignon', base_unit: 'piece', unit_weight_kg: 0.01,
+                                dehydrated: true, rehydration_coefficient: 2.0, user: user)
+      expect(product).not_to be_valid
+      expect(product.errors[:dehydrated]).to be_present
+    end
+
+    it 'nettoie rehydration_coefficient quand dehydrated décoché' do
+      product = create(:product, name: 'Couscous', base_unit: 'kg', dehydrated: true,
+                                 rehydration_coefficient: 3.0, user: user)
+      product.update!(dehydrated: false)
+      expect(product.reload.rehydration_coefficient).to be_nil
+    end
+  end
+
   describe 'defaults (after_initialize)' do
     it 'base_unit par défaut kg' do
       product = Product.new

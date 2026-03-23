@@ -42,10 +42,19 @@ class Product < ApplicationRecord
             absence: true,
             unless: :piece_unit?
 
+  # Déshydratation : coefficient obligatoire et > 1 si dehydrated, uniquement pour kg
+  validates :rehydration_coefficient,
+            numericality: { greater_than: 1 },
+            presence: true,
+            if: :dehydrated?
+
+  validate :dehydrated_only_for_kg
+
   # ============================================
   # Callbacks
   # ============================================
   after_initialize :set_defaults, if: :new_record?
+  before_validation :clear_dehydration_fields, unless: :dehydrated?
 
   # ============================================
   # Instance Methods
@@ -83,5 +92,15 @@ class Product < ApplicationRecord
   def set_defaults
     self.base_unit ||= 'kg'
     self.avg_price_per_kg ||= 0
+  end
+
+  def dehydrated_only_for_kg
+    if dehydrated? && base_unit != 'kg'
+      errors.add(:dehydrated, "n'est disponible que pour les produits en kg")
+    end
+  end
+
+  def clear_dehydration_fields
+    self.rehydration_coefficient = nil
   end
 end

@@ -225,6 +225,25 @@ RSpec.describe RecipeComponent, type: :model do
     end
   end
 
+  describe '#effective_weight_kg' do
+    it 'retourne quantity_kg pour un produit normal' do
+      rc = build(:recipe_component, parent_recipe: recipe, component: product, quantity_kg: 0.5)
+      expect(rc.effective_weight_kg).to eq(0.5)
+    end
+
+    it 'retourne quantity_kg × coefficient pour un produit déshydraté' do
+      dehydrated_product = create(:product, name: 'Couscous', base_unit: 'kg',
+                                            dehydrated: true, rehydration_coefficient: 3.0, user: user)
+      rc = build(:recipe_component, parent_recipe: recipe, component: dehydrated_product, quantity_kg: 0.5)
+      expect(rc.effective_weight_kg).to eq(1.5)
+    end
+
+    it 'retourne quantity_kg pour un composant sous-recette' do
+      rc = build(:recipe_component, parent_recipe: recipe, component: subrecipe, quantity_kg: 0.5)
+      expect(rc.effective_weight_kg).to eq(0.5)
+    end
+  end
+
   describe '#line_cost' do
     context 'composant Product' do
       it 'retourne quantity_kg * product.avg_price_per_kg' do

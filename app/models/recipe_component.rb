@@ -61,6 +61,14 @@ class RecipeComponent < ApplicationRecord
     component_type == 'Product'
   end
 
+  # Poids effectif (réhydraté si produit déshydraté)
+  def effective_weight_kg
+    return quantity_kg unless product_component?
+    return quantity_kg unless component&.dehydrated?
+
+    quantity_kg * (component.rehydration_coefficient || 1)
+  end
+
   # Coût de la ligne (PRD Section 8.1)
   def line_cost
     return 0 unless quantity_kg && component

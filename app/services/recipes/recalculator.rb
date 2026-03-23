@@ -85,9 +85,11 @@ module Recipes
       end
     end
 
-    # Calcule le poids brut total (avant cuisson)
+    # Calcule le poids brut total (avant cuisson), avec réhydratation
     def calculate_raw_weight
-      @recipe.recipe_components.sum(:quantity_kg) || 0
+      @recipe.recipe_components.includes(:component).sum do |rc|
+        rc.effective_weight_kg.to_f
+      end
     end
 
     # Calcule le poids final (après cuisson)
