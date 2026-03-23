@@ -6,7 +6,8 @@ class RecipesController < ApplicationController
   def index
     @tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
     scope = current_user.recipes
-                        .includes(:recipe_components, :tray_size)
+                        .includes(recipe_components: :component)
+                        .includes(:tray_size)
                         .where(sellable_as_component: @tab == 'subrecipes')
                         .order(:cached_cost_per_kg)
     scope = scope.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?

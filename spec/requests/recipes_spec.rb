@@ -83,6 +83,15 @@ RSpec.describe 'Recipes', type: :request do
         end
       end
 
+      it 'affiche le badge alerte quand une recette contient un produit à prix 0' do
+        recipe = create(:recipe, name: 'Pâte brisée', user: user)
+        product_zero = create(:product, name: 'Sel', user: user, avg_price_per_kg: 0)
+        create(:recipe_component, parent_recipe: recipe, component: product_zero)
+
+        get recipes_path
+        expect(response.body).to include('1 produit à 0')
+      end
+
       it 'tab=subrecipes affiche uniquement les sous-recettes' do
         create(:recipe, name: 'Pâte brisée', user: user)
         create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)

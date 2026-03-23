@@ -191,6 +191,17 @@ class Recipe < ApplicationRecord
     suggested_selling_price * unit_reference_weight_kg
   end
 
+  # Nombre de produits à prix 0 dans cette recette (inclut les sous-recettes)
+  def zero_price_products_count
+    count = products.where(avg_price_per_kg: 0).count
+
+    subrecipe_components.includes(component: :products).each do |rc|
+      count += rc.component.products.count { |p| p.avg_price_per_kg.zero? }
+    end
+
+    count
+  end
+
   # Prix de vente conseillé (PRD Section 8.1)
   # Sans barquette: cost_per_kg * coefficient
   # Avec barquette: (cost_per_kg * coefficient) + tray_price

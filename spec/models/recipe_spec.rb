@@ -370,6 +370,50 @@ RSpec.describe Recipe, type: :model do
     end
   end
 
+  describe '#zero_price_products_count' do
+    it 'retourne 0 quand tous les produits ont un prix > 0' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      product = create(:product, name: 'Farine T55', user: user, avg_price_per_kg: 5.0)
+      create(:recipe_component, parent_recipe: recipe, component: product)
+
+      expect(recipe.zero_price_products_count).to eq(0)
+    end
+
+    it 'retourne le bon nombre quand des produits directs sont à prix 0' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      product_ok = create(:product, name: 'Farine T55', user: user, avg_price_per_kg: 5.0)
+      product_zero = create(:product, name: 'Sel', user: user, avg_price_per_kg: 0)
+      create(:recipe_component, parent_recipe: recipe, component: product_ok)
+      create(:recipe_component, parent_recipe: recipe, component: product_zero)
+
+      expect(recipe.zero_price_products_count).to eq(1)
+    end
+
+    it 'inclut les produits à 0€ des sous-recettes' do
+      subrecipe = create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+      product_zero = create(:product, name: 'Lait', user: user, avg_price_per_kg: 0)
+      create(:recipe_component, parent_recipe: subrecipe, component: product_zero)
+
+      recipe = create(:recipe, name: 'Mille-feuille', user: user)
+      create(:recipe_component, parent_recipe: recipe, component: subrecipe)
+
+      expect(recipe.zero_price_products_count).to eq(1)
+    end
+
+    it 'cumule les produits à 0€ directs et des sous-recettes' do
+      subrecipe = create(:recipe, :subrecipe, name: 'Crème pâtissière', user: user)
+      product_sub_zero = create(:product, name: 'Lait', user: user, avg_price_per_kg: 0)
+      create(:recipe_component, parent_recipe: subrecipe, component: product_sub_zero)
+
+      recipe = create(:recipe, name: 'Mille-feuille', user: user)
+      product_direct_zero = create(:product, name: 'Sel', user: user, avg_price_per_kg: 0)
+      create(:recipe_component, parent_recipe: recipe, component: product_direct_zero)
+      create(:recipe_component, parent_recipe: recipe, component: subrecipe)
+
+      expect(recipe.zero_price_products_count).to eq(2)
+    end
+  end
+
   describe '#calculated_raw_weight' do
     it 'retourne la somme des quantity_kg de tous les composants' do
       recipe = create(:recipe, name: 'Pâte brisée', user: user)

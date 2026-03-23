@@ -75,6 +75,13 @@
               <td>
                 <%= link_to recipe_path(recipe), style: "color: var(--sl-900); font-weight: 500; text-decoration: none; display: block;" do %>
                   <%= recipe.name %>
+                  <% zero_count = recipe.zero_price_products_count %>
+                  <% if zero_count > 0 %>
+                    <span class="badge-warning-sl" style="font-size: 11px; margin-left: 8px;">
+                      <i class="bi bi-exclamation-triangle"></i>
+                      <%= zero_count %> produit<%= 's' if zero_count > 1 %> à 0&nbsp;€
+                    </span>
+                  <% end %>
                 <% end %>
               </td>
               <td>
