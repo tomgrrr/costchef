@@ -102,6 +102,29 @@ RSpec.describe 'Recipes', type: :request do
     end
   end
 
+  describe 'GET /recipes.csv' do
+    before { sign_in user }
+
+    it 'retourne un CSV avec les en-têtes et les recettes du user' do
+      create(:recipe, name: 'Pâte brisée', user: user, cooking_loss_percentage: 10)
+      create(:recipe, name: 'Crème brûlée', user: user)
+      get recipes_path(format: :csv)
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include('text/csv')
+      lines = response.body.lines
+      expect(lines.first).to include('Nom;Coût/kg (€)')
+      expect(lines.size).to eq(3) # header + 2 recipes
+    end
+
+    it 'respecte l\'isolation utilisateur' do
+      create(:recipe, name: 'Pâte brisée', user: user)
+      create(:recipe, name: 'Recette secrète', user: other_user)
+      get recipes_path(format: :csv)
+      expect(response.body).to include('Pâte brisée')
+      expect(response.body).not_to include('Recette secrète')
+    end
+  end
+
   describe 'GET /recipes/:id' do
     before { sign_in user }
 

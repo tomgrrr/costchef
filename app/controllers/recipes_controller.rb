@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'csv'
+
 class RecipesController < ApplicationController
   before_action :set_recipe, only: %i[show edit update destroy duplicate export_excel]
 
@@ -12,7 +14,10 @@ class RecipesController < ApplicationController
                         .order(:cached_cost_per_kg)
     scope = scope.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
 
-    @pagy, @recipes = pagy(scope)
+    respond_to do |format|
+      format.html { @pagy, @recipes = pagy(scope) }
+      format.csv { send_recipes_csv(scope) }
+    end
   end
 
   def tarifs
@@ -248,6 +253,22 @@ class RecipesController < ApplicationController
                       style: [total_style, total_style, total_dec3_style, total_style]
 
         sheet.column_widths 14, 30, 16, 10
+      end
+    end
+  end
+
+  def send_recipes_csv(recipes)
+    prefix = @tab == 'subrecipes' ? 'sous-recettes' : 'recettes'
+    send_data generate_recipes_csv(recipes),
+              filename: "#{prefix}-#{Date.today}.csv",
+              type: 'text/csv; charset=utf-8'
+  end
+
+  def generate_recipes_csv(recipes)
+    CSV.generate(col_sep: ';') do |csv|
+      csv << ['Nom', 'Coût/kg (€)', 'Poids final (kg)', 'Perte cuisson (%)']
+      recipes.each do |r|
+        csv << [r.name, r.cached_cost_per_kg, r.cached_total_weight, r.cooking_loss_percentage]
       end
     end
   end
