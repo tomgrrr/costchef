@@ -129,7 +129,7 @@ RSpec.describe RecipeComponent, type: :model do
     end
   end
 
-  describe 'validate_max_depth (2 niveaux max)' do
+  describe 'validate_max_depth (3 niveaux max)' do
     it 'valide : sous-recette contenant uniquement des produits (profondeur 1)' do
       create(:recipe_component, parent_recipe: subrecipe, component: product)
 
@@ -146,7 +146,7 @@ RSpec.describe RecipeComponent, type: :model do
       expect(rc).to be_valid
     end
 
-    it 'invalide : sous-recette contenant une chaîne de 2 sous-recettes imbriquées (profondeur 3)' do
+    it 'valide : chaîne de 3 sous-recettes imbriquées (profondeur 3)' do
       level2 = create(:recipe, :subrecipe, name: 'Ganache', user: user)
       level3 = create(:recipe, :subrecipe, name: 'Crème', user: user)
       create(:recipe_component, parent_recipe: level3, component: product)
@@ -154,15 +154,43 @@ RSpec.describe RecipeComponent, type: :model do
       create(:recipe_component, parent_recipe: subrecipe, component: level2)
 
       rc = build(:recipe_component, parent_recipe: recipe, component: subrecipe)
-      expect(rc).not_to be_valid
-      expect(rc.errors[:base].join).to include('2 niveaux max')
+      expect(rc).to be_valid
     end
 
-    it 'invalide : ajout dans une recette déjà à profondeur 2 au-dessus' do
-      # grandparent → parent → middle (déjà 2 niveaux au-dessus)
+    it 'invalide : chaîne de 4 sous-recettes imbriquées (profondeur 4)' do
+      level2 = create(:recipe, :subrecipe, name: 'Ganache', user: user)
+      level3 = create(:recipe, :subrecipe, name: 'Crème', user: user)
+      level4 = create(:recipe, :subrecipe, name: 'Base', user: user)
+      create(:recipe_component, parent_recipe: level4, component: product)
+      create(:recipe_component, parent_recipe: level3, component: level4)
+      create(:recipe_component, parent_recipe: level2, component: level3)
+      create(:recipe_component, parent_recipe: subrecipe, component: level2)
+
+      rc = build(:recipe_component, parent_recipe: recipe, component: subrecipe)
+      expect(rc).not_to be_valid
+      expect(rc.errors[:base].join).to include('3 niveaux max')
+    end
+
+    it 'valide : ajout dans une recette déjà à profondeur 2 au-dessus (profondeur totale 3)' do
+      # grandparent → parent → middle (2 niveaux au-dessus)
       middle = create(:recipe, :subrecipe, name: 'Middle', user: user)
       parent_r = create(:recipe, :subrecipe, name: 'Parent', user: user)
       grandparent_r = create(:recipe, name: 'GrandParent', user: user)
+      create(:recipe_component, parent_recipe: grandparent_r, component: parent_r)
+      create(:recipe_component, parent_recipe: parent_r, component: middle)
+
+      new_sub = create(:recipe, :subrecipe, name: 'Nouvelle sous', user: user)
+      rc = build(:recipe_component, parent_recipe: middle, component: new_sub)
+      expect(rc).to be_valid
+    end
+
+    it 'invalide : profondeur totale dépasse 3 (3 au-dessus + 1 en dessous)' do
+      # great_grandparent → grandparent → parent → middle (3 niveaux au-dessus)
+      middle = create(:recipe, :subrecipe, name: 'Middle', user: user)
+      parent_r = create(:recipe, :subrecipe, name: 'Parent', user: user)
+      grandparent_r = create(:recipe, :subrecipe, name: 'GrandParent', user: user)
+      great_grandparent_r = create(:recipe, name: 'GreatGrandParent', user: user)
+      create(:recipe_component, parent_recipe: great_grandparent_r, component: grandparent_r)
       create(:recipe_component, parent_recipe: grandparent_r, component: parent_r)
       create(:recipe_component, parent_recipe: parent_r, component: middle)
 

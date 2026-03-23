@@ -91,19 +91,19 @@ class RecipeComponent < ApplicationRecord
     end
   end
 
-  # 2 niveaux max de sous-recettes : A → B → C autorisé, A → B → C → D interdit
+  # 3 niveaux max de sous-recettes : A → B → C → D autorisé, A → B → C → D → E interdit
   def validate_max_depth
     return unless component.is_a?(Recipe)
 
-    # Sens descendant : la sous-recette ajoutée ne doit pas être déjà à profondeur 2
-    if depth_below(component) >= 2
-      errors.add(:base, "La sous-recette '#{component.name}' atteint déjà la profondeur maximale (2 niveaux max)")
+    # Sens descendant : la sous-recette ajoutée ne doit pas être déjà à profondeur 3
+    if depth_below(component) >= 3
+      errors.add(:base, "La sous-recette '#{component.name}' atteint déjà la profondeur maximale (3 niveaux max)")
       return
     end
 
-    # Sens ascendant + descendant : la profondeur totale ne doit pas dépasser 2
-    if depth_above(parent_recipe) + depth_below(component) >= 2
-      errors.add(:base, "Ajout impossible : la profondeur totale dépasserait 2 niveaux")
+    # Sens ascendant + descendant : la profondeur totale ne doit pas dépasser 3
+    if depth_above(parent_recipe) + depth_below(component) >= 3
+      errors.add(:base, "Ajout impossible : la profondeur totale dépasserait 3 niveaux")
     end
   end
 
@@ -111,16 +111,22 @@ class RecipeComponent < ApplicationRecord
     child_recipe_ids = recipe.recipe_components.where(component_type: 'Recipe').pluck(:component_id)
     return 0 if child_recipe_ids.empty?
 
-    has_grandchildren = RecipeComponent.where(component_type: 'Recipe', parent_recipe_id: child_recipe_ids).exists?
-    has_grandchildren ? 2 : 1
+    grandchild_ids = RecipeComponent.where(component_type: 'Recipe', parent_recipe_id: child_recipe_ids).pluck(:component_id)
+    return 1 if grandchild_ids.empty?
+
+    great_grandchild_exists = RecipeComponent.where(component_type: 'Recipe', parent_recipe_id: grandchild_ids).exists?
+    great_grandchild_exists ? 3 : 2
   end
 
   def depth_above(recipe)
     parent_ids = RecipeComponent.where(component_type: 'Recipe', component_id: recipe.id).pluck(:parent_recipe_id)
     return 0 if parent_ids.empty?
 
-    grandparent_exists = RecipeComponent.where(component_type: 'Recipe', component_id: parent_ids).exists?
-    grandparent_exists ? 2 : 1
+    grandparent_ids = RecipeComponent.where(component_type: 'Recipe', component_id: parent_ids).pluck(:parent_recipe_id)
+    return 1 if grandparent_ids.empty?
+
+    great_grandparent_exists = RecipeComponent.where(component_type: 'Recipe', component_id: grandparent_ids).exists?
+    great_grandparent_exists ? 3 : 2
   end
 
   # Anti-cycle: une recette ne peut pas se contenir elle-même
