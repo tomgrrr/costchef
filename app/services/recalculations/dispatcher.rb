@@ -31,7 +31,7 @@ module Recalculations
     # 1. AvgPriceRecalculator.call(purchase.product)
     # 2. Trouver les recettes impactées via recipe_components
     # 3. Recalculator.call(recipe) pour chaque recette impactée
-    # 4. Propager aux recettes parentes (1 niveau)
+    # 4. Propager aux recettes parentes (2 niveaux max)
     #
     def self.product_purchase_changed(purchase, product: nil)
       new.product_purchase_changed(purchase, product: product)
@@ -157,20 +157,20 @@ module Recalculations
       end
     end
 
-    # Propage le recalcul aux recettes qui utilisent cette recette comme sous-recette
-    def propagate_to_parent_recipes(recipe)
+    # Propage le recalcul aux recettes qui utilisent cette recette comme sous-recette (2 niveaux max)
+    def propagate_to_parent_recipes(recipe, depth: 0)
+      return if depth >= 2
       return unless recipe.sellable_as_component?
 
-      # Trouver les recettes parentes
       parent_recipe_ids = RecipeComponent
                           .where(component_type: 'Recipe', component_id: recipe.id)
                           .pluck(:parent_recipe_id)
 
       return if parent_recipe_ids.empty?
 
-      # Recalculer chaque recette parente (1 niveau seulement, PRD D5)
       Recipe.where(id: parent_recipe_ids).find_each do |parent_recipe|
         Recipes::Recalculator.call(parent_recipe)
+        propagate_to_parent_recipes(parent_recipe, depth: depth + 1)
       end
     end
   end

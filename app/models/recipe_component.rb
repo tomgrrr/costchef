@@ -91,13 +91,36 @@ class RecipeComponent < ApplicationRecord
     end
   end
 
-  # PRD D5: 1 seul niveau max - la sous-recette ne doit pas contenir d'autres sous-recettes
+  # 2 niveaux max de sous-recettes : A → B → C autorisé, A → B → C → D interdit
   def validate_max_depth
     return unless component.is_a?(Recipe)
 
-    if component.recipe_components.where(component_type: 'Recipe').exists?
-      errors.add(:base, "La sous-recette '#{component.name}' contient déjà des sous-recettes (1 niveau max)")
+    # Sens descendant : la sous-recette ajoutée ne doit pas être déjà à profondeur 2
+    if depth_below(component) >= 2
+      errors.add(:base, "La sous-recette '#{component.name}' atteint déjà la profondeur maximale (2 niveaux max)")
+      return
     end
+
+    # Sens ascendant + descendant : la profondeur totale ne doit pas dépasser 2
+    if depth_above(parent_recipe) + depth_below(component) >= 2
+      errors.add(:base, "Ajout impossible : la profondeur totale dépasserait 2 niveaux")
+    end
+  end
+
+  def depth_below(recipe)
+    child_recipe_ids = recipe.recipe_components.where(component_type: 'Recipe').pluck(:component_id)
+    return 0 if child_recipe_ids.empty?
+
+    has_grandchildren = RecipeComponent.where(component_type: 'Recipe', parent_recipe_id: child_recipe_ids).exists?
+    has_grandchildren ? 2 : 1
+  end
+
+  def depth_above(recipe)
+    parent_ids = RecipeComponent.where(component_type: 'Recipe', component_id: recipe.id).pluck(:parent_recipe_id)
+    return 0 if parent_ids.empty?
+
+    grandparent_exists = RecipeComponent.where(component_type: 'Recipe', component_id: parent_ids).exists?
+    grandparent_exists ? 2 : 1
   end
 
   # Anti-cycle: une recette ne peut pas se contenir elle-même

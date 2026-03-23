@@ -139,6 +139,34 @@ RSpec.describe Recalculations::Dispatcher do
     end
   end
 
+  describe '2-level cascade propagation' do
+    let(:product) { create(:product, user: user, avg_price_per_kg: 5.0) }
+    let(:level_c) { create(:recipe, :subrecipe, user: user, name: 'Level C', cooking_loss_percentage: 0) }
+    let(:level_b) { create(:recipe, :subrecipe, user: user, name: 'Level B', cooking_loss_percentage: 0) }
+    let(:level_a) { create(:recipe, user: user, name: 'Level A', cooking_loss_percentage: 0) }
+
+    before do
+      create(:recipe_component, parent_recipe: level_c, component: product, quantity_kg: 1.0)
+      create(:recipe_component, parent_recipe: level_b, component: level_c, quantity_kg: 1.0)
+      create(:recipe_component, parent_recipe: level_a, component: level_b, quantity_kg: 1.0)
+    end
+
+    it 'propagates recalculation through 2 levels (grandparent → parent → child)' do
+      described_class.recipe_component_changed(level_c)
+
+      level_c.reload
+      level_b.reload
+      level_a.reload
+
+      # level_c: 1kg × 5€/kg = 5€
+      expect(level_c.cached_cost_per_kg.to_f).to eq(5.0)
+      # level_b: 1kg × 5€/kg = 5€
+      expect(level_b.cached_total_cost.to_f).to eq(5.0)
+      # level_a: 1kg × 5€/kg = 5€
+      expect(level_a.cached_total_cost.to_f).to eq(5.0)
+    end
+  end
+
   describe '.supplier_force_destroyed' do
     it 'recalculates each affected product and its recipes' do
       product_a = create(:product, user: user, name: 'Produit A')
