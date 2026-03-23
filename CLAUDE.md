@@ -99,7 +99,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 | `ApplicationController` | Base | `authenticate_user!`, `ensure_subscription!`, `record_not_found` rescue, `Pagy::Backend` (pagination) |
 | `PagesController` | `GET /` (home), `GET /subscription_required`, `GET /referentiel-pieces` (HTML + CSV) | Dashboard with resource counts, Référentiel Pièces view with CSV export |
 | `SignupsController` | `GET/POST /signup` | Token-based invitation signup, skips auth + subscription |
-| `ProductsController` | CRUD `/products` (incl. show) | Search (ILIKE), Pagy pagination, show page with pricing sidebar (PON/MOY), blocks delete if used in recipes, permits `dehydrated`/`rehydration_coefficient`, triggers `Dispatcher.full_product_recalculation` on coefficient/dehydrated change |
+| `ProductsController` | CRUD `/products` (incl. show, CSV export) | Search (ILIKE), Pagy pagination, CSV export (`format.csv` on index, semicolon-delimited: Nom/Unité/Poids unitaire), show page with pricing sidebar (PON/MOY), blocks delete if used in recipes, permits `dehydrated`/`rehydration_coefficient`, triggers `Dispatcher.full_product_recalculation` on coefficient/dehydrated change |
 | `SuppliersController` | CRUD + `activate/deactivate` | Soft-delete, Pagy pagination (active suppliers), force destroy with cascade recalc |
 | `ProductPurchasesController` | CRUD + `toggle_active` | Turbo Streams responses, triggers Dispatcher |
 | `RecipesController` | CRUD + `duplicate` + `export_excel` + `export_all_excel`, `GET /recipes/tarifs` | Tab filtering (recipes/subrecipes), Pagy pagination, conditional recalc, demotion alert via `Recipe#demotion_alert_message`, Excel export (.xlsx via caxlsx): single recipe or all recipes, optional `detailed` param for costs, `sold_by_unit` g→kg conversion in params + cleanup when unchecked |
@@ -167,7 +167,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - **Paginated index actions:** `ProductsController#index`, `RecipesController#index`, `SuppliersController#index` (active suppliers only), `StandardDeviationsController#index` (pagy_array).
 - **Views:** `pagy_bootstrap_nav(@pagy)` in `products/index`, `recipes/index`, `suppliers/index`.
 
-### Test Suite (589 specs)
+### Test Suite (591 specs)
 
 **Setup:**
 - `spec/factories.rb` — Single file with all factories (user, supplier, product, product_purchase, recipe, recipe_component, daily_special, invitation, tray_size). Key traits: product `:piece`/`:liquid`, product_purchase `:in_grams`/`:in_pieces`/`:in_liters`/`:in_cl`/`:inactive`/`:uncalculated`, recipe `:subrecipe`/`:sold_by_unit`, recipe_component `:with_subrecipe`/`:in_grams`/`:in_liters`/`:in_pieces`, invitation `:expired`/`:used`/`:pending`.
@@ -191,7 +191,7 @@ Test each service with a dedicated RSpec before integrating into controllers.
 - `spec/models/tray_size_spec.rb` — 14 examples. Validations, associations, nullify on delete, eager-loaded recipes_count.
 - `spec/requests/pages_spec.rb` — 14 examples. GET / (auth, subscription gate, counters) + GET /subscription_required + GET /referentiel-pieces (auth, piece products, isolation, CSV export).
 - `spec/requests/signups_spec.rb` — 17 examples. GET /signup + POST /signup.
-- `spec/requests/products_spec.rb` — 35 examples. Index (auth, search, pagination), show (pricing, isolation, 404), POST (incl. dehydrated), PATCH (incl. coefficient recalc), DELETE.
+- `spec/requests/products_spec.rb` — 37 examples. Index (auth, search, pagination), CSV export (content-type, isolation), show (pricing, isolation, 404), POST (incl. dehydrated), PATCH (incl. coefficient recalc), DELETE.
 - `spec/requests/suppliers_spec.rb` — 31 examples. Index (pagination), POST, PATCH, activate/deactivate, DELETE, force destroy, isolation.
 - `spec/requests/product_purchases_spec.rb` — 21 examples. POST, PATCH, DELETE, toggle_active with turbo_stream.
 - `spec/requests/recipes_spec.rb` — 58 examples. Index (auth, search, tabs, pagination), show, new, create (incl. sold_by_unit g→kg), edit, update (incl. sold_by_unit), destroy, duplicate, export_excel, export_all_excel, tarifs.

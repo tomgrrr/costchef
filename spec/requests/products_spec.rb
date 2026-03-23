@@ -81,7 +81,43 @@ RSpec.describe 'Products', type: :request do
           expect(response.body).not_to include('Beurre')
           expect(response.body).not_to include('Produit 050')
         end
+
+        it 'respecte per_page=20' do
+          get products_path, params: { per_page: 20 }
+          expect(response.body).to include('Produit 000')
+          expect(response.body).not_to include('Produit 020')
+        end
+
+        it 'retombe sur 50 si per_page est invalide' do
+          get products_path, params: { per_page: 999 }
+          # 51 produits avec défaut 50/page = 2 pages, pas 1 seule
+          expect(response.body).to include('Produit 000')
+          expect(response.body).not_to include('Produit 050')
+        end
       end
+    end
+  end
+
+  describe 'GET /products.csv' do
+    before { sign_in user }
+
+    it 'retourne un CSV avec les en-têtes et les produits du user' do
+      create(:product, name: 'Farine T55', base_unit: 'kg', user: user)
+      create(:product, :piece, name: 'Oeuf', user: user)
+      get products_path(format: :csv)
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include('text/csv')
+      lines = response.body.lines
+      expect(lines.first).to include('Nom;Unité;Poids unitaire (kg)')
+      expect(lines.size).to eq(3) # header + 2 products
+    end
+
+    it 'respecte l\'isolation utilisateur' do
+      create(:product, name: 'Farine T55', user: user)
+      create(:product, name: 'Beurre secret', user: other_user)
+      get products_path(format: :csv)
+      expect(response.body).to include('Farine T55')
+      expect(response.body).not_to include('Beurre secret')
     end
   end
 

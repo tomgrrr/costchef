@@ -1,15 +1,20 @@
 # frozen_string_literal: true
 
+require 'csv'
+
 class ProductsController < ApplicationController
   before_action :set_product, only: %i[show edit update destroy]
 
   def index
-    @pagy, @products = pagy(
-      current_user.products
-                  .includes(product_purchases: :supplier)
-                  .order(:name)
-                  .then { |scope| params[:search].present? ? scope.where("name ILIKE ?", "%#{params[:search]}%") : scope }
-    )
+    scope = current_user.products
+                        .includes(product_purchases: :supplier)
+                        .order(:name)
+                        .then { |s| params[:search].present? ? s.where("name ILIKE ?", "%#{params[:search]}%") : s }
+
+    respond_to do |format|
+      format.html { @pagy, @products = pagy(scope, items: items_per_page) }
+      format.csv { send_products_csv(scope) }
+    end
   end
 
   def show
@@ -76,6 +81,24 @@ class ProductsController < ApplicationController
 
   def update_redirect_path
     params[:return_to] == "referentiel_pieces" ? referentiel_pieces_path : products_path
+  end
+
+  def items_per_page
+    per_page = params[:per_page].to_i
+    [20, 50, 100].include?(per_page) ? per_page : 50
+  end
+
+  def send_products_csv(products)
+    send_data generate_products_csv(products),
+              filename: "produits-#{Date.today}.csv",
+              type: 'text/csv; charset=utf-8'
+  end
+
+  def generate_products_csv(products)
+    CSV.generate(col_sep: ';') do |csv|
+      csv << ['Nom', 'Unité', 'Poids unitaire (kg)']
+      products.each { |p| csv << [p.name, p.base_unit, p.unit_weight_kg&.round(3)] }
+    end
   end
 
   def trigger_recalculation_if_weight_changed
