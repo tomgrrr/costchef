@@ -94,7 +94,7 @@ module Import
       count = 0
 
       missing.each do |name|
-        display_name = name.split.map(&:capitalize).join(" ")
+        display_name = name.gsub(/\s+sous\s+recettes?\s*$/i, "").strip.split.map(&:capitalize).join(" ")
         @user.recipes.find_or_create_by!(name: display_name) do |r|
           r.sellable_as_component = true
           r.cooking_loss_percentage = 0
@@ -207,10 +207,12 @@ module Import
 
     def find_subrecipe(name)
       normalized = normalize_subrecipe_name(name)
+      without_suffix = name.downcase.gsub(/\s+sous\s+recettes?\s*$/, "").strip
 
       @user.recipes.find_by(name: name) ||
         @user.recipes.where("LOWER(name) = ?", name.downcase).first ||
         @user.recipes.where("LOWER(name) = ?", normalized).first ||
+        @user.recipes.where("LOWER(name) = ?", without_suffix).first ||
         fuzzy_find_subrecipe(normalized)
     end
 
@@ -223,6 +225,8 @@ module Import
 
     def normalize_subrecipe_name(name)
       name.downcase
+          .gsub(/\s+sous\s+recettes?\s*$/, "")
+          .strip
           .gsub("pate ", "pâte ")
           .gsub("feuilletés", "feuilletée")
           .gsub("brisee", "brisée")
