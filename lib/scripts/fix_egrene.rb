@@ -10,7 +10,9 @@ puts "Produit correct : #{egrene_correct.name} — #{egrene_correct.avg_price_pe
 
 ActiveRecord::Base.transaction do
 
-  faux_ids = user.products.where("name ILIKE ?", "%grains%").pluck(:id)
+  # Recherche par nom exact (accent inclus) ou variantes
+  faux_ids = user.products.where("name ILIKE ? OR name ILIKE ? OR name ILIKE ?",
+    "%grainés%", "%graines%", "%grains%").pluck(:id)
 
   if faux_ids.any?
     comps = RecipeComponent.where(component_type: "Product", component_id: faux_ids)
