@@ -7,7 +7,7 @@
 # - Recalcule avg_price_per_kg
 
 user = User.find_by!("email ILIKE ?", "dp.lassalas@outlook.fr")
-blanc = user.products.find_by!("name = ?", "Blanc")
+blanc = user.products.find_by!("name ILIKE ?", "blanc d%")
 
 puts "Avant correction :"
 puts "  base_unit     : #{blanc.base_unit}"

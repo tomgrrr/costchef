@@ -104,7 +104,7 @@ ActiveRecord::Base.transaction do
   puts "\n15. Frangipane"
   r = upsert_sr!(user, "Frangipane")
   add_sr!(r, find_subrecipe!(user, "TPT sous recette"),              4.2)
-  add_p!(r,  user.products.find_by!("name = ?", "Blanc"),            2.0)  # Blanc d'oeuf (exact match)
+  add_p!(r,  user.products.find_by!("name ILIKE ?", "blanc d%"),     2.0)  # Blanc d'oeuf
   add_p!(r,  find_product!(user, "Beurre"),                          1.5)
   Recipes::Recalculator.call(r)
   puts "   #{r.recipe_components.count} composants | #{r.reload.cached_cost_per_kg.round(2)} EUR/kg"
