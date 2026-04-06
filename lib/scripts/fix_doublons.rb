@@ -3,6 +3,7 @@
 # Fusionne les doublons produits détectés par audit_products :
 #   - Fecule → Fécule (accent)
 #   - Égrainés de boeuf → Égrainés de bœuf (ligature oe/œ)
+#   - Crème épaisse → Crème (même produit, confirmé par Dimitry)
 
 user = User.find_by!("email ILIKE ?", "dp.lassalas@outlook.fr")
 
@@ -79,6 +80,37 @@ ActiveRecord::Base.transaction do
     Recipes::Recalculator.call(bolo)
     bolo.reload
     puts "\n  [RECALCUL] #{bolo.name} → #{bolo.cached_cost_per_kg.round(2)} EUR/kg"
+  end
+
+  # ── Crème épaisse → Crème ────────────────────────────────────────────
+  puts "\n=== Crème épaisse → Crème ==="
+  creme = user.products.find_by!("LOWER(name) = ?", "crème")
+
+  creme_epaisse = user.products.find_by("LOWER(name) = ?", "crème épaisse")
+  unless creme_epaisse
+    puts "  [OK] Crème épaisse absente — rien à faire"
+  else
+    puts "  Garder    : #{creme.name} (ID #{creme.id}) — #{creme.avg_price_per_kg.to_f.round(2)} €/kg"
+    puts "  Supprimer : #{creme_epaisse.name} (ID #{creme_epaisse.id})"
+
+    n = RecipeComponent.where(component_type: "Product", component_id: creme_epaisse.id).count
+    RecipeComponent.where(component_type: "Product", component_id: creme_epaisse.id)
+                   .update_all(component_id: creme.id)
+    puts "  [FIX] #{n} RecipeComponent(s) rerattaché(s) vers Crème"
+
+    creme_epaisse.product_purchases.delete_all
+    creme_epaisse.destroy!
+    puts "  [SUPPRIME] Crème épaisse"
+
+    # Recalculer toutes les recettes impactées
+    recettes = RecipeComponent.where(component_type: "Product", component_id: creme.id)
+                              .map(&:parent_recipe).uniq.compact
+    puts "  Recalcul #{recettes.count} recette(s) :"
+    recettes.each do |r|
+      Recipes::Recalculator.call(r)
+      r.reload
+      puts "    #{r.name} → #{r.cached_cost_per_kg.round(2)} EUR/kg"
+    end
   end
 
 end
