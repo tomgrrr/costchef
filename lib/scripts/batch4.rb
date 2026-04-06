@@ -73,7 +73,7 @@ ActiveRecord::Base.transaction do
   add_p!(r, find_or_create_product!(user, "Oignons",   search: "Oignon"),                        10.0)
   add_p!(r, find_or_create_product!(user, "Carotte"),                                             8.0)
   add_p!(r, find_or_create_product!(user, "Eau"),                                                 16.0)
-  add_p!(r, find_or_create_product!(user, "Égrainés de boeuf"),                                  60.0)
+  add_p!(r, find_or_create_product!(user, "Egrene", search: "grene"),                            60.0) # Égrainé de boeuf
   add_p!(r, find_or_create_product!(user, "Vin blanc",  search: "Vin blanc"),                    3.0)
   add_p!(r, find_or_create_product!(user, "Concentre de tomates", search: "Concentr"),           10.0)
   add_p!(r, find_or_create_product!(user, "Gustoza"),                                             9.0)
