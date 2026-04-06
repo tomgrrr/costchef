@@ -62,7 +62,7 @@ ActiveRecord::Base.transaction do
   add_p!(r, find_or_create_product!(user, "Muscade"),                                            0.05)
   add_p!(r, find_or_create_product!(user, "Oeuf solide", search: "Oeuf solid"),                  5.0) # 100 pieces x 50g
   add_p!(r, find_or_create_product!(user, "Oeuf liquide entier", search: "Oeuf liquide"),        4.0)
-  add_p!(r, find_or_create_product!(user, "Jaune d'oeuf"),                                       1.0)
+  add_p!(r, find_or_create_product!(user, "Jaune",        search: "Jaune"),                      1.0) # Jaune d'oeuf
   Recipes::Recalculator.call(r)
   puts "   #{r.recipe_components.count} composants | #{r.reload.cached_cost_per_kg.round(2)} EUR/kg"
 
