@@ -92,7 +92,7 @@ ActiveRecord::Base.transaction do
   puts "\n23. Sauce ris de veau louche"
   r = upsert_sr!(user, "Sauce ris de veau louche")
   add_p!(r, find_or_create_product!(user, "Beurre doux",        search: "Beurre doux"),    1.0)
-  add_p!(r, find_or_create_product!(user, "Echalote"),                                     1.0)
+  add_p!(r, find_or_create_product!(user, "Echalotte",         search: "Echalot"),         1.0)
   add_p!(r, find_or_create_product!(user, "Morilles"),                                     4.0)
   add_p!(r, find_or_create_product!(user, "Ris de veau",        search: "Ris de veau"),   40.0)
   add_p!(r, find_or_create_product!(user, "Porto",              unit: "l"),                2.0)
@@ -110,7 +110,7 @@ ActiveRecord::Base.transaction do
   puts "\n24. Beurre escargot"
   r = upsert_sr!(user, "Beurre escargot")
   add_p!(r, find_or_create_product!(user, "Persil",             search: "Persil"),         0.75)
-  add_p!(r, find_or_create_product!(user, "Echalote"),                                     0.12)
+  add_p!(r, find_or_create_product!(user, "Echalotte",         search: "Echalot"),         0.12)
   add_p!(r, find_or_create_product!(user, "Ail"),                                          0.12)
   add_p!(r, find_or_create_product!(user, "Sel"),                                          0.15)
   add_p!(r, find_or_create_product!(user, "Poivre"),                                      0.01)
