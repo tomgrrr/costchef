@@ -83,6 +83,9 @@ ActiveRecord::Base.transaction do
   end
 
   # ── Crème épaisse → Crème ────────────────────────────────────────────
+  # Contrainte unicité (parent_recipe_id, component_type, component_id) :
+  # si la recette a déjà Crème ET Crème épaisse, on fusionne les quantités
+  # plutôt que de faire un update_all qui violerait la contrainte.
   puts "\n=== Crème épaisse → Crème ==="
   creme = user.products.find_by!("LOWER(name) = ?", "crème")
 
@@ -93,20 +96,40 @@ ActiveRecord::Base.transaction do
     puts "  Garder    : #{creme.name} (ID #{creme.id}) — #{creme.avg_price_per_kg.to_f.round(2)} €/kg"
     puts "  Supprimer : #{creme_epaisse.name} (ID #{creme_epaisse.id})"
 
-    n = RecipeComponent.where(component_type: "Product", component_id: creme_epaisse.id).count
-    RecipeComponent.where(component_type: "Product", component_id: creme_epaisse.id)
-                   .update_all(component_id: creme.id)
-    puts "  [FIX] #{n} RecipeComponent(s) rerattaché(s) vers Crème"
+    rcs_epaisse = RecipeComponent.where(component_type: "Product", component_id: creme_epaisse.id)
+    puts "  #{rcs_epaisse.count} recette(s) concernée(s)"
+
+    recettes_impactees = []
+
+    rcs_epaisse.each do |rc_ep|
+      recette = rc_ep.parent_recipe
+      rc_creme = RecipeComponent.find_by(
+        parent_recipe_id: recette.id,
+        component_type: "Product",
+        component_id: creme.id
+      )
+
+      if rc_creme
+        # La recette a déjà Crème → additionner les quantités et supprimer Crème épaisse
+        nouvelle_qte = rc_creme.quantity_kg + rc_ep.quantity_kg
+        rc_ep.destroy!
+        rc_creme.update!(quantity_kg: nouvelle_qte)
+        puts "    [FUSION] #{recette.name} : Crème #{rc_creme.quantity_kg - rc_ep.quantity_kg rescue nouvelle_qte}kg + #{rc_ep.quantity_kg}kg → #{nouvelle_qte}kg"
+      else
+        # Pas de Crème dans cette recette → simple rerattachement
+        rc_ep.update!(component_id: creme.id)
+        puts "    [RERATTACHE] #{recette.name} : Crème épaisse → Crème (#{rc_ep.quantity_kg}kg)"
+      end
+
+      recettes_impactees << recette
+    end
 
     creme_epaisse.product_purchases.delete_all
     creme_epaisse.destroy!
     puts "  [SUPPRIME] Crème épaisse"
 
-    # Recalculer toutes les recettes impactées
-    recettes = RecipeComponent.where(component_type: "Product", component_id: creme.id)
-                              .map(&:parent_recipe).uniq.compact
-    puts "  Recalcul #{recettes.count} recette(s) :"
-    recettes.each do |r|
+    puts "  Recalcul #{recettes_impactees.count} recette(s) :"
+    recettes_impactees.uniq.each do |r|
       Recipes::Recalculator.call(r)
       r.reload
       puts "    #{r.name} → #{r.cached_cost_per_kg.round(2)} EUR/kg"
