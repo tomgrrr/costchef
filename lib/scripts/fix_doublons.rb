@@ -1,0 +1,84 @@
+# encoding: utf-8
+# frozen_string_literal: true
+# Fusionne les doublons produits détectés par audit_products :
+#   - Fecule → Fécule (accent)
+#   - Égrainés de boeuf → Égrainés de bœuf (ligature oe/œ)
+
+user = User.find_by!("email ILIKE ?", "dp.lassalas@outlook.fr")
+
+def fusionner!(user, garder_name, supprimer_pattern)
+  garder    = user.products.find_by!("name = ?", garder_name)
+  supprimer = user.products.find_by("name ILIKE ?", supprimer_pattern)
+
+  unless supprimer
+    puts "  [OK] Doublon '#{supprimer_pattern}' absent — rien à faire"
+    return
+  end
+
+  if garder.id == supprimer.id
+    puts "  [OK] Même produit, rien à faire"
+    return
+  end
+
+  puts "  Garder    : #{garder.name} (ID #{garder.id}) — #{garder.avg_price_per_kg.to_f.round(2)} €/kg | #{garder.product_purchases.count} condits"
+  puts "  Supprimer : #{supprimer.name} (ID #{supprimer.id}) — #{supprimer.avg_price_per_kg.to_f.round(2)} €/kg | #{supprimer.product_purchases.count} condits"
+
+  n = RecipeComponent.where(component_type: "Product", component_id: supprimer.id).count
+  RecipeComponent.where(component_type: "Product", component_id: supprimer.id)
+                 .update_all(component_id: garder.id)
+  puts "  [FIX] #{n} RecipeComponent(s) rerattaché(s) vers #{garder.name}"
+
+  supprimer.product_purchases.delete_all
+  supprimer.destroy!
+  puts "  [SUPPRIME] #{supprimer.name}"
+end
+
+ActiveRecord::Base.transaction do
+
+  # ── Fecule / Fécule ──────────────────────────────────────────────────
+  puts "=== Fecule / Fécule ==="
+  # Garder celui qui a des conditionnements ou le mieux nommé
+  fecule_accent = user.products.find_by("name = ?", "Fécule")
+  fecule_sans   = user.products.find_by("name = ?", "Fecule")
+
+  if fecule_accent && fecule_sans
+    # Garder Fécule (avec accent), fusionner Fecule dedans
+    fusionner!(user, "Fécule", "Fecule")
+  elsif fecule_sans && !fecule_accent
+    fecule_sans.update!(name: "Fécule")
+    puts "  [RENOMME] Fecule → Fécule"
+  else
+    puts "  [OK] Pas de doublon Fecule/Fécule"
+  end
+
+  # ── Égrainés de boeuf / Égrainés de bœuf ────────────────────────────
+  puts "\n=== Égrainés de boeuf / Égrainés de bœuf ==="
+  # Garder celui qui est utilisé dans les recettes (Egrene = le vrai produit avec condits)
+  egrene = user.products.find_by("name ILIKE ?", "%grene%")  # "Egrene" = le produit avec prix
+  egraine_boeuf = user.products.find_by("name ILIKE ? AND name NOT ILIKE ?", "%grain%boeuf%", "%grene%")
+  egraine_boeuf ||= user.products.find_by("name ILIKE ? AND name NOT ILIKE ?", "%grain%b%uf%", "%grene%")
+
+  puts "  Produit référence (Egrene) : #{egrene&.name} (ID #{egrene&.id})"
+  puts "  Doublon trouvé : #{egraine_boeuf&.name} (ID #{egraine_boeuf&.id})"
+
+  if egraine_boeuf && egraine_boeuf.id != egrene&.id
+    n = RecipeComponent.where(component_type: "Product", component_id: egraine_boeuf.id).count
+    RecipeComponent.where(component_type: "Product", component_id: egraine_boeuf.id)
+                   .update_all(component_id: egrene.id)
+    egraine_boeuf.product_purchases.delete_all
+    egraine_boeuf.destroy!
+    puts "  [FIX] #{n} composant(s) rerattaché(s) vers #{egrene.name}"
+    puts "  [SUPPRIME] #{egraine_boeuf.name}"
+  else
+    puts "  [OK] Pas de doublon actif"
+  end
+
+  # Recalculer Bolognaise
+  bolo = user.recipes.find_by("LOWER(name) LIKE ?", "%bolognaise%")
+  if bolo
+    Recipes::Recalculator.call(bolo)
+    bolo.reload
+    puts "\n  [RECALCUL] #{bolo.name} → #{bolo.cached_cost_per_kg.round(2)} EUR/kg"
+  end
+
+end
