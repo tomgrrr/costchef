@@ -35,7 +35,7 @@ splits.each do |nom, pp_ids|
   if produit
     puts "  ♻️  Produit existant : '#{produit.name}' (ID #{produit.id})"
   else
-    produit = user.products.create!(name: nom, unit: "kg")
+    produit = user.products.create!(name: nom)
     puts "  ✨ Créé : '#{produit.name}' (ID #{produit.id})"
   end
 
