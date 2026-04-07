@@ -3,4 +3,4 @@
 require 'pagy/extras/bootstrap'
 require 'pagy/extras/array'
 
-Pagy::DEFAULT[:items] = 50 # éléments par page
+Pagy::DEFAULT[:limit] = 20 # éléments par page (pagy v9+)

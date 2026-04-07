@@ -13,7 +13,7 @@ class ProductsController < ApplicationController
                         .then { |s| params[:zero_price] == "1" ? s.where(avg_price_per_kg: 0) : s }
 
     respond_to do |format|
-      format.html { @pagy, @products = pagy(scope, items: items_per_page) }
+      format.html { @pagy, @products = pagy(scope, limit: items_per_page) }
       format.csv { send_products_csv(scope) }
     end
   end

@@ -47,6 +47,15 @@
           value: params[:search],
           placeholder: "Rechercher une recette...",
           class: "form-control form-control-sm flex-grow-1 flex-md-grow-0" %>
+    <%= f.select :per_page,
+          options_for_select(
+            [["20 / page", 20], ["50 / page", 50], ["100 / page", 100]],
+            params[:per_page]&.to_i || 20
+          ),
+          {},
+          class: "form-select form-select-sm",
+          style: "width: auto;",
+          onchange: "this.form.submit()" %>
     <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
       <%= link_to "✕", recipes_path(tab: @tab), class: "btn-outline-slate", style: "color: var(--cc-danger);" %>

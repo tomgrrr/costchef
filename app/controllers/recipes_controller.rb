@@ -15,7 +15,7 @@ class RecipesController < ApplicationController
     scope = scope.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
 
     respond_to do |format|
-      format.html { @pagy, @recipes = pagy(scope) }
+      format.html { @pagy, @recipes = pagy(scope, limit: recipes_per_page) }
       format.csv { send_recipes_csv(scope) }
     end
   end
@@ -120,6 +120,11 @@ class RecipesController < ApplicationController
   end
 
   private
+
+  def recipes_per_page
+    per_page = params[:per_page].to_i
+    [20, 50, 100].include?(per_page) ? per_page : 20
+  end
 
   def set_recipe
     @recipe = current_user.recipes.find(params[:id])
