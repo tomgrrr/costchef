@@ -109,6 +109,15 @@ class RecipesController < ApplicationController
               type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   end
 
+  def export_full_excel
+    recipes = current_user.recipes
+                          .includes(recipe_components: { component: :recipe_components })
+                          .order(:sellable_as_component, :name)
+    send_data generate_full_xlsx(recipes),
+              filename: "recettes-complet-#{Date.today}.xlsx",
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  end
+
   def duplicate
     new_recipe = Recipes::Duplicator.call(@recipe)
     if new_recipe.save
@@ -260,6 +269,102 @@ class RecipesController < ApplicationController
         sheet.column_widths 14, 30, 16, 10
       end
     end
+  end
+
+  def generate_full_xlsx(recipes)
+    package = ::Axlsx::Package.new
+    wb = package.workbook
+
+    # Styles
+    wb.add_worksheet(name: "Toutes les recettes") do |sheet|
+      h  = sheet.styles.add_style(b: true, bg_color: "1E3A5F", fg_color: "FFFFFF",
+                                  border: { style: :thin, color: "FFFFFF" }, sz: 11)
+      h2 = sheet.styles.add_style(b: true, bg_color: "E2E8F0",
+                                  border: { style: :thin, color: "94A3B8" })
+      recipe_row_style   = sheet.styles.add_style(bg_color: "F0F4FF", b: true)
+      dec2 = sheet.styles.add_style(format_code: "0.00")
+      dec3 = sheet.styles.add_style(format_code: "0.000")
+      recipe_dec2 = sheet.styles.add_style(bg_color: "F0F4FF", b: true, format_code: "0.00")
+      recipe_dec3 = sheet.styles.add_style(bg_color: "F0F4FF", b: true, format_code: "0.000")
+      pct  = sheet.styles.add_style(format_code: "0.0\"%\"")
+
+      sheet.add_row [
+        "Recette", "Type recette", "Perte cuisson (%)",
+        "Coût/kg recette (€)", "Poids total recette (kg)", "Coût total recette (€)",
+        "Composant", "Type composant",
+        "Quantité (kg)", "Unité",
+        "Prix/kg composant (€)", "Coût ligne (€)", "% du coût recette"
+      ], style: Array.new(13, h)
+
+      recipes.each do |recipe|
+        type_recette = recipe.sellable_as_component? ? "Sous-recette" : "Recette"
+        total_cost   = recipe.cached_total_cost.to_f
+
+        if recipe.recipe_components.empty?
+          sheet.add_row [
+            recipe.name, type_recette, recipe.cooking_loss_percentage,
+            recipe.cached_cost_per_kg, recipe.cached_total_weight, total_cost,
+            "(aucun ingrédient)", "", "", "", "", "", ""
+          ], style: [recipe_row_style, recipe_row_style, pct,
+                     recipe_dec2, recipe_dec3, recipe_dec2,
+                     recipe_row_style, recipe_row_style,
+                     recipe_row_style, recipe_row_style,
+                     recipe_row_style, recipe_row_style, recipe_row_style]
+        else
+          recipe.recipe_components.each do |rc|
+            comp = rc.component
+            comp_type = rc.recipe_component? ? "Sous-recette" : "Produit"
+            price_per_kg = rc.recipe_component? ? comp.cached_cost_per_kg.to_f : comp.avg_price_per_kg.to_f
+            line_cost    = rc.line_cost.to_f
+            pct_cost     = total_cost > 0 ? (line_cost / total_cost * 100).round(1) : 0
+
+            sheet.add_row [
+              recipe.name, type_recette, recipe.cooking_loss_percentage,
+              recipe.cached_cost_per_kg, recipe.cached_total_weight, total_cost,
+              comp.name, comp_type,
+              rc.quantity_kg, rc.quantity_unit,
+              price_per_kg, line_cost, pct_cost
+            ], style: [nil, nil, pct,
+                       dec2, dec3, dec2,
+                       nil, nil,
+                       dec3, nil,
+                       dec2, dec2, nil]
+          end
+        end
+      end
+
+      sheet.column_widths 30, 14, 16, 18, 22, 20, 30, 14, 14, 10, 22, 14, 16
+    end
+
+    # Onglet résumé recettes
+    wb.add_worksheet(name: "Résumé") do |sheet|
+      h   = sheet.styles.add_style(b: true, bg_color: "1E3A5F", fg_color: "FFFFFF", sz: 11)
+      dec2 = sheet.styles.add_style(format_code: "0.00")
+      dec3 = sheet.styles.add_style(format_code: "0.000")
+      sub  = sheet.styles.add_style(bg_color: "F0F4FF")
+      sub2 = sheet.styles.add_style(bg_color: "F0F4FF", format_code: "0.00")
+      sub3 = sheet.styles.add_style(bg_color: "F0F4FF", format_code: "0.000")
+
+      sheet.add_row ["Recette", "Type", "Coût/kg (€)", "Poids (kg)", "Coût total (€)", "Nb ingrédients"],
+                    style: Array.new(6, h)
+
+      recipes.each do |r|
+        is_sub = r.sellable_as_component?
+        s0, s2, s3 = is_sub ? [sub, sub2, sub3] : [nil, dec2, dec3]
+        sheet.add_row [
+          r.name,
+          is_sub ? "Sous-recette" : "Recette",
+          r.cached_cost_per_kg,
+          r.cached_total_weight,
+          r.cached_total_cost,
+          r.recipe_components.size
+        ], style: [s0, s0, s2, s3, s2, s0]
+      end
+
+      sheet.column_widths 35, 14, 14, 14, 14, 16
+    end
+
+    package.to_stream.string
   end
 
   def send_recipes_csv(recipes)

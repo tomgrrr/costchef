@@ -41,6 +41,7 @@ Rails.application.routes.draw do
   resources :recipes do
     collection do
       get :export_all_excel
+      get :export_full_excel
     end
     member do
       post :duplicate
