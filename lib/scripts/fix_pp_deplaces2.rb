@@ -44,22 +44,27 @@ move_pp(3831, "Persillade", user)
 
 puts "\n2. PP#3865 → Épeautre bio"
 epeautre = user.products.where("name ILIKE ?", "%peautre%").first
-if epeautre
-  pp = ProductPurchase.find_by(id: 3865)
-  if pp
-    src_name = pp.product.name
-    pp.update!(product: epeautre)
-    Products::AvgPriceRecalculator.call(epeautre)
-    epeautre.reload
-    puts "  ✅ PP#3865 : '#{src_name}' → '#{epeautre.name}' | avg → #{epeautre.avg_price_per_kg.to_f.round(3)} €/kg"
-  else
-    puts "  ⚠️  PP#3865 introuvable"
-  end
+unless epeautre
+  epeautre = user.products.create!(name: "Épeautre bio")
+  puts "  ✨ Produit 'Épeautre bio' créé (ID #{epeautre.id})"
+end
+pp3865 = ProductPurchase.find_by(id: 3865)
+if pp3865
+  src_name = pp3865.product.name
+  pp3865.update!(product: epeautre)
+  Products::AvgPriceRecalculator.call(epeautre)
+  epeautre.reload
+  puts "  ✅ PP#3865 : '#{src_name}' → '#{epeautre.name}' | avg → #{epeautre.avg_price_per_kg.to_f.round(3)} €/kg"
 else
-  puts "  ⚠️  Produit épeautre introuvable"
+  puts "  ⚠️  PP#3865 introuvable"
 end
 
 puts "\n3. PP#3345 → Compote pomme"
-move_pp(3345, "Compote pomme", user)
+compote = user.products.where("name ILIKE ?", "%compote%").first
+unless compote
+  compote = user.products.create!(name: "Compote pomme")
+  puts "  ✨ Produit 'Compote pomme' créé (ID #{compote.id})"
+end
+move_pp(3345, compote.name, user)
 
 puts "\n=== TERMINÉ ==="
