@@ -10,6 +10,7 @@ class ProductsController < ApplicationController
                         .includes(product_purchases: :supplier)
                         .order(:name)
                         .then { |s| params[:search].present? ? s.where("name ILIKE ?", "%#{params[:search]}%") : s }
+                        .then { |s| params[:zero_price] == "1" ? s.where(avg_price_per_kg: 0) : s }
 
     respond_to do |format|
       format.html { @pagy, @products = pagy(scope, items: items_per_page) }

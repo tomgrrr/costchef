@@ -7,6 +7,7 @@
           <th>Type</th>
           <th>Composant</th>
           <th>Quantit&eacute; (kg)</th>
+          <th>Prix/kg</th>
           <th>Co&ucirc;t ligne</th>
           <th></th>
         </tr>
@@ -23,6 +24,14 @@
             </td>
             <td><%= rc.component.name %></td>
             <td><span class="mono"><%= number_with_precision(rc.quantity_kg, precision: 3) %> kg</span></td>
+            <td>
+              <% price_per_kg = rc.product_component? ? rc.component.avg_price_per_kg.to_f : rc.component.cached_cost_per_kg.to_f %>
+              <% if price_per_kg > 0 %>
+                <span class="mono"><%= number_with_precision(price_per_kg, precision: 2) %> &euro;/kg</span>
+              <% else %>
+                <span style="color: var(--sl-400); font-size: 12px;">—</span>
+              <% end %>
+            </td>
             <td><span class="mono"><%= number_with_precision(rc.line_cost, precision: 2) %> &euro;</span></td>
             <td style="text-align: right;">
               <%= button_to recipe_recipe_component_path(recipe, rc),

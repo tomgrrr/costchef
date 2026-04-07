@@ -31,8 +31,20 @@
           style: "width: auto;",
           onchange: "this.form.submit()" %>
     <%= f.submit "Rechercher", class: "btn-outline-slate" %>
+    <% if params[:zero_price] == "1" %>
+      <%= link_to products_path(search: params[:search], per_page: params[:per_page]),
+            class: "btn-outline-slate",
+            style: "color: var(--cc-danger); border-color: var(--cc-danger);" do %>
+        <i class="bi bi-exclamation-triangle"></i> Prix non défini <span style="font-weight:600;">✕</span>
+      <% end %>
+    <% else %>
+      <%= link_to products_path(search: params[:search], per_page: params[:per_page], zero_price: "1"),
+            class: "btn-outline-slate" do %>
+        <i class="bi bi-exclamation-triangle"></i> Prix non défini
+      <% end %>
+    <% end %>
     <% if params[:search].present? %>
-      <%= link_to "✕", products_path, class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
+      <%= link_to "✕", products_path(zero_price: params[:zero_price]), class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
     <% end %>
   <% end %>
 </div>
