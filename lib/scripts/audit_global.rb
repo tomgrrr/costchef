@@ -4,7 +4,7 @@
 # Couvre tous les onglets Excel : Légumes, Poissons, Viandes, Sauce, Laitiers, Fruits, etc.
 
 user = User.find_by!("email ILIKE ?", "dp.lassalas@outlook.fr")
-all_products = user.products.includes(:product_purchases, :recipe_components).order(:name)
+all_products = user.products.includes(product_purchases: :supplier, recipe_components: []).order(:name)
 
 catch_alls = []
 zero_condits = []
@@ -45,7 +45,7 @@ else
   catch_alls.sort_by { |c| -c[:ratio] }.each do |c|
     puts "\n  #{c[:name]} (ID #{c[:id]}) — #{c[:n]} condits | #{c[:min]}→#{c[:max]} €/kg (×#{c[:ratio]})"
     puts "  #{'%-5s  %-20s  %8s  %-5s  %10s  %8s' % ['PP_ID', 'Fournisseur', 'Qté', 'Unité', 'Prix total', '€/kg']}"
-    c[:condits].includes(:supplier).order(:price_per_kg).each do |pp|
+    c[:condits].sort_by { |pp| pp.price_per_kg.to_f }.each do |pp|
       puts "  #{'%-5s  %-20s  %8.3f  %-5s  %10.2f€  %8.3f' % [pp.id, pp.supplier&.name.to_s, pp.package_quantity.to_f, pp.package_unit.to_s, pp.package_price.to_f, pp.price_per_kg.to_f]}"
     end
   end
