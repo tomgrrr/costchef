@@ -111,7 +111,7 @@ class RecipesController < ApplicationController
 
   def export_full_excel
     recipes = current_user.recipes
-                          .includes(recipe_components: { component: :recipe_components })
+                          .includes(recipe_components: :component)
                           .order(:sellable_as_component, :name)
     send_data generate_full_xlsx(recipes),
               filename: "recettes-complet-#{Date.today}.xlsx",
