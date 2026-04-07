@@ -4,7 +4,7 @@
 
 user = User.find_by!("email ILIKE ?", "dp.lassalas@outlook.fr")
 
-["morceaux", "Mélange"].each do |nom|
+["morceaux", "Mélange", "Thon"].each do |nom|
   p = user.products.find_by("name = ?", nom)
   unless p
     puts "\n❌ Produit '#{nom}' introuvable"
