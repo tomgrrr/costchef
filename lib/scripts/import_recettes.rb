@@ -32,19 +32,29 @@ def sr!(user, name)
   r
 end
 
-# Crée ou met à jour une recette (vide ses composants existants)
+$skip_adds = false
+
+# Crée une recette seulement si elle n'existe pas ou n'a pas de composants
+# NE MODIFIE PAS les recettes existantes avec des composants
 def upsert!(user, name, sub: false)
-  r = user.recipes.where("name ILIKE ?", name).first || user.recipes.new(name: name)
+  r = user.recipes.where("name ILIKE ?", name).first
+  if r && r.recipe_components.exists?
+    $skip_adds = true
+    puts "  SKIP (déjà configurée): #{name}"
+    return r
+  end
+  $skip_adds = false
+  r ||= user.recipes.new(name: name)
   r.name = name
   r.sellable_as_component = sub
   r.cooking_loss_percentage ||= 0
-  RecipeComponent.where(parent_recipe_id: r.id).delete_all if r.persisted?
   r.save!
   r
 end
 
 # Ajoute un composant (produit ou sous-recette) à une recette
 def add!(recipe, comp, qty, unit: "kg")
+  return if $skip_adds
   return if comp.nil? || qty.to_f == 0
   recipe.recipe_components.create!(
     component: comp,
@@ -56,6 +66,7 @@ rescue ActiveRecord::RecordInvalid => e
 end
 
 def recalc!(r)
+  return if $skip_adds
   Recipes::Recalculator.call(r)
 rescue => e
   puts "  WARN recalc #{r.name}: #{e.message}"
