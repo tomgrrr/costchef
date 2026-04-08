@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h4 class="mb-0">Modifier <%= @product.name %></h4>
-  <%= link_to "← Retour", products_path %>
+  <%= link_to "← Retour", product_path(@product), class: "btn-outline-slate" %>
 </div>
 
 <div class="row">

@@ -80,6 +80,6 @@
 
   <div class="d-flex gap-2 mt-4">
     <%= f.submit class: "btn btn-primary" %>
-    <%= link_to "Annuler", products_path, class: "btn btn-link text-decoration-none" %>
+    <%= link_to "Annuler", product.persisted? ? product_path(product) : products_path, class: "btn btn-link text-decoration-none" %>
   </div>
 <% end %>

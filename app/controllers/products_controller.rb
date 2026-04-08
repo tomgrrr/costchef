@@ -82,7 +82,7 @@ class ProductsController < ApplicationController
   end
 
   def update_redirect_path
-    params[:return_to] == "referentiel_pieces" ? referentiel_pieces_path : products_path
+    params[:return_to] == "referentiel_pieces" ? referentiel_pieces_path : product_path(@product)
   end
 
   def items_per_page

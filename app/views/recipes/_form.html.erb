@@ -97,6 +97,6 @@
 
   <div class="d-flex gap-2">
     <%= f.submit recipe.persisted? ? "Mettre à jour" : "Créer", class: "btn btn-primary" %>
-    <%= link_to "Annuler", recipes_path, class: "btn btn-outline-secondary" %>
+    <%= link_to "Annuler", recipe.persisted? ? recipe_path(recipe) : recipes_path, class: "btn btn-outline-secondary" %>
   </div>
 <% end %>
