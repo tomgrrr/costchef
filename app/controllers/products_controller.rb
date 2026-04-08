@@ -7,7 +7,7 @@ class ProductsController < ApplicationController
 
   def index
     scope = current_user.products
-                        .includes(product_purchases: :supplier, recipe_components: :parent_recipe)
+                        .includes(product_purchases: :supplier)
                         .order(:name)
                         .then { |s| params[:search].present? ? s.where("name ILIKE ?", "%#{params[:search]}%") : s }
                         .then { |s| params[:zero_price] == "1" ? s.where(avg_price_per_kg: 0) : s }
