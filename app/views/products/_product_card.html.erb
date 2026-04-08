@@ -51,6 +51,23 @@
       <%= product.product_purchases.active.count %> conditionnement(s) actif(s)
     </div>
 
+    <%# Recettes %>
+    <% recipes = product.recipe_components.map(&:parent_recipe).uniq.sort_by(&:name) %>
+    <% if recipes.any? %>
+      <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+        <% recipes.each do |recipe| %>
+          <%= link_to recipe_path(recipe),
+                style: "display: inline-flex; align-items: center; gap: 4px; text-decoration: none;
+                        background: #{recipe.sellable_as_component? ? 'var(--sl-100)' : 'var(--cc-accent)'};
+                        color: #{recipe.sellable_as_component? ? 'var(--sl-600)' : 'white'};
+                        border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 500;",
+                data: { turbo_frame: "_top" } do %>
+            <%= recipe.name %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
     <%# Stock button: collapse on desktop, link to show on mobile %>
     <button class="stock-btn d-none d-md-block"
             type="button"
