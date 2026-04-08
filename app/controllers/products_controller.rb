@@ -22,6 +22,7 @@ class ProductsController < ApplicationController
     @purchases = @product.product_purchases.includes(:supplier).order(:created_at)
     @new_purchase = ProductPurchase.new
     @suppliers = current_user.suppliers.active.order(:name)
+    @used_in = @product.recipe_components.includes(:parent_recipe).map(&:parent_recipe).uniq.sort_by(&:name)
   end
 
   def new

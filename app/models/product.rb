@@ -74,6 +74,11 @@ class Product < ApplicationRecord
     recipe_components.count
   end
 
+  # Liste des recettes parentes (dédupliquées, triées par nom)
+  def used_in_recipes
+    recipe_components.includes(:parent_recipe).map(&:parent_recipe).uniq.sort_by(&:name)
+  end
+
   # Moyenne arithmétique simple des price_per_kg des achats actifs
   def simple_avg_price_per_kg
     avg = product_purchases.active.average(:price_per_kg)

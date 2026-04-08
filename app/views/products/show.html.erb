@@ -103,9 +103,30 @@
         </div>
         <div class="info-row">
           <span class="info-label">Recettes</span>
-          <span class="info-value"><%= @product.recipes_count %></span>
+          <span class="info-value"><%= @used_in.size %></span>
         </div>
       </div>
+    </div>
+
+    <%# Utilisé dans %>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Utilisé dans</div>
+      <% if @used_in.any? %>
+        <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 6px;">
+          <% @used_in.each do |recipe| %>
+            <%= link_to recipe_path(recipe), style: "display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;" do %>
+              <% if recipe.sellable_as_component? %>
+                <span class="badge-produit" style="font-size: 10px; white-space: nowrap;">Sous-recette</span>
+              <% else %>
+                <span class="badge-produit" style="font-size: 10px; white-space: nowrap; background: var(--cc-accent); color: white;">Recette</span>
+              <% end %>
+              <span style="font-size: 13px;"><%= recipe.name %></span>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div style="margin-top: 6px; color: var(--sl-400); font-size: 13px;">Non utilisé dans aucune recette</div>
+      <% end %>
     </div>
   </div>
 </div>
