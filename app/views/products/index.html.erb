@@ -52,21 +52,9 @@
 <%# Products grid %>
 <div style="padding: 24px;">
   <% if @products.any? %>
-    <div class="products-grid" id="products_accordion">
+    <div class="products-grid">
       <% @products.each do |product| %>
-        <div>
-          <%= render "products/product_card", product: product %>
-
-          <div class="collapse" id="purchases_collapse_<%= product.id %>" data-bs-parent="#products_accordion">
-            <%= turbo_frame_tag "purchases_#{product.id}" do %>
-              <%= render "product_purchases/purchases_section",
-                    product: product,
-                    purchases: product.product_purchases.order(:created_at),
-                    new_purchase: ProductPurchase.new,
-                    suppliers: current_user.suppliers.active %>
-            <% end %>
-          </div>
-        </div>
+        <%= render "products/product_card", product: product %>
       <% end %>
     </div>
   <% else %>
