@@ -56,11 +56,11 @@
     <% if recipes.any? %>
       <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
         <% recipes.each do |recipe| %>
+          <% tag_style = recipe.sellable_as_component? \
+              ? "background: var(--sl-100); color: var(--sl-600);" \
+              : "background: var(--cc-accent); color: white;" %>
           <%= link_to recipe_path(recipe),
-                style: "display: inline-flex; align-items: center; gap: 4px; text-decoration: none;
-                        background: #{recipe.sellable_as_component? ? 'var(--sl-100)' : 'var(--cc-accent)'};
-                        color: #{recipe.sellable_as_component? ? 'var(--sl-600)' : 'white'};
-                        border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 500;",
+                style: "display: inline-flex; align-items: center; text-decoration: none; border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 500; #{tag_style}",
                 data: { turbo_frame: "_top" } do %>
             <%= recipe.name %>
           <% end %>
