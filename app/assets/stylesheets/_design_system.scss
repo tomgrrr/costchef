@@ -319,7 +319,7 @@ body {
   padding: 16px;
   position: relative;
   transition: background 0.1s;
-  height: 175px;
+  min-height: 175px;
   display: flex;
   flex-direction: column;
 }
