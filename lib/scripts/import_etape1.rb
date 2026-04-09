@@ -117,9 +117,9 @@ add!(r, vanille,       100,   unit: "g")
 add!(r, farine,        30,    unit: "kg")
 add!(r, oeuf_liquide,  9,     unit: "kg")
 
-# 2. Pâte pâté croûte
+# 2. Pâte pâté croûte (nom DB : "Pâte à pâté en croûte")
 puts "\n── Pâte pâté croûte ──"
-r = upsert!(user, "Pâte pâté croûte", sub: true)
+r = upsert!(user, "Pâte à pâté en croûte", sub: true)
 add!(r, farine,       42,    unit: "kg")
 add!(r, sel,          840,   unit: "g")
 add!(r, sucre,        840,   unit: "g")
