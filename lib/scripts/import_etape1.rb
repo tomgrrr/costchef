@@ -27,16 +27,17 @@ end
 
 def upsert!(user, name, sub: false)
   r = user.recipes.where("name ILIKE ?", name).first
-  if r && r.recipe_components.exists?
+  if r
     $skip_adds = true
-    puts "  SKIP (déjà configurée) : #{name}"
+    puts "  SKIP (déjà en base) : #{name}"
     return r
   end
   $skip_adds = false
-  r ||= user.recipes.new(name: name)
-  r.name                  = name
-  r.sellable_as_component = sub
-  r.cooking_loss_percentage ||= 0
+  r = user.recipes.new(
+    name:                   name,
+    sellable_as_component:  sub,
+    cooking_loss_percentage: 0
+  )
   r.save!
   puts "  ✓ #{sub ? '[SR]' : '[R] '} #{name}"
   r
