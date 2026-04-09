@@ -43,7 +43,8 @@
 
 <%# Search bar %>
 <div class="search-bar" style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
-  <%= form_with url: recipes_path, method: :get, class: "d-flex align-items-center gap-2" do |f| %>
+  <%= form_with url: recipes_path, method: :get, class: "d-flex align-items-center gap-2",
+        data: { controller: "auto-submit" } do |f| %>
     <%= hidden_field_tag :tab, @tab %>
     <%= f.text_field :search,
           value: params[:search],
@@ -57,7 +58,7 @@
           {},
           class: "form-select form-select-sm",
           style: "width: auto;",
-          onchange: "this.form.submit()" %>
+          data: { action: "change->auto-submit#submit" } %>
     <%= f.submit "Rechercher", class: "btn-outline-slate" %>
     <% if params[:search].present? %>
       <%= link_to "✕", recipes_path(tab: @tab), class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
