@@ -61,10 +61,10 @@ end
 
 # 8. Composants à quantité nulle
 zero_qty_comps = RecipeComponent
-  .joins("INNER JOIN recipes ON recipes.id = recipe_components.recipe_id")
+  .joins("INNER JOIN recipes ON recipes.id = recipe_components.parent_recipe_id")
   .where(recipes: { user_id: user.id })
   .where("recipe_components.quantity_kg = 0 OR recipe_components.quantity_kg IS NULL")
-  .includes(:recipe)
+  .includes(:parent_recipe)
 
 # 9. Catch-all products (prix très variable)
 catch_alls = []
@@ -407,7 +407,7 @@ html = <<~HTML
       else
         "<table><thead><tr><th>Recette</th><th>Composant</th><th>Quantité</th></tr></thead><tbody>" +
         zero_qty_comps.map { |rc|
-          "<tr><td>#{rc.recipe.name}</td><td>#{rc.component.name}</td><td><span class='tag tag-err'>#{rc.quantity_kg}</span></td></tr>"
+          "<tr><td>#{rc.parent_recipe.name}</td><td>#{rc.component.name}</td><td><span class='tag tag-err'>#{rc.quantity_kg}</span></td></tr>"
         }.join + "</tbody></table>"
       end}
     </div>
