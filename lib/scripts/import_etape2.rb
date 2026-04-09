@@ -88,7 +88,7 @@ cognac         = p!(user, "cognac",      base_unit: "l")
 vinaigre       = p!(user, "vinaigre")
 huile_olive    = p!(user, "huile olive", "huile d'olive", base_unit: "l")
 oignons        = p!(user, "oignons", "oignon")
-oignons_pref   = p!(user, "oignon prefrit", "oignons préfrits")
+oignons_pref   = p!(user, "oignons émincés préfrits", "oignons prefrits", "oignon prefrit", "prefrit")
 
 # ── Vins, alcools, fonds ──────────────────────────────────────
 
