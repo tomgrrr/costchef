@@ -37,7 +37,6 @@ def upsert!(user, name, sub: false)
     puts "  SKIP (déjà en base) : #{name}"
     return r
   end
-  $skip_ads = false
   $skip_adds = false
   r = user.recipes.new(
     name:                    name,
