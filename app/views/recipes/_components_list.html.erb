@@ -22,7 +22,13 @@
                 <span class="badge-sous-recette">Recette</span>
               <% end %>
             </td>
-            <td><%= rc.component.name %></td>
+            <td>
+              <% if rc.product_component? %>
+                <%= link_to rc.component.name, product_path(rc.component), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
+              <% else %>
+                <%= link_to rc.component.name, recipe_path(rc.component), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
+              <% end %>
+            </td>
             <td><span class="mono"><%= number_with_precision(rc.quantity_kg, precision: 3) %> kg</span></td>
             <td>
               <% price_per_kg = rc.product_component? ? rc.component.avg_price_per_kg.to_f : rc.component.cached_cost_per_kg.to_f %>
