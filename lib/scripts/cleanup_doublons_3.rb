@@ -47,9 +47,9 @@ if frais.nil?
 else
   puts "  ✓ Trouvé : #{frais.name} (ID #{frais.id})"
 
-  # Poids unitaire : oeuf gros 63/73g → moyenne 68g
-  frais.update!(unit_weight_kg: 0.068)
-  puts "  ✓ unit_weight_kg = 0.068 kg (68g)"
+  # Passer en base_unit "piece" + poids unitaire 68g (oeuf gros 63/73g)
+  frais.update!(base_unit: "piece", unit_weight_kg: 0.068)
+  puts "  ✓ base_unit = piece, unit_weight_kg = 0.068 kg (68g)"
 
   sup_france  = find_supplier(user, "france frais", "france-frais")
   sup_abp     = find_supplier(user, "abp")
