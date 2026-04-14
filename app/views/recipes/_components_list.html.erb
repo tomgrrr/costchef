@@ -29,7 +29,21 @@
                 <%= link_to rc.component.name, recipe_path(rc.component), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
               <% end %>
             </td>
-            <td><span class="mono"><%= number_with_precision(rc.quantity_kg, precision: 3) %> kg</span></td>
+            <td>
+              <%= form_with url: recipe_recipe_component_path(recipe, rc), method: :patch,
+                    data: { turbo_stream: true },
+                    style: "display: inline-flex; align-items: center; gap: 4px;" do %>
+                <input type="hidden" name="recipe_component[quantity_unit]" value="kg">
+                <input type="number"
+                       name="recipe_component[quantity]"
+                       value="<%= number_with_precision(rc.quantity_kg, precision: 3) %>"
+                       step="0.001" min="0.001"
+                       class="mono"
+                       style="width: 72px; border: 1px solid var(--sl-200); border-radius: 4px; padding: 2px 6px; font-size: 13px; text-align: right; background: transparent;"
+                       onchange="this.form.requestSubmit()">
+                <span style="color: var(--sl-500); font-size: 12px;">kg</span>
+              <% end %>
+            </td>
             <td>
               <% price_per_kg = rc.product_component? ? rc.component.avg_price_per_kg.to_f : rc.component.cached_cost_per_kg.to_f %>
               <% if price_per_kg > 0 %>

@@ -7,7 +7,7 @@
     <% end %>
   </div>
   <div class="d-flex gap-2">
-    <%= link_to recipes_path, class: "btn-outline-slate" do %>
+    <%= link_to recipes_path(session[:recipes_back] || {}), class: "btn-outline-slate" do %>
       <i class="bi bi-arrow-left"></i> Retour
     <% end %>
     <%= button_to duplicate_recipe_path(@recipe),

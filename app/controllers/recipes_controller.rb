@@ -7,6 +7,7 @@ class RecipesController < ApplicationController
 
   def index
     @tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
+    session[:recipes_back] = { search: params[:search], tab: @tab, per_page: params[:per_page] }.compact
     scope = current_user.recipes
                         .includes(recipe_components: :component)
                         .includes(:tray_size)
