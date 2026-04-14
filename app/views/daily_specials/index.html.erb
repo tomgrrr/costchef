@@ -20,6 +20,66 @@
     <%= render 'category_column', category: 'side',  entries: @sides,  average: @side_average,
                icon: 'bi-basket2', title: 'Accompagnements',  placeholder: 'Ex: Riz, Gratin dauphinois...' %>
 
+    <%# Portionnement info — spans all 3 columns %>
+    <div class="col-12">
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">Portionnement</h2>
+      </div>
+      <div style="padding: 0 20px 20px; display: flex; gap: 16px; flex-wrap: wrap;">
+
+        <%# Plat viande %>
+        <div style="flex: 1; min-width: 240px; background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 8px; padding: 16px;">
+          <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;">
+            <i class="bi bi-fire"></i> Plat viande — 400 g
+          </div>
+          <%# Barre de proportion %>
+          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
+            <div style="width: 50%; background: #c2410c;" title="Viande 200g"></div>
+            <div style="width: 50%; background: #d97706;" title="Accompagnement 200g"></div>
+          </div>
+          <div style="display: flex; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: #c2410c; flex-shrink: 0;"></span>
+              <span style="color: var(--sl-600);">Viande</span>
+              <span class="mono" style="font-size: 11px; font-weight: 600;">200 g</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: #d97706; flex-shrink: 0;"></span>
+              <span style="color: var(--sl-600);">Accompagnement</span>
+              <span class="mono" style="font-size: 11px; font-weight: 600;">200 g</span>
+            </div>
+          </div>
+        </div>
+
+        <%# Plat poisson %>
+        <div style="flex: 1; min-width: 240px; background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 8px; padding: 16px;">
+          <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;">
+            <i class="bi bi-water"></i> Plat poisson — 500 g
+          </div>
+          <%# Barre de proportion 150/500 = 30% / 350/500 = 70% %>
+          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
+            <div style="width: 30%; background: #0369a1;" title="Poisson 150g"></div>
+            <div style="width: 70%; background: #0891b2;" title="Accompagnement 350g"></div>
+          </div>
+          <div style="display: flex; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: #0369a1; flex-shrink: 0;"></span>
+              <span style="color: var(--sl-600);">Poisson</span>
+              <span class="mono" style="font-size: 11px; font-weight: 600;">150 g</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: #0891b2; flex-shrink: 0;"></span>
+              <span style="color: var(--sl-600);">Accompagnement</span>
+              <span class="mono" style="font-size: 11px; font-weight: 600;">350 g</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    </div>
+
     <%# Tarification recap card — spans all 3 columns %>
     <div class="col-12">
     <div class="section-card">
@@ -28,7 +88,7 @@
       </div>
       <div style="padding: 16px 20px;">
         <div class="summary-row">
-          <span class="s-label">Viande + Accompagnement — coût portion 400g</span>
+          <span class="s-label">Viande + Accompagnement — coût portion 400 g</span>
           <span class="s-value"><%= number_with_precision(@meat_portion_cost, precision: 2) %> €</span>
         </div>
         <div class="summary-row">
@@ -36,7 +96,7 @@
           <span class="s-value accent"><%= number_with_precision(@meat_portion_cost * current_user.markup_coefficient, precision: 2) %> €</span>
         </div>
         <div class="summary-row">
-          <span class="s-label">Poisson + Accompagnement — coût portion 400g</span>
+          <span class="s-label">Poisson + Accompagnement — coût portion 500 g</span>
           <span class="s-value"><%= number_with_precision(@fish_portion_cost, precision: 2) %> €</span>
         </div>
         <div class="summary-row">
@@ -46,9 +106,6 @@
         <div class="summary-row" style="border-bottom: none; margin-top: 4px;">
           <span class="s-label">Coefficient appliqué</span>
           <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
-        </div>
-        <div class="mono" style="color: var(--sl-400); font-size: 11px; margin-top: 8px;">
-          Portionnement : Viande 200g+200g / Poisson 150g+350g
         </div>
       </div>
     </div>
