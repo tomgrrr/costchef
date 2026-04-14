@@ -14,7 +14,10 @@ def matches_feuillete?(name)
   normalized.include?('feuillet')
 end
 
-all = user.recipes.order(:name).select { |r| matches_feuillete?(r.name) }
+# ID 198 = Pâte Feuilletée — utilisée dans 9 recettes, NE PAS SUPPRIMER
+EXCLUDED_IDS = [198].freeze
+
+all = user.recipes.order(:name).select { |r| matches_feuillete?(r.name) && !EXCLUDED_IDS.include?(r.id) }
 
 puts "#{all.size} recette(s) à supprimer :"
 all.each { |r| puts "  - [#{r.sellable_as_component? ? 'SR' : 'R '}] #{r.id}\t#{r.name}" }
