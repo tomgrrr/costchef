@@ -30,7 +30,6 @@ def add_cond(user, product_id, supplier, qty, unit, price)
 end
 
 puts "=== IMPORT ==="
-add_cond(user, 1092, transgourmet,    5,   "kg", 28.10)  # Moutarde
 add_cond(user, 1091, transgourmet,    2,   "l",  10.10)  # Vinaigre balsamique
 add_cond(user, 1088, brendani,        1,   "l",   4.65)  # Ketchup Colona
 add_cond(user, 1213, ds_restauration, 1,   "kg", 59.00)  # Foie gras 1kg
