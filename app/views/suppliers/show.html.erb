@@ -1,0 +1,196 @@
+<%# Page header %>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    <h1 class="page-title"><%= @supplier.name %></h1>
+    <% if @supplier.active? %>
+      <span class="badge-produit" style="background: var(--cc-success); color: white;">Actif</span>
+    <% else %>
+      <span class="badge-produit" style="background: var(--sl-300); color: var(--sl-600);">Inactif</span>
+    <% end %>
+  </div>
+  <div class="d-flex gap-2">
+    <%= link_to suppliers_path, class: "btn-outline-slate" do %>
+      <i class="bi bi-arrow-left"></i> Retour
+    <% end %>
+    <%= link_to edit_supplier_path(@supplier), class: "btn-outline-slate" do %>
+      <i class="bi bi-pencil"></i> Modifier
+    <% end %>
+  </div>
+</div>
+
+<%# Stats bar %>
+<% total_purchases = @purchases_by_product.values.flatten %>
+<% active_count   = total_purchases.count(&:active?) %>
+<% inactive_count = total_purchases.count { |p| !p.active? } %>
+
+<div style="display: flex; gap: 32px; padding: 16px 24px; background: white; border-bottom: 1px solid var(--sl-200); flex-wrap: wrap;">
+  <div>
+    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Produits</div>
+    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--sl-900);"><%= @purchases_by_product.size %></div>
+  </div>
+  <div>
+    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Conditionnements</div>
+    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--sl-900);"><%= total_purchases.size %></div>
+  </div>
+  <div>
+    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Actifs</div>
+    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--cc-success);"><%= active_count %></div>
+  </div>
+  <% if inactive_count > 0 %>
+  <div>
+    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Inactifs</div>
+    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--sl-400);"><%= inactive_count %></div>
+  </div>
+  <% end %>
+</div>
+
+<div style="padding: 24px;">
+
+  <% if @purchases_by_product.empty? %>
+    <div style="text-align: center; color: var(--sl-400); font-size: 13px; padding: 48px 0;">
+      Aucun conditionnement pour ce fournisseur.
+    </div>
+  <% else %>
+
+    <% @purchases_by_product.each do |product, purchases| %>
+      <%
+        active_purchases  = purchases.select(&:active?)
+        total_qty_kg      = active_purchases.sum(&:package_quantity_kg).to_f
+        weighted_avg      = total_qty_kg > 0 ?
+          active_purchases.sum { |p| p.package_quantity_kg.to_f * p.price_per_kg.to_f } / total_qty_kg :
+          nil
+        simple_avg        = active_purchases.any? ?
+          active_purchases.sum { |p| p.price_per_kg.to_f } / active_purchases.size :
+          nil
+        global_avg        = product.avg_price_per_kg.to_f > 0 ? product.avg_price_per_kg.to_f : nil
+
+        # Is this supplier cheaper or more expensive than global avg?
+        price_delta       = (weighted_avg && global_avg) ? weighted_avg - global_avg : nil
+        price_delta_pct   = (price_delta && global_avg > 0) ? (price_delta / global_avg * 100).round(1) : nil
+      %>
+
+      <div class="section-card" style="margin-bottom: 16px;">
+        <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div class="d-flex align-items-center gap-2">
+            <h2 class="section-title" style="margin: 0;">
+              <%= link_to product.name, product_path(product), style: "color: inherit; text-decoration: none;" %>
+            </h2>
+            <span class="badge-produit"><%= product.base_unit %></span>
+            <% unless active_purchases.any? %>
+              <span class="badge-warning-sl" style="font-size: 10px;"><i class="bi bi-pause-circle"></i> Inactifs uniquement</span>
+            <% end %>
+          </div>
+
+          <%# Prix synthèse %>
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <% if weighted_avg %>
+              <div style="text-align: right;">
+                <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em;">PON fournisseur</div>
+                <div class="mono" style="font-size: 15px; font-weight: 700; color: var(--cc-success);">
+                  <%= number_with_precision(weighted_avg, precision: 2) %> €/<%= product.base_unit %>
+                </div>
+              </div>
+            <% end %>
+            <% if simple_avg && active_purchases.size > 1 %>
+              <div style="text-align: right;">
+                <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em;">MOY simple</div>
+                <div class="mono" style="font-size: 15px; font-weight: 700; color: var(--cc-danger);">
+                  <%= number_with_precision(simple_avg, precision: 2) %> €/<%= product.base_unit %>
+                </div>
+              </div>
+            <% end %>
+            <% if global_avg && @purchases_by_product.size > 0 %>
+              <div style="text-align: right;">
+                <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em;">Moy. globale</div>
+                <div class="mono" style="font-size: 15px; font-weight: 600; color: var(--sl-600);">
+                  <%= number_with_precision(global_avg, precision: 2) %> €/<%= product.base_unit %>
+                </div>
+              </div>
+            <% end %>
+            <% if price_delta_pct %>
+              <% delta_color = price_delta > 0 ? "var(--cc-danger)" : "var(--cc-success)" %>
+              <% delta_icon  = price_delta > 0 ? "bi-arrow-up" : "bi-arrow-down" %>
+              <% delta_label = price_delta > 0 ? "vs moy." : "vs moy." %>
+              <span class="mono" style="font-size: 12px; font-weight: 700; color: <%= delta_color %>;">
+                <i class="bi <%= delta_icon %>"></i>
+                <%= price_delta > 0 ? "+" : "" %><%= price_delta_pct %> %
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <%# Table des conditionnements %>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Conditionnement</th>
+                <th class="text-end">Prix achat</th>
+                <th class="text-end">Prix / <%= product.base_unit %></th>
+                <th class="text-end">Qté (kg eq.)</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% purchases.sort_by { |p| [p.active? ? 0 : 1, p.created_at] }.each do |purchase| %>
+                <tr style="<%= 'opacity: 0.45;' unless purchase.active? %>">
+                  <td style="font-weight: 500;">
+                    <%= number_with_precision(purchase.package_quantity, precision: 3, strip_insignificant_zeros: true) %>
+                    <%= purchase.package_unit %>
+                  </td>
+                  <td class="text-end">
+                    <span class="mono"><%= number_with_precision(purchase.package_price, precision: 2) %> €</span>
+                  </td>
+                  <td class="text-end">
+                    <span class="mono" style="font-weight: 600; color: <%= purchase.active? ? "var(--cc-success)" : "var(--sl-400)" %>;">
+                      <%= number_with_precision(purchase.price_per_kg, precision: 2) %> €/<%= product.base_unit %>
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <span class="mono" style="color: var(--sl-400); font-size: 12px;">
+                      <%= number_with_precision(purchase.package_quantity_kg, precision: 3, strip_insignificant_zeros: true) %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if purchase.active? %>
+                      <span style="font-size: 11px; font-weight: 500; color: var(--cc-success);"><i class="bi bi-check-circle"></i> Actif</span>
+                    <% else %>
+                      <span style="font-size: 11px; color: var(--sl-400);"><i class="bi bi-pause-circle"></i> Inactif</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+            <% if active_purchases.size > 1 %>
+              <tfoot>
+                <tr style="background: var(--sl-50); border-top: 2px solid var(--sl-200);">
+                  <td colspan="2" style="font-size: 12px; color: var(--sl-500); font-style: italic;">
+                    Calculs sur <%= active_purchases.size %> conditionnement<%= 's' if active_purchases.size > 1 %> actif<%= 's' if active_purchases.size > 1 %>
+                  </td>
+                  <td class="text-end">
+                    <div class="mono" style="font-size: 11px; color: var(--sl-400);">PON</div>
+                    <div class="mono" style="font-weight: 700; color: var(--cc-success);">
+                      <%= number_with_precision(weighted_avg, precision: 2) %> €/<%= product.base_unit %>
+                    </div>
+                    <div class="mono" style="font-size: 11px; color: var(--sl-400); margin-top: 2px;">MOY</div>
+                    <div class="mono" style="font-weight: 600; color: var(--cc-danger);">
+                      <%= number_with_precision(simple_avg, precision: 2) %> €/<%= product.base_unit %>
+                    </div>
+                  </td>
+                  <td class="text-end">
+                    <span class="mono" style="font-size: 12px; color: var(--sl-500);">
+                      <%= number_with_precision(total_qty_kg, precision: 3, strip_insignificant_zeros: true) %> kg
+                    </span>
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            <% end %>
+          </table>
+        </div>
+      </div>
+
+    <% end %>
+  <% end %>
+
+</div>

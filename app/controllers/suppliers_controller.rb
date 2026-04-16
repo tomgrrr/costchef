@@ -1,13 +1,20 @@
 # frozen_string_literal: true
 
 class SuppliersController < ApplicationController
-  before_action :set_supplier, only: %i[edit update destroy activate deactivate]
+  before_action :set_supplier, only: %i[show edit update destroy activate deactivate]
 
   def index
     base = current_user.suppliers
     base = base.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
     @pagy, @active_suppliers   = pagy(base.where(active: true).order(:name))
     @inactive_suppliers        = base.where(active: false).order(:name)
+  end
+
+  def show
+    @purchases_by_product = @supplier.product_purchases
+      .includes(:product)
+      .order("products.name ASC, product_purchases.created_at ASC")
+      .group_by(&:product)
   end
 
   def new

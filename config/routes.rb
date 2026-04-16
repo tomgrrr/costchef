@@ -21,7 +21,7 @@ Rails.application.routes.draw do
     resources :invitations, only: %i[index new create]
   end
 
-  resources :suppliers, except: [:show] do
+  resources :suppliers do
     member do
       post :activate
       post :deactivate
