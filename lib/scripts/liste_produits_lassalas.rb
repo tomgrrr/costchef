@@ -15,8 +15,8 @@ products.each do |p|
 
   # Prix pondéré actif (même logique que weighted_avg_price_per_kg dans le contrôleur)
   if active_purchases.any?
-    total_qty   = active_purchases.sum { |pp| pp.qty_kg.to_f }
-    total_value = active_purchases.sum { |pp| pp.qty_kg.to_f * pp.price_per_kg.to_f }
+    total_qty   = active_purchases.sum { |pp| pp.package_quantity_kg.to_f }
+    total_value = active_purchases.sum { |pp| pp.package_quantity_kg.to_f * pp.price_per_kg.to_f }
     pon = total_qty > 0 ? (total_value / total_qty).round(4) : nil
   else
     pon = nil
