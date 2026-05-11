@@ -155,6 +155,34 @@ RSpec.describe Recipe, type: :model do
         expect(recipe).to be_valid
       end
     end
+
+    context 'tva_rate' do
+      it 'valide avec 5.5' do
+        recipe = build(:recipe, tva_rate: 5.5, user: user)
+        expect(recipe).to be_valid
+      end
+
+      it 'valide avec 10' do
+        recipe = build(:recipe, tva_rate: 10, user: user)
+        expect(recipe).to be_valid
+      end
+
+      it 'valide avec 20' do
+        recipe = build(:recipe, tva_rate: 20, user: user)
+        expect(recipe).to be_valid
+      end
+
+      it 'invalide avec une valeur hors liste' do
+        recipe = build(:recipe, tva_rate: 7, user: user)
+        expect(recipe).not_to be_valid
+        expect(recipe.errors[:tva_rate]).to be_present
+      end
+
+      it 'invalide avec nil' do
+        recipe = build(:recipe, tva_rate: nil, user: user)
+        expect(recipe).not_to be_valid
+      end
+    end
   end
 
   describe 'defaults (after_initialize)' do
@@ -367,6 +395,53 @@ RSpec.describe Recipe, type: :model do
     it 'retourne nil si suggested_selling_price est nil' do
       recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: nil, user: user)
       expect(recipe.unit_selling_price).to be_nil
+    end
+  end
+
+  describe '#pvc_ttc' do
+    let(:user_markup) { create(:user, email: 'ttc@test.fr', markup_coefficient: 2.0) }
+
+    it 'retourne suggested_selling_price * (1 + 5.5/100) pour TVA 5.5%' do
+      recipe = build(:recipe, cached_cost_per_kg: 10, has_tray: false, tva_rate: 5.5, user: user_markup)
+      # ht = 20.0 → ttc = 21.10
+      expect(recipe.pvc_ttc).to be_within(0.001).of(21.10)
+    end
+
+    it 'retourne suggested_selling_price * 1.10 pour TVA 10%' do
+      recipe = build(:recipe, cached_cost_per_kg: 10, has_tray: false, tva_rate: 10, user: user_markup)
+      # ht = 20.0 → ttc = 22.0
+      expect(recipe.pvc_ttc).to eq(22.0)
+    end
+
+    it 'retourne suggested_selling_price * 1.20 pour TVA 20%' do
+      recipe = build(:recipe, cached_cost_per_kg: 10, has_tray: false, tva_rate: 20, user: user_markup)
+      # ht = 20.0 → ttc = 24.0
+      expect(recipe.pvc_ttc).to eq(24.0)
+    end
+
+    it 'retourne nil si suggested_selling_price est nil' do
+      recipe = build(:recipe, cached_cost_per_kg: nil, tva_rate: 10, user: user_markup)
+      expect(recipe.pvc_ttc).to be_nil
+    end
+  end
+
+  describe '#unit_selling_price_ttc' do
+    let(:user_markup) { create(:user, email: 'unitttc@test.fr', markup_coefficient: 2.0) }
+
+    it 'retourne unit_selling_price * (1 + tva_rate/100)' do
+      recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: 20, tva_rate: 10, user: user_markup)
+      # unit_selling_price = 40 * 0.250 = 10 → ttc = 11.0
+      expect(recipe.unit_selling_price_ttc).to eq(11.0)
+    end
+
+    it 'retourne nil si sold_by_unit est false' do
+      recipe = build(:recipe, sold_by_unit: false, cached_cost_per_kg: 20, tva_rate: 10, user: user_markup)
+      expect(recipe.unit_selling_price_ttc).to be_nil
+    end
+
+    it 'retourne nil si unit_selling_price est nil' do
+      recipe = build(:recipe, :sold_by_unit, cached_cost_per_kg: nil, tva_rate: 10, user: user_markup)
+      expect(recipe.unit_selling_price_ttc).to be_nil
     end
   end
 

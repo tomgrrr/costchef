@@ -144,7 +144,7 @@ class RecipesController < ApplicationController
     permitted = params.require(:recipe).permit(
       :name, :description, :cooking_loss_percentage,
       :sellable_as_component, :has_tray, :tray_size_id,
-      :sold_by_unit, :unit_reference_weight_kg
+      :sold_by_unit, :unit_reference_weight_kg, :tva_rate
     )
 
     # Convertir grammes → kg (le formulaire envoie des grammes)

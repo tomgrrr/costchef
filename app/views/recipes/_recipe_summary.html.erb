@@ -47,10 +47,31 @@
         </div>
       <% end %>
 
+      <div class="summary-row">
+        <span class="s-label">TVA</span>
+        <span class="s-value">
+          <%= form_with model: recipe, method: :patch,
+                data: { controller: "auto-submit", turbo_stream: true },
+                class: "tva-inline-form",
+                style: "display: inline;" do |f| %>
+            <%= f.select :tva_rate,
+                  [["5,5 %", "5.5"], ["10 %", "10"], ["20 %", "20"]],
+                  { selected: format("%g", recipe.tva_rate) },
+                  data: { action: "change->auto-submit#submit" },
+                  style: "border: 1px solid var(--sl-200); border-radius: 4px; padding: 2px 6px; font-size: 13px; background: transparent;" %>
+          <% end %>
+        </span>
+      </div>
+
       <% if recipe.suggested_selling_price.present? %>
         <div class="summary-row">
-          <span class="s-label">Prix de vente conseillé</span>
+          <span class="s-label">PVC HT</span>
           <span class="s-value accent"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="s-label">PVC TTC</span>
+          <span class="s-value accent"><%= number_with_precision(recipe.pvc_ttc, precision: 2) %> €/kg</span>
         </div>
       <% end %>
 
@@ -69,8 +90,13 @@
 
         <% if recipe.unit_selling_price.present? %>
           <div class="summary-row">
-            <span class="s-label">Prix de vente à l'unité</span>
+            <span class="s-label">PVC unité HT</span>
             <span class="s-value accent"><%= number_with_precision(recipe.unit_selling_price, precision: 2) %> €</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="s-label">PVC unité TTC</span>
+            <span class="s-value accent"><%= number_with_precision(recipe.unit_selling_price_ttc, precision: 2) %> €</span>
           </div>
         <% end %>
       <% end %>

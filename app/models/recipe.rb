@@ -80,6 +80,10 @@ class Recipe < ApplicationRecord
             numericality: { greater_than_or_equal_to: 0 },
             allow_nil: true
 
+  # Taux de TVA : 5.5%, 10% ou 20% (régimes traiteur FR)
+  validates :tva_rate,
+            inclusion: { in: [BigDecimal("5.5"), BigDecimal("10"), BigDecimal("20")] }
+
   # ============================================
   # Validations personnalisées
   # ============================================
@@ -215,6 +219,20 @@ class Recipe < ApplicationRecord
     else
       base_price
     end
+  end
+
+  # PVC TTC = PVC HT * (1 + tva_rate / 100)
+  def pvc_ttc
+    return nil unless suggested_selling_price && tva_rate
+
+    suggested_selling_price * (1 + tva_rate / BigDecimal("100"))
+  end
+
+  # Prix de vente unitaire TTC
+  def unit_selling_price_ttc
+    return nil unless unit_selling_price && tva_rate
+
+    unit_selling_price * (1 + tva_rate / BigDecimal("100"))
   end
 
   private
