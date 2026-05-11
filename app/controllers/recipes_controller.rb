@@ -21,10 +21,19 @@ class RecipesController < ApplicationController
   end
 
   def tarifs
-    @recipes = current_user.recipes
-                           .where(sellable_as_component: false)
-                           .includes(:tray_size, :user)
-                           .order(:name)
+    @recipes = tarifs_scope
+
+    respond_to do |format|
+      format.html
+      format.csv { send_tarifs_csv(@recipes) }
+    end
+  end
+
+  def export_tarifs_excel
+    recipes = tarifs_scope
+    send_data generate_tarifs_xlsx(recipes),
+              filename: "tarifs-#{Date.today}.xlsx",
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   end
 
   def show
@@ -381,6 +390,85 @@ class RecipesController < ApplicationController
         csv << [r.name, r.cached_cost_per_kg, r.cached_total_weight, r.cooking_loss_percentage]
       end
     end
+  end
+
+  def tarifs_scope
+    current_user.recipes
+                .where(sellable_as_component: false)
+                .includes(:tray_size, :user)
+                .order(:name)
+  end
+
+  def send_tarifs_csv(recipes)
+    send_data generate_tarifs_csv(recipes),
+              filename: "tarifs-#{Date.today}.csv",
+              type: 'text/csv; charset=utf-8'
+  end
+
+  def generate_tarifs_csv(recipes)
+    CSV.generate(col_sep: ';') do |csv|
+      csv << ['Recette', 'Coût de revient (€/kg)', 'TVA (%)', 'PVC HT (€/kg)', 'PVC TTC (€/kg)',
+              'Prix unité HT (€)', 'Prix unité TTC (€)', 'Poids unité (g)', 'Barquette']
+      recipes.each do |r|
+        csv << [
+          r.name,
+          decimal_or_blank(r.cached_cost_per_kg, 2),
+          decimal_or_blank(r.tva_rate, 1),
+          decimal_or_blank(r.suggested_selling_price, 2),
+          decimal_or_blank(r.pvc_ttc, 2),
+          decimal_or_blank(r.unit_selling_price, 2),
+          decimal_or_blank(r.unit_selling_price_ttc, 2),
+          r.unit_reference_weight_kg ? (r.unit_reference_weight_kg * 1000).round : nil,
+          tray_label(r)
+        ]
+      end
+    end
+  end
+
+  def generate_tarifs_xlsx(recipes)
+    package = ::Axlsx::Package.new
+    wb = package.workbook
+
+    wb.add_worksheet(name: "Tarifs") do |sheet|
+      header_style = sheet.styles.add_style(b: true, bg_color: "E2E8F0", border: { style: :thin, color: "94A3B8" })
+      decimal2 = sheet.styles.add_style(format_code: "0.00")
+      decimal1 = sheet.styles.add_style(format_code: "0.0")
+      integer  = sheet.styles.add_style(format_code: "0")
+
+      sheet.add_row ['Recette', 'Coût de revient (€/kg)', 'TVA (%)', 'PVC HT (€/kg)', 'PVC TTC (€/kg)',
+                     'Prix unité HT (€)', 'Prix unité TTC (€)', 'Poids unité (g)', 'Barquette'],
+                    style: Array.new(9, header_style)
+
+      recipes.each do |r|
+        sheet.add_row [
+          r.name,
+          r.cached_cost_per_kg,
+          r.tva_rate,
+          r.suggested_selling_price,
+          r.pvc_ttc,
+          r.unit_selling_price,
+          r.unit_selling_price_ttc,
+          r.unit_reference_weight_kg ? (r.unit_reference_weight_kg * 1000).round : nil,
+          tray_label(r)
+        ], style: [nil, decimal2, decimal1, decimal2, decimal2, decimal2, decimal2, integer, nil]
+      end
+
+      sheet.column_widths 30, 18, 8, 14, 14, 14, 14, 12, 28
+    end
+
+    package.to_stream.string
+  end
+
+  def decimal_or_blank(value, precision)
+    return nil if value.nil?
+
+    value.to_f.round(precision)
+  end
+
+  def tray_label(recipe)
+    return nil unless recipe.has_tray? && recipe.tray_size
+
+    format("%s (%.2f €)", recipe.tray_size.name, recipe.tray_size.price)
   end
 
   def unique_sheet_name(name, used_names)

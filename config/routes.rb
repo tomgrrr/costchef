@@ -36,7 +36,8 @@ Rails.application.routes.draw do
     end
   end
 
-  get 'recipes/tarifs', to: 'recipes#tarifs', as: 'tarifs_recipes'
+  get 'recipes/tarifs',              to: 'recipes#tarifs',              as: 'tarifs_recipes'
+  get 'recipes/tarifs/export_excel', to: 'recipes#export_tarifs_excel', as: 'export_tarifs_excel_recipes'
 
   resources :recipes do
     collection do

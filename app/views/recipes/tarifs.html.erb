@@ -4,9 +4,17 @@
     <h1 class="page-title">Tarifs</h1>
     <span class="mono" style="color: var(--sl-400);"><%= @recipes.size %> recette<%= 's' if @recipes.size > 1 %></span>
   </div>
-  <%= link_to recipes_path, class: "btn-outline-slate" do %>
-    <i class="bi bi-arrow-left"></i> Recettes
-  <% end %>
+  <div class="d-flex align-items-center gap-2">
+    <%= link_to tarifs_recipes_path(format: :csv), class: "btn-outline-slate" do %>
+      <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+    <% end %>
+    <%= link_to export_tarifs_excel_recipes_path, class: "btn-outline-slate" do %>
+      <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+    <% end %>
+    <%= link_to recipes_path, class: "btn-outline-slate" do %>
+      <i class="bi bi-arrow-left"></i> Recettes
+    <% end %>
+  </div>
 </div>
 
 <%# Tab bar %>

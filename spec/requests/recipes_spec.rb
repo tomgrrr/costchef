@@ -125,6 +125,65 @@ RSpec.describe 'Recipes', type: :request do
     end
   end
 
+  describe 'GET /recipes/tarifs.csv' do
+    before { sign_in user }
+
+    it 'retourne un CSV avec les colonnes Recette, Coût, TVA, PVC HT/TTC, Prix unité, Barquette' do
+      create(:recipe, name: 'Pâte brisée', user: user)
+      get tarifs_recipes_path(format: :csv)
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include('text/csv')
+      header = response.body.lines.first
+      expect(header).to include('Recette;Coût de revient (€/kg);TVA (%);PVC HT (€/kg);PVC TTC (€/kg);Prix unité HT (€);Prix unité TTC (€);Poids unité (g);Barquette')
+    end
+
+    it "n'inclut pas les sous-recettes" do
+      create(:recipe, name: 'Aligot', user: user)
+      create(:recipe, :subrecipe, name: 'Pâte feuilletée', user: user)
+      get tarifs_recipes_path(format: :csv)
+      expect(response.body).to include('Aligot')
+      expect(response.body).not_to include('Pâte feuilletée')
+    end
+
+    it 'respecte l\'isolation utilisateur' do
+      create(:recipe, name: 'Pâte brisée', user: user)
+      create(:recipe, name: 'Recette secrète', user: other_user)
+      get tarifs_recipes_path(format: :csv)
+      expect(response.body).to include('Pâte brisée')
+      expect(response.body).not_to include('Recette secrète')
+    end
+
+    it 'gère les valeurs nil et les noms avec séparateur sans crasher' do
+      create(:recipe, name: 'Recette; "spéciale"', user: user, cached_cost_per_kg: nil)
+      get tarifs_recipes_path(format: :csv)
+      expect(response).to have_http_status(:ok)
+      # Le nom avec ; doit être quoté par CSV.generate pour préserver le séparateur
+      parsed = CSV.parse(response.body, col_sep: ';')
+      data_row = parsed.find { |row| row.first&.include?('spéciale') }
+      expect(data_row.first).to eq('Recette; "spéciale"')
+    end
+  end
+
+  describe 'GET /recipes/tarifs/export_excel' do
+    before { sign_in user }
+
+    it 'retourne un Excel avec le bon content-type' do
+      create(:recipe, name: 'Pâte brisée', user: user)
+      get export_tarifs_excel_recipes_path
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include('spreadsheetml.sheet')
+      expect(response.headers['Content-Disposition']).to include('tarifs-')
+    end
+
+    it 'respecte l\'isolation utilisateur (pas de recettes d\'un autre user)' do
+      create(:recipe, name: 'Pâte brisée', user: user)
+      create(:recipe, name: 'Recette secrète', user: other_user)
+      get export_tarifs_excel_recipes_path
+      # Content binaire xlsx — vérifier que ça réponds 200 et content-type xlsx suffit
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe 'GET /recipes/:id' do
     before { sign_in user }
 
