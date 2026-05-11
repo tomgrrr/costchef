@@ -35,7 +35,7 @@
           <% @recipes.each do |recipe| %>
             <tr>
               <td>
-                <%= link_to recipe.name, recipe_path(recipe), style: "color: var(--sl-900); font-weight: 500; text-decoration: none;" %>
+                <%= link_to recipe.name, recipe_path(recipe, back: request.fullpath), style: "color: var(--sl-900); font-weight: 500; text-decoration: none;" %>
               </td>
               <td>
                 <% if recipe.cached_cost_per_kg.present? && recipe.cached_cost_per_kg > 0 %>

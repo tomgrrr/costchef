@@ -523,4 +523,54 @@ RSpec.describe 'Recipes', type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe 'back navigation' do
+    before { sign_in user }
+
+    it 'GET /recipes propage la fullpath via param back sur les liens recipe' do
+      create(:recipe, name: 'Pâte brisée', user: user)
+      get recipes_path, params: { page: 1, search: 'Pâte' }
+      # Les liens vers recipe_path doivent contenir back=/recipes?page=1&search=Pâte (URL-encoded)
+      expect(response.body).to include('back=')
+      expect(response.body).to match(%r{back=%2Frecipes})
+    end
+
+    it 'GET /recipes/:id avec param back relatif → bouton "Retour" pointe vers back' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      get recipe_path(recipe, back: '/recipes?page=2')
+      expect(response.body).to include('href="/recipes?page=2"')
+    end
+
+    it 'GET /recipes/:id avec back absolu (open redirect) → bouton "Retour" pointe vers /recipes (fallback)' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      get recipe_path(recipe, back: 'https://evil.com')
+      expect(response.body).not_to include('https://evil.com')
+      expect(response.body).to include('href="/recipes"')
+    end
+
+    it 'GET /recipes/:id avec back protocol-relative (//evil) → fallback /recipes' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      get recipe_path(recipe, back: '//evil.com')
+      expect(response.body).not_to match(%r{href="//evil\.com"})
+      expect(response.body).to include('href="/recipes"')
+    end
+
+    it 'GET /recipes/:id sans back → bouton "Retour" pointe vers /recipes' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      get recipe_path(recipe)
+      expect(response.body).to include('href="/recipes"')
+    end
+
+    it 'PATCH /recipes/:id avec back valide → redirige vers show?back=...' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      patch recipe_path(recipe), params: { recipe: { name: 'Pâte sucrée' }, back: '/recipes?page=2' }
+      expect(response).to redirect_to(recipe_path(recipe, back: '/recipes?page=2'))
+    end
+
+    it 'PATCH /recipes/:id avec back malicieux → redirige vers show sans propager le back malveillant' do
+      recipe = create(:recipe, name: 'Pâte brisée', user: user)
+      patch recipe_path(recipe), params: { recipe: { name: 'Pâte sucrée' }, back: 'https://evil.com' }
+      expect(response.location).not_to include('back=')
+    end
+  end
 end

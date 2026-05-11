@@ -7,7 +7,6 @@ class RecipesController < ApplicationController
 
   def index
     @tab = params[:tab] == 'subrecipes' ? 'subrecipes' : 'recipes'
-    session[:recipes_back] = { search: params[:search], tab: @tab, per_page: params[:per_page] }.compact
     scope = current_user.recipes
                         .includes(recipe_components: :component)
                         .includes(:tray_size)
@@ -62,7 +61,7 @@ class RecipesController < ApplicationController
       alert_msg = @recipe.demotion_alert_message
       respond_to do |format|
         format.turbo_stream { @recipe.reload }
-        format.html { redirect_to @recipe, notice: "Recette mise à jour.", alert: alert_msg }
+        format.html { redirect_to recipe_path(@recipe, back: helpers.safe_back_path(params[:back], nil)), notice: "Recette mise à jour.", alert: alert_msg }
       end
     else
       respond_to do |format|

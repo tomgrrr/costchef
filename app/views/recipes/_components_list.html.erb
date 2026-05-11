@@ -26,7 +26,7 @@
               <% if rc.product_component? %>
                 <%= link_to rc.component.name, product_path(rc.component), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
               <% else %>
-                <%= link_to rc.component.name, recipe_path(rc.component), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
+                <%= link_to rc.component.name, recipe_path(rc.component, back: request.fullpath), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
               <% end %>
             </td>
             <td>

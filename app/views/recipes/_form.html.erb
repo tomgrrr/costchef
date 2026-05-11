@@ -1,4 +1,6 @@
 <%= form_with model: recipe, class: "needs-validation" do |f| %>
+  <%= hidden_field_tag :back, params[:back] if params[:back].present? %>
+
   <% if recipe.errors.any? %>
     <div class="alert alert-danger mb-3">
       <h6 class="alert-heading"><%= pluralize(recipe.errors.count, "erreur") %> :</h6>
@@ -97,6 +99,6 @@
 
   <div class="d-flex gap-2">
     <%= f.submit recipe.persisted? ? "Mettre à jour" : "Créer", class: "btn btn-primary" %>
-    <%= link_to "Annuler", recipe.persisted? ? recipe_path(recipe) : recipes_path, class: "btn btn-outline-secondary" %>
+    <%= link_to "Annuler", recipe.persisted? ? recipe_path(recipe, back: params[:back]) : recipes_path, class: "btn btn-outline-secondary" %>
   </div>
 <% end %>
