@@ -98,8 +98,10 @@ class ProductsController < ApplicationController
 
   def generate_products_csv(products)
     CSV.generate(col_sep: ';') do |csv|
-      csv << ['Nom', 'Unité', 'Poids unitaire (kg)']
-      products.each { |p| csv << [p.name, p.base_unit, p.unit_weight_kg&.round(3)] }
+      csv << ['Nom', 'Unité', 'Poids unitaire pièce (kg)', 'Prix moyen (€/kg)']
+      products.each do |p|
+        csv << [p.name, p.base_unit, p.unit_weight_kg&.round(3), p.avg_price_per_kg.round(2)]
+      end
     end
   end
 
