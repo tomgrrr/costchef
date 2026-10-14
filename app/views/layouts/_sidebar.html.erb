@@ -2,11 +2,7 @@
 <nav class="sidebar" aria-label="Navigation principale" data-controller="sidebar">
   <div class="sidebar__top">
     <%= link_to root_path, class: "sidebar__brand", "aria-label": "CostChef, accueil" do %>
-      <svg class="sidebar__mark" viewBox="0 0 30 30" aria-hidden="true">
-        <rect class="mark__bg" width="30" height="30" rx="9"></rect>
-        <circle class="mark__ring" cx="15" cy="15" r="8"></circle>
-        <circle class="mark__dot" cx="15" cy="15" r="2.6"></circle>
-      </svg>
+      <%= image_tag "logo.jpg", class: "sidebar__logo", alt: "", width: 40, height: 40 %>
       <span>CostChef</span>
     <% end %>
     <button type="button" class="icon-btn sidebar__toggle" data-action="sidebar#toggle"

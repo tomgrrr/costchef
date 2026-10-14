@@ -27,6 +27,7 @@
                   form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
       <%= icon("copy") %> Dupliquer
     <% end %>
+    <%= render "recipes/convert_button", recipe: @recipe %>
     <details class="menu" data-controller="menu">
       <summary class="btn btn--outline"><%= icon("download") %> Exporter <%= icon("chevron-down") %></summary>
       <div class="menu__panel">

@@ -72,7 +72,7 @@ Type scale classes follow Core's `{role}-{size}`: `.text-display-lg/md/sm`,
 
 | Component | Classes | Notes |
 |---|---|---|
-| App shell | `.app`, `.sidebar`, `.app__main`, `.app__content` (`--narrow` for forms) | `layouts/application.html.erb`, `layouts/_sidebar.html.erb` |
+| App shell | `.app`, `.sidebar`, `.app__main`, `.app__content` (`--narrow` for forms) | `layouts/application.html.erb`, `layouts/_sidebar.html.erb`; brand = caterer logo (`.sidebar__logo`, `logo.jpg`) + CostChef name |
 | Page header | `page_header(title, subtitle:) { actions }` | owns the `<h1>` |
 | Breadcrumb | `breadcrumb(["Produits", products_path], "Farine")` | last item is the current page |
 | Button | `.btn` + `--primary` / `--outline` / `--ghost` / `--danger`, `--sm`, `--block` | `.icon-btn` for icon-only (always `aria-label`) |
@@ -91,6 +91,12 @@ Type scale classes follow Core's `{role}-{size}`: `.text-display-lg/md/sm`,
 | Tabs | `.tabs` + `.tabs__item[aria-current]` | page-level sections |
 | Meter / share bar | `.meter` (`--value`, `--tick`), `.share-bar__part.decor-N` (`--share`) | |
 | Chart | `products/_price_chart.html.erb`, geometry from `ProductsHelper#price_chart` | inline SVG |
+
+## Excel exports
+
+Exports use `Exports::XlsxTheme` (`app/services/exports/xlsx_theme.rb`): the same colours as
+the app (header in `--brand`, highlighted rows on the brand tint) and shared number formats.
+Its spec fails if `--brand`, `--card` or `--foreground` change in `_tokens.scss` without it.
 
 ## Stimulus controllers
 

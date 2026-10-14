@@ -8,7 +8,7 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
 1. **Couleur de marque définitive.** Aubergine (`#5A2D4F`) par défaut. Elle se change en
    une ligne : `--brand` dans `app/assets/stylesheets/costchef/_tokens.scss`. Toute l'app suit
    (boutons, liens, bloc prix, focus).
-   → En attendant : aubergine.
+   ✅ Décision de Tom (14 oct.) : on garde l'aubergine pour l'instant.
 
 2. ✅ **Vocabulaire — validé par Tom (14 oct.).** Appliqué partout dans l'app, y compris les
    messages de confirmation (« Achat ajouté », plus « Conditionnement »).
@@ -32,21 +32,28 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
    Les messages natifs du navigateur (« Veuillez remplir ce champ ») suivent la langue du navigateur.
 
 4. **Recherche globale (⌘K).** Présente dans les maquettes, mais elle n'existe pas dans l'app.
-   Je ne l'ai pas mise pour ne pas afficher un champ qui ne fait rien. On la construit ?
-   → En attendant : absente.
+   Je ne l'ai pas mise pour ne pas afficher un champ qui ne fait rien.
+   ✅ Décision de Tom (14 oct.) : abandonnée.
 
 5. **Boutons « Convertir en recette / en sous-recette ».** Ils étaient masqués dans le code
-   (`if false`, avec un TODO « à réactiver »). Je ne les ai pas repris. On les réactive ?
+   (`if false`, avec un TODO « à réactiver »).
+   ✅ Réactivés (14 oct.) dans l'en-tête de la fiche recette. Passer en sous-recette retire la
+   barquette et la vente à l'unité (une sous-recette ne peut pas les avoir) ; repasser en recette
+   finale une sous-recette déjà utilisée est possible, avec un avertissement : elle reste dans les
+   recettes qui l'utilisent, mais sa quantité n'y est plus modifiable (même règle qu'avant).
 
 6. ✅ **Retrait complet de Bootstrap — fait (14 oct.).** Retiré de `assets.rb`, `pagy.rb` et
    `package.json`. Seules les icônes (Bootstrap Icons, une bibliothèque séparée) restent.
 
-7. **Exports Excel.** Ils gardent l'ancienne palette (bleu marine, gris). Je les passe aux
-   couleurs CostChef ?
+7. ✅ **Exports — faits (14 oct.).** Les 4 exports Excel passent aux couleurs CostChef (en-têtes
+   aubergine, lignes de sous-recettes sur la teinte de marque, fichier signé « CostChef ») et au
+   nouveau vocabulaire, ainsi que les en-têtes des CSV. Unités en toutes lettres (« pièce(s) »),
+   prix des barquettes au format français. Fichiers renommés : `prix-de-vente-…`, `poids-des-pieces-…`.
+   La structure des tableaux (colonnes, ordre, onglets) ne change pas.
 
-8. **Logo Lassalas.** Il n'est plus affiché (CostChef a sa propre marque). Le fichier
-   `app/assets/images/logo.jpg` est toujours là. Je le supprime, ou on prévoit un co-branding
-   (logo du traiteur dans l'app ou sur les exports) ?
+8. ✅ **Logo Lassalas — fait (14 oct.).** Il remplace le logo rond, à côté du nom CostChef, dans
+   le menu et sur les écrans de connexion. Comme dans l'ancienne version, il s'affiche pour tous
+   les comptes : si d'autres traiteurs utilisent l'app, il faudra un logo par compte.
 
 ## À valider avec Quentin
 
@@ -61,9 +68,8 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
 
 ## Constats (rien à décider tout de suite)
 
-11. **Tests.** 840 tests (636 au départ). Il en reste **2 en échec, déjà en échec sur `master`**
-    avant la refonte, et sans lien avec le design : ce sont les tests qui ne correspondent plus
-    au code, pas l'inverse.
+11. **Tests.** 855 tests, **0 échec** (14 oct.). Les 2 tests qui échouaient déjà sur `master`
+    ont été réalignés sur le comportement actuel du code (ce sont eux qui étaient périmés) :
     - `spec/requests/products_spec.rb:104` attend l'ancien en-tête de l'export CSV produits.
     - `spec/requests/products_spec.rb:270` attend un retour à la liste après modification d'un
       produit ; le code renvoie sur la fiche du produit depuis une modification de septembre.

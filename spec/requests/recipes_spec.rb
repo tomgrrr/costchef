@@ -112,7 +112,7 @@ RSpec.describe 'Recipes', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to include('text/csv')
       lines = response.body.lines
-      expect(lines.first).to include('Nom;Coût/kg (€)')
+      expect(lines.first).to include('Nom;Coût au kg (€)')
       expect(lines.size).to eq(3) # header + 2 recipes
     end
 
@@ -134,7 +134,7 @@ RSpec.describe 'Recipes', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to include('text/csv')
       header = response.body.lines.first
-      expect(header).to include('Recette;Coût de revient (€/kg);TVA (%);PVC HT (€/kg);PVC TTC (€/kg);Prix unité HT (€);Prix unité TTC (€);Poids unité (g);Barquette')
+      expect(header).to include('Recette;Coût de revient (€/kg);TVA (%);Prix de vente conseillé HT (€/kg);Prix de vente conseillé TTC (€/kg);Prix à l’unité HT (€);Prix à l’unité TTC (€);Poids d’une unité (g);Barquette')
     end
 
     it "n'inclut pas les sous-recettes" do
@@ -172,7 +172,7 @@ RSpec.describe 'Recipes', type: :request do
       get export_tarifs_excel_recipes_path
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to include('spreadsheetml.sheet')
-      expect(response.headers['Content-Disposition']).to include('tarifs-')
+      expect(response.headers['Content-Disposition']).to include('prix-de-vente-')
     end
 
     it 'respecte l\'isolation utilisateur (pas de recettes d\'un autre user)' do
@@ -424,6 +424,61 @@ RSpec.describe 'Recipes', type: :request do
         patch recipe_path(other_recipe), params: { recipe: { name: 'Hack' } }
         expect(response).to redirect_to(root_path)
       end
+    end
+  end
+
+  describe 'convertir recette ⇄ sous-recette (boutons de la fiche)' do
+    before { sign_in user }
+
+    let(:tray) { create(:tray_size, user: user) }
+    let(:to_sub_params) do
+      { recipe: { sellable_as_component: '1', has_tray: '0', tray_size_id: '', sold_by_unit: '0' } }
+    end
+
+    it 'affiche « Convertir en sous-recette » sur une recette finale' do
+      recipe = create(:recipe, user: user)
+      get recipe_path(recipe)
+      expect(response.body).to include('Convertir en sous-recette')
+    end
+
+    it 'affiche « Convertir en recette » sur une sous-recette' do
+      recipe = create(:recipe, :subrecipe, user: user)
+      get recipe_path(recipe)
+      expect(response.body).to include('Convertir en recette')
+    end
+
+    it 'convertit une recette vendue en barquette et à l’unité en sous-recette' do
+      recipe = create(:recipe, :sold_by_unit, user: user, has_tray: true, tray_size: tray)
+      patch recipe_path(recipe), params: to_sub_params
+      recipe.reload
+      expect(recipe).to have_attributes(sellable_as_component: true, has_tray: false, tray_size_id: nil,
+                                        sold_by_unit: false, unit_reference_weight_kg: nil)
+      follow_redirect!
+      expect(response.body).to include('Recette convertie en sous-recette.')
+    end
+
+    it 'convertit une sous-recette en recette finale' do
+      recipe = create(:recipe, :subrecipe, user: user)
+      patch recipe_path(recipe), params: { recipe: { sellable_as_component: '0' } }
+      expect(recipe.reload.sellable_as_component).to be(false)
+      follow_redirect!
+      expect(response.body).to include('Sous-recette convertie en recette finale.')
+    end
+
+    it 'prévient quand la sous-recette convertie est utilisée ailleurs' do
+      sub = create(:recipe, :subrecipe, user: user)
+      parent = create(:recipe, name: 'Tarte', user: user)
+      create(:recipe_component, parent_recipe: parent, component: sub)
+      get recipe_path(sub)
+      expect(response.body).to include('Elle est déjà utilisée dans 1 recette')
+      patch recipe_path(sub), params: { recipe: { sellable_as_component: '0' } }
+      expect(flash[:alert]).to include('utilisée comme sous-recette dans 1 recette')
+    end
+
+    it 'ne convertit pas la recette d’un autre utilisateur' do
+      other = create(:recipe, name: 'Crème brûlée', user: other_user)
+      patch recipe_path(other), params: to_sub_params
+      expect(other.reload.sellable_as_component).to be(false)
     end
   end
 

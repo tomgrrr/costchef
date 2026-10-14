@@ -56,15 +56,16 @@
   &:hover { color: var(--foreground); }
 }
 
-.sidebar__mark {
+// The caterer's logo (Maison Lassalas) next to the CostChef name.
+.sidebar__logo {
   flex: none;
-  width: 30px;
-  height: 30px;
-}
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
 
-.mark__bg { fill: var(--brand); }
-.mark__ring { fill: none; stroke: var(--brand-foreground); stroke-width: 1.8; }
-.mark__dot { fill: var(--brand-foreground); }
+  &--lg { width: 56px; height: 56px; }
+}
 
 .sidebar .sidebar__toggle { display: none; }
 

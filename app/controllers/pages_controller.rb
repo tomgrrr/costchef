@@ -20,7 +20,7 @@ class PagesController < ApplicationController
       format.html
       format.csv do
         send_data generate_pieces_csv(@piece_products),
-                  filename: "referentiel-pieces-#{Date.today}.csv",
+                  filename: "poids-des-pieces-#{Date.today}.csv",
                   type: 'text/csv; charset=utf-8'
       end
     end
@@ -49,7 +49,7 @@ class PagesController < ApplicationController
 
   def generate_pieces_csv(products)
     CSV.generate(col_sep: ';') do |csv|
-      csv << ['Nom', 'Poids unitaire (g)', 'Poids unitaire (kg)', 'Prix moyen (€/kg)']
+      csv << ['Nom', 'Poids d’une pièce (g)', 'Poids d’une pièce (kg)', 'Prix moyen pondéré (€/kg)']
       products.each do |p|
         csv << [p.name, (p.unit_weight_kg * 1000).round(0), p.unit_weight_kg.round(3), p.avg_price_per_kg.round(2)]
       end

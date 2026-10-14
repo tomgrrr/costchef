@@ -108,7 +108,7 @@ RSpec.describe 'Products', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to include('text/csv')
       lines = response.body.lines
-      expect(lines.first).to include('Nom;Unité;Poids unitaire (kg)')
+      expect(lines.first).to include('Nom;Unité;Poids d’une pièce (kg);Prix moyen pondéré (€/kg)')
       expect(lines.size).to eq(3) # header + 2 products
     end
 
@@ -270,7 +270,7 @@ RSpec.describe 'Products', type: :request do
       it 'met à jour et redirige avec notice' do
         patch product_path(product), params: { product: { name: 'Farine T65' } }
         expect(product.reload.name).to eq('Farine T65')
-        expect(response).to redirect_to(products_path)
+        expect(response).to redirect_to(product_path(product))
         follow_redirect!
         expect(response.body).to include('Produit mis à jour')
       end
