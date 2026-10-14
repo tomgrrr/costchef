@@ -9,7 +9,7 @@
 <% end %>
 
 <%= form_with url: standard_deviations_path, method: :get, class: "cluster cluster--sm" do |f| %>
-  <label class="affix affix--prefix">
+  <label class="affix affix--prefix" style="--input-width: 280px">
     <span class="sr-only">Rechercher un produit</span>
     <span class="affix__prefix"><%= icon("search") %></span>
     <%= f.search_field :search, value: params[:search], placeholder: "Rechercher un produit…", class: "input",

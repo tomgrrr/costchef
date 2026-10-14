@@ -41,7 +41,8 @@
                   <label class="sr-only" for="quantity_<%= rc.id %>">Quantité de <%= rc.component.name %> en <%= unit_label(rc.quantity_unit) %></label>
                   <input type="number" id="quantity_<%= rc.id %>"
                          name="recipe_component[quantity]"
-                         value="<%= number_with_precision(display_quantity, precision: rc.quantity_unit == "piece" ? 1 : 3, strip_insignificant_zeros: true) %>"
+                         value="<%= number_with_precision(display_quantity, precision: rc.quantity_unit == "piece" ? 1 : 3,
+                                                          strip_insignificant_zeros: true, separator: ".", delimiter: "") %>"
                          step="0.001" min="0.001"
                          class="input input--num input--compact"
                          style="--input-width: 84px"

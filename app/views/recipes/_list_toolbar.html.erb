@@ -20,7 +20,7 @@
       <%= form_with url: recipes_path, method: :get, class: "cluster cluster--sm",
                     data: { controller: "auto-submit" } do |f| %>
         <%= hidden_field_tag :tab, tab %>
-        <label class="affix affix--prefix">
+        <label class="affix affix--prefix" style="--input-width: 280px">
           <span class="sr-only">Rechercher une recette</span>
           <span class="affix__prefix"><%= icon("search") %></span>
           <%= f.search_field :search, value: params[:search], placeholder: "Rechercher une recette…",

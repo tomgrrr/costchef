@@ -16,7 +16,7 @@ class ProductPurchasesController < ApplicationController
       @new_purchase = ProductPurchase.new
       respond_to do |format|
         format.turbo_stream { render_success_streams }
-        format.html { redirect_to products_path, notice: "Conditionnement ajouté." }
+        format.html { redirect_to products_path, notice: "Achat ajouté." }
       end
     else
       @new_purchase = @purchase

@@ -43,10 +43,10 @@ class SuppliersController < ApplicationController
     if params[:force] == "true"
       impacted_product_ids = @supplier.force_destroy!
       Recalculations::Dispatcher.supplier_force_destroyed(impacted_product_ids)
-      redirect_to suppliers_path, notice: "Fournisseur et ses conditionnements supprimés."
+      redirect_to suppliers_path, notice: "Fournisseur et ses achats supprimés."
     elsif @supplier.has_purchases?
       redirect_to suppliers_path,
-                  alert: "Ce fournisseur possède #{@supplier.product_purchases.count} conditionnement(s). " \
+                  alert: "Ce fournisseur possède #{@supplier.product_purchases.count} achat(s). " \
                          "Désactivez-le ou utilisez la suppression forcée."
     else
       @supplier.destroy!

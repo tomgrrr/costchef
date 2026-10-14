@@ -38,7 +38,7 @@
               <td>
                 <span class="cluster cluster--sm cluster--nowrap">
                   <span class="avatar avatar--lg avatar--muted" aria-hidden="true"><%= initials_for(user.company_name.presence || user.email) %></span>
-                  <span class="stack stack--xs">
+                  <span class="stack stack--xs text-break">
                     <span class="text-medium"><%= user.company_name.presence || user.email %></span>
                     <span class="text-body-sm text-muted"><%= user.email if user.company_name.present? %><%= " · vous" if user == current_user %></span>
                   </span>

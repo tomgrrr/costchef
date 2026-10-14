@@ -113,7 +113,7 @@ RSpec.describe 'Signups', type: :request do
 
       it 'affiche les erreurs de validation' do
         post signup_path, params: short_password_params
-        expect(response.body).to include('Password')
+        expect(response.body).to include('Mot de passe est trop court')
       end
     end
 

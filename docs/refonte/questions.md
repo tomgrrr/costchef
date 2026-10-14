@@ -10,8 +10,10 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
    (boutons, liens, bloc prix, focus).
    → En attendant : aubergine.
 
-2. **Vocabulaire.** J'ai remplacé le jargon par des mots du métier. Lassalas a peut-être ses
-   habitudes : à valider avec eux.
+2. ✅ **Vocabulaire — validé par Tom (14 oct.).** Appliqué partout dans l'app, y compris les
+   messages de confirmation (« Achat ajouté », plus « Conditionnement »).
+   Reste : les fichiers exportés (CSV, Excel) gardent les anciens libellés (« PVC HT », onglet
+   « Tarifs »). À traiter avec la question 7.
    | Avant | Maintenant |
    |---|---|
    | PON / MOY | Prix moyen pondéré / Moyenne simple |
@@ -22,10 +24,12 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
    | Tarifs (onglet) | Recettes › « Prix de vente » |
    | PVC HT / TTC | Prix de vente conseillé HT / TTC |
 
-3. **Messages en anglais.** Les messages de connexion (« Signed out successfully. ») et les
-   erreurs de formulaire par défaut (« can't be blank ») restent en anglais : l'app n'a pas de
-   traduction française. Il faut ajouter les gems `rails-i18n` et `devise-i18n` et passer la
-   langue par défaut en français (`config/application.rb`). Pas fait sans ton accord.
+3. ✅ **Messages en français — fait (14 oct.).** Gems `rails-i18n` et `devise-i18n`, langue par
+   défaut française, noms des champs traduits (`config/locales/fr.yml`) : connexion, erreurs de
+   formulaire, emails de mot de passe oublié et de déblocage, pagination, pages d'erreur 404/422/500.
+   Effet de bord corrigé : les pluriels (« 3 recette ») — règles du pluriel français ajoutées dans
+   `config/initializers/inflections.rb` (fichier de règles de langue, sans lien avec la sécurité).
+   Les messages natifs du navigateur (« Veuillez remplir ce champ ») suivent la langue du navigateur.
 
 4. **Recherche globale (⌘K).** Présente dans les maquettes, mais elle n'existe pas dans l'app.
    Je ne l'ai pas mise pour ne pas afficher un champ qui ne fait rien. On la construit ?
@@ -34,10 +38,8 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
 5. **Boutons « Convertir en recette / en sous-recette ».** Ils étaient masqués dans le code
    (`if false`, avec un TODO « à réactiver »). Je ne les ai pas repris. On les réactive ?
 
-6. **Retrait complet de Bootstrap.** Le CSS et le JS de Bootstrap ne sont plus chargés. Il en
-   reste des traces dans deux fichiers de configuration (`config/initializers/assets.rb`,
-   `config/initializers/pagy.rb`) et dans `package.json` (`bootstrap`, `@popperjs/core`).
-   La règle du projet demande ton accord avant de toucher aux initializers. Je les retire ?
+6. ✅ **Retrait complet de Bootstrap — fait (14 oct.).** Retiré de `assets.rb`, `pagy.rb` et
+   `package.json`. Seules les icônes (Bootstrap Icons, une bibliothèque séparée) restent.
 
 7. **Exports Excel.** Ils gardent l'ancienne palette (bleu marine, gris). Je les passe aux
    couleurs CostChef ?
@@ -88,3 +90,11 @@ Pour chaque question, j'indique ce que j'ai fait en attendant ta réponse.
 14. **Performance.** Le compteur « Prix instables » de l'accueil calcule la variation produit
     par produit (comme avant la refonte). Avec plus de 1 000 produits, l'accueil peut être lent.
     À optimiser si besoin (un seul calcul en base).
+
+15. **Tableaux tronqués sur ordinateur — corrigé (14 oct., signalé par Tom).** Les tableaux
+    avaient une largeur minimale pensée pour le téléphone ; sur la fiche produit (colonne de
+    droite présente), le tableau des achats dépassait et la poubelle était coupée. Même défaut
+    sur la composition des recettes, la liste des produits, les fournisseurs et l'admin.
+    Vérifié page par page à 768, 1024, 1280, 1440 et 1920 px : plus aucun débordement. Corrigé
+    aussi : sur téléphone, toute la page pouvait glisser sur le côté ; le choix « pièce(s) » et
+    les champs de recherche étaient coupés.

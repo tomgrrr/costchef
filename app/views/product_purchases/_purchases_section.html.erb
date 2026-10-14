@@ -90,7 +90,7 @@
                 <%= f.number_field :package_quantity, step: "0.001", min: "0.001", placeholder: "2,5",
                                    class: "input input--num" %>
               </div>
-              <div class="field field--xs">
+              <div class="field field--sm">
                 <%= f.label :package_unit, "Unité" %>
                 <%= f.select :package_unit, unit_options(Units.allowed_for(product.base_unit)),
                              { include_blank: false }, class: "input" %>
@@ -199,7 +199,7 @@
                             <%= f.number_field :package_quantity, value: purchase.package_quantity, id: "edit_quantity_#{purchase.id}",
                                                step: "0.001", min: "0.001", class: "input input--num" %>
                           </div>
-                          <div class="field field--xs">
+                          <div class="field field--sm">
                             <%= f.label :package_unit, "Unité", for: "edit_unit_#{purchase.id}" %>
                             <%= f.select :package_unit, unit_options(Units.allowed_for(product.base_unit)),
                                          { selected: purchase.package_unit }, class: "input", id: "edit_unit_#{purchase.id}" %>

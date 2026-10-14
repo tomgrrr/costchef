@@ -14,3 +14,12 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# French plurals for the `pluralize` view helper, which follows the app locale (fr).
+# Without them, "3 recette" stays singular. Models and table names keep the English
+# rules: ActiveRecord always inflects with the :en locale.
+ActiveSupport::Inflector.inflections(:fr) do |inflect|
+  inflect.plural(/$/, 's')
+  inflect.plural(/(s|x|z)$/i, '\1')
+  inflect.plural(/(eau|au|eu)$/i, '\1x')
+end

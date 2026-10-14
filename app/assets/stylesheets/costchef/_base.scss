@@ -64,6 +64,8 @@ turbo-frame { display: block; }
 .text-medium { font-weight: 500; }
 .text-right { text-align: right; }
 .nowrap { white-space: nowrap; }
+// Long unbroken strings (emails) may wrap anywhere rather than widen a table.
+.text-break { overflow-wrap: anywhere; }
 
 // Tabular figures for every number that lines up with another.
 .num {

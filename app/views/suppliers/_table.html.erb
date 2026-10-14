@@ -22,7 +22,10 @@
           <td class="num text-secondary"><%= stat[:last] ? short_date(stat[:last].to_date) : "Aucun achat" %></td>
           <td class="table__actions">
             <span class="row-actions">
-              <%= link_to "Modifier", edit_supplier_path(supplier), class: "btn btn--outline btn--sm" %>
+              <%= link_to edit_supplier_path(supplier), class: "icon-btn icon-btn--sm", title: "Modifier",
+                                                        "aria-label": "Modifier #{supplier.name}" do %>
+                <%= icon("pencil") %>
+              <% end %>
               <% if active %>
                 <%= button_to "Désactiver", deactivate_supplier_path(supplier), method: :post, class: "btn btn--outline btn--sm",
                               form: { data: { turbo_confirm: "Désactiver #{supplier.name} ? Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>

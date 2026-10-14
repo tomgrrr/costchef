@@ -41,6 +41,8 @@ No Bootstrap. No Tailwind. Plain SCSS compiled by `cssbundling-rails` (`yarn bui
 - Numbers that line up use `.num` (tabular figures). Money and weights go through
   `eur`, `weight_label`, `percent`, `fr_number` (French formatting, non-breaking spaces).
 - Touch targets are 44 px (`--control-height`): kitchens use tablets.
+- No table may scroll sideways from 768 px up: check a new table at 768, 1024, 1440 and 1920 px
+  (the product page aside leaves ~740 px to the main column at 1440).
 - Light theme only.
 
 To re-colour the app, change `--brand` in `_tokens.scss`. Every tint derives from it.
@@ -83,7 +85,7 @@ Type scale classes follow Core's `{role}-{size}`: `.text-display-lg/md/sm`,
 | Notice | `notice_box(tone:) { … }`, flash in `layouts/_flash.html.erb` | dot + text |
 | Chip / dot | `chip(text, tone:, dot:)`, `status_dot(tone)` | tones: success, warning, danger, brand, off |
 | Empty state | `empty_state(title, text) { action }` | an invitation, not an apology |
-| Table | `.table-wrap` > `table.table` (`--table-min`), `.num`, `.table__link`, `.table__meta`, `.table__actions`, `tr.is-off`, `tr.table__edit`, `tr.table__divider` | real `<table>` |
+| Table | `.table-wrap` > `table.table` (`--table-min`), `.num`, `.table__link`, `.table__meta`, `.table__actions`, `tr.is-off`, `tr.table__edit`, `tr.table__divider` | real `<table>`; fits its card from 700 px up, `--table-min` is the phone floor (scrolls below it). Keep row actions to 2–3 icon buttons; use `.text-break` on emails |
 | Menu | `<details class="menu" data-controller="menu">` + `.menu__panel` / `.menu__item` | positioned so tables never clip it |
 | Dialog | `<dialog class="dialog">` opened by `data-action="dialog#open" data-dialog-id-param` | native dialog |
 | Tabs | `.tabs` + `.tabs__item[aria-current]` | page-level sections |

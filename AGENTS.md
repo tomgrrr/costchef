@@ -125,5 +125,6 @@ Run with `bundle exec rspec` (about 840 specs). Conventions:
   `spec/deployment/pre_deploy_spec.rb` (secrets/gitignore/schema/CSP/Docker checks).
 
 ## Key dependencies
-Backend: Devise, Pagy, Rack::Attack, caxlsx (Excel). Frontend: Turbo/Stimulus, cssbundling (Dart Sass),
-Bootstrap Icons. Test: RSpec, FactoryBot, Shoulda-Matchers, Capybara.
+Backend: Devise, Pagy, Rack::Attack, caxlsx (Excel), rails-i18n + devise-i18n (the app runs in French:
+`default_locale :fr`, app names in `config/locales/fr.yml`, French plurals in `config/initializers/inflections.rb`).
+Frontend: Turbo/Stimulus, cssbundling (Dart Sass), Bootstrap Icons. Test: RSpec, FactoryBot, Shoulda-Matchers, Capybara.

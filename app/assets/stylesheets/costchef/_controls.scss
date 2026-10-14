@@ -113,7 +113,7 @@ form.button_to { display: inline-flex; margin: 0; }
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 // ── Fields ───────────────────────────────────────────────────

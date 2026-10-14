@@ -233,7 +233,7 @@ RSpec.describe 'Suppliers', type: :request do
         expect { delete supplier_path(supplier) }
           .not_to change(Supplier, :count)
         expect(response).to redirect_to(suppliers_path)
-        expect(flash[:alert]).to include('conditionnement')
+        expect(flash[:alert]).to include('achat')
       end
     end
   end
