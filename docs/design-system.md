@@ -88,7 +88,7 @@ Type scale classes follow Core's `{role}-{size}`: `.text-display-lg/md/sm`,
 | Table | `.table-wrap` > `table.table` (`--table-min`), `.num`, `.table__link`, `.table__meta`, `.table__actions`, `tr.is-off`, `tr.table__edit`, `tr.table__divider` | real `<table>`; fits its card from 700 px up, `--table-min` is the phone floor (scrolls below it). Keep row actions to 2–3 icon buttons; use `.text-break` on emails |
 | Menu | `<details class="menu" data-controller="menu">` + `.menu__panel` / `.menu__item` | positioned so tables never clip it |
 | Dialog | `<dialog class="dialog">` opened by `data-action="dialog#open" data-dialog-id-param` | native dialog |
-| Confirmation | `data-turbo-confirm="Supprimer cet achat ? Explication facultative."` on the form | opens `shared/_confirm_dialog` (via `app/javascript/confirm_dialog.js`), never the browser's `confirm()`. Start with the question: it becomes the title, its first verb the button label (or `data-confirm-label`); DELETE forms get the red button |
+| Confirmation | `form: { data: { turbo_confirm: "Supprimer cet achat ?", confirm_detail: "Explication facultative." } }` | opens `shared/_confirm_dialog` (via `app/javascript/confirm_dialog.js`), never the browser's `confirm()`. `turbo_confirm` is only the question (title; its opening verb is the button label, or `data-confirm-label`); the explanation goes in `confirm_detail`. DELETE forms get the red button |
 | Tabs | `.tabs` + `.tabs__item[aria-current]` | page-level sections |
 | Meter / share bar | `.meter` (`--value`, `--tick`), `.share-bar__part.decor-N` (`--share`) | |
 | Chart | `products/_price_chart.html.erb`, geometry from `ProductsHelper#price_chart` | inline SVG |

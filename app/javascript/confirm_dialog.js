@@ -10,15 +10,25 @@ import { Turbo } from "@hotwired/turbo-rails"
 
 const INFINITIVE = /^[A-ZÀ-Ý][a-zà-ÿ]+(er|ir|re)$/
 
-// The confirmation waiting for an answer: one at a time.
+// The open confirmation: { dialog, resolve, opener }. One at a time.
 let pending = null
 
-function finish(accepted) {
-  if (!pending) return
+// Settles the open confirmation, only from the dialog that shows it.
+function finish(dialog, accepted) {
+  if (!pending || pending.dialog !== dialog) return
   const { resolve, opener } = pending
   pending = null
   resolve(accepted)
-  if (opener?.isConnected) opener.focus()
+  // After the dialog has closed: the page is inert until then.
+  setTimeout(() => { if (opener?.isConnected) opener.focus() })
+}
+
+// A page change while the dialog is open counts as "Annuler".
+function cancelPending() {
+  if (!pending) return
+  const { dialog } = pending
+  finish(dialog, false)
+  if (dialog.open) dialog.close("")
 }
 
 function isDelete(form) {
@@ -45,41 +55,54 @@ function fill(dialog, title, detail, form) {
   return danger
 }
 
-// Listeners live on the dialog element, once: each page render brings a new one.
+// Every answer is settled synchronously, before the dialog closes, so a late
+// "close" event can never answer a later confirmation.
 function bind(dialog) {
   if (dialog.dataset.confirmBound) return
-  dialog.addEventListener("close", () => finish(dialog.returnValue === "accept"))
-  // A click on the backdrop lands on the <dialog> itself.
-  dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close("") })
+  dialog.querySelector("form").addEventListener("submit", (event) => {
+    finish(dialog, event.submitter?.value === "accept")
+  })
+  dialog.addEventListener("cancel", () => finish(dialog, false)) // Escape
+  dialog.addEventListener("click", (event) => {
+    if (event.target !== dialog) return // a click on the backdrop lands on the <dialog> itself
+    finish(dialog, false)
+    dialog.close("")
+  })
+  // Any other way of closing; ignored if the dialog was reopened meanwhile.
+  dialog.addEventListener("close", () => { if (!dialog.open) finish(dialog, false) })
   dialog.dataset.confirmBound = "on"
 }
 
-function confirmWithDialog(message, form) {
-  const dialog = document.getElementById("confirm-dialog")
-  const detail = form?.dataset.confirmDetail || ""
-  if (typeof dialog?.showModal !== "function") {
-    return Promise.resolve(window.confirm([message, detail].join(" ").trim()))
-  }
-  // The page is inert while the dialog is open: a second request can only come
-  // from a script, and must not ride on the first answer.
-  if (dialog.open || pending) return Promise.resolve(false)
-
+// Opens the dialog; false when it cannot (no dialog, no API, already open, error).
+function show(dialog, title, detail, form) {
+  if (typeof dialog?.showModal !== "function" || dialog.open) return false
   bind(dialog)
-  const danger = fill(dialog, message, detail, form)
-  return new Promise((resolve) => {
-    pending = { resolve, opener: document.activeElement }
+  const danger = fill(dialog, title, detail, form)
+  try {
     dialog.returnValue = ""
     dialog.showModal()
-    dialog.querySelector(danger ? "[data-confirm-cancel]" : "[data-confirm-accept]").focus()
-  })
+  } catch {
+    return false
+  }
+  dialog.querySelector(danger ? "[data-confirm-cancel]" : "[data-confirm-accept]").focus()
+  return true
 }
 
-// A page change while the dialog is open counts as "Annuler", and the dialog
-// must not be cached open.
-document.addEventListener("turbo:before-render", () => finish(false))
-document.addEventListener("turbo:before-cache", () => {
-  document.getElementById("confirm-dialog")?.close("")
-  finish(false)
-})
+function confirmWithDialog(message, form) {
+  // The page is inert while the dialog is open: a second request can only come
+  // from a script, and must not share the first answer.
+  if (pending) return Promise.resolve(false)
+
+  const dialog = document.getElementById("confirm-dialog")
+  const detail = form?.dataset.confirmDetail || ""
+  const opener = document.activeElement
+  if (!show(dialog, message, detail, form)) {
+    return Promise.resolve(window.confirm([message, detail].join(" ").trim()))
+  }
+  return new Promise((resolve) => { pending = { dialog, resolve, opener } })
+}
+
+document.addEventListener("turbo:before-render", cancelPending)
+document.addEventListener("turbo:before-cache", cancelPending)
 
 Turbo.config.forms.confirm = confirmWithDialog
