@@ -21,7 +21,8 @@
     <%= link_to edit_supplier_path(@supplier), class: "btn btn--outline" do %><%= icon("pencil") %> Modifier<% end %>
     <% if @supplier.active? %>
       <%= button_to "Désactiver", deactivate_supplier_path(@supplier), method: :post, class: "btn btn--outline",
-                    form: { data: { turbo_confirm: "Désactiver #{@supplier.name} ? Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>
+                    form: { data: { turbo_confirm: "Désactiver #{@supplier.name} ?",
+                                            confirm_detail: "Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>
     <% else %>
       <%= button_to "Réactiver", activate_supplier_path(@supplier), method: :post, class: "btn btn--outline" %>
     <% end %>

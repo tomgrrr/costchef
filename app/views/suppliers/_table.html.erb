@@ -28,7 +28,8 @@
               <% end %>
               <% if active %>
                 <%= button_to "Désactiver", deactivate_supplier_path(supplier), method: :post, class: "btn btn--outline btn--sm",
-                              form: { data: { turbo_confirm: "Désactiver #{supplier.name} ? Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>
+                              form: { data: { turbo_confirm: "Désactiver #{supplier.name} ?",
+                                                      confirm_detail: "Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>
                 <% if stat[:total].positive? %>
                   <span class="icon-btn icon-btn--sm" aria-disabled="true"
                         title="Ce fournisseur a des achats : désactivez-le d’abord"><%= icon("trash", label: "Suppression impossible : ce fournisseur a des achats") %></span>
@@ -42,7 +43,8 @@
               <% else %>
                 <%= button_to "Réactiver", activate_supplier_path(supplier), method: :post, class: "btn btn--outline btn--sm" %>
                 <%= button_to "Supprimer", supplier_path(supplier, force: true), method: :delete, class: "btn btn--danger btn--sm",
-                              form: { data: { turbo_confirm: "Supprimer ce fournisseur et tous ses achats définitivement ? Les recettes concernées seront recalculées. Cette action est irréversible." } } %>
+                              form: { data: { turbo_confirm: "Supprimer ce fournisseur et tous ses achats définitivement ?",
+                                                      confirm_detail: "Les recettes concernées seront recalculées. Cette action est irréversible." } } %>
               <% end %>
             </span>
           </td>
