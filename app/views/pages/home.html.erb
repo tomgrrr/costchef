@@ -1,61 +1,122 @@
-<%# Page header %>
-<div style="text-align: center; padding: 32px 24px 16px;">
-  <%= image_tag "logo.jpg", height: 80, style: "border-radius: 8px; margin-bottom: 12px;" %>
-  <h1 class="page-title" style="font-size: 22px;">Tableau de bord</h1>
-  <p style="color: var(--sl-400); font-size: 13px; margin-top: 4px;">Bienvenue <%= current_user.email.split('@').first.capitalize %></p>
-</div>
+<% content_for :title, "Accueil" %>
+<% weekday = %w[Dimanche Lundi Mardi Mercredi Jeudi Vendredi Samedi][Date.current.wday] %>
+<% coefficient = current_user.markup_coefficient.to_d %>
+<% recent_count = @recent_changes.size %>
 
-<div style="padding: 24px;">
-  <div class="dash-grid">
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-box-seam"></i></div>
-      <div class="dash-label">Produits</div>
-      <div class="dash-count"><%= @products_count %></div>
-      <%= link_to "Accéder →", products_path, class: "dash-link" %>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-journal-text"></i></div>
-      <div class="dash-label">Recettes</div>
-      <div class="dash-count"><%= @recipes_count %></div>
-      <%= link_to "Accéder →", recipes_path, class: "dash-link" %>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-truck"></i></div>
-      <div class="dash-label">Fournisseurs</div>
-      <div class="dash-count"><%= @suppliers_count %></div>
-      <%= link_to "Accéder →", suppliers_path, class: "dash-link" %>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-archive"></i></div>
-      <div class="dash-label">Barquettes</div>
-      <div class="dash-count"><%= @tray_sizes_count %></div>
-      <%= link_to "Accéder →", tray_sizes_path, class: "dash-link" %>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-egg"></i></div>
-      <div class="dash-label">Réf. pièces</div>
-      <div class="dash-count"><%= @piece_products_count %></div>
-      <%= link_to "Accéder →", referentiel_pieces_path, class: "dash-link" %>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-graph-up"></i></div>
-      <div class="dash-label">Écarts Types</div>
-      <div class="dash-count"><%= @high_variability_count %></div>
-      <%= link_to "Accéder →", standard_deviations_path, class: "dash-link" %>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-icon"><i class="bi bi-tags"></i></div>
-      <div class="dash-label">Tarifs</div>
-      <div class="dash-count"><%= current_user.recipes.where(sellable_as_component: false).count %></div>
-      <%= link_to "Accéder →", tarifs_recipes_path, class: "dash-link" %>
-    </div>
-
+<header class="page-header">
+  <div class="page-header__text">
+    <p class="text-body-sm text-muted"><%= weekday %> <%= short_date(Date.current) %></p>
+    <h1 class="text-display-lg">Bonjour, voici ce qui demande votre attention</h1>
   </div>
+  <div class="page-header__actions">
+    <%= link_to products_path, class: "btn btn--outline" do %><%= icon("box-seam") %> Ajouter un achat<% end %>
+    <%= link_to new_recipe_path, class: "btn btn--primary" do %><%= icon("plus-lg") %> Nouvelle recette<% end %>
+  </div>
+</header>
+
+<section class="grid-auto grid-auto--stretch" style="--grid-min: 260px" aria-label="À traiter">
+  <%= link_to products_path(zero_price: "1"), class: "card card--link" do %>
+    <span class="cluster cluster--sm text-label-md <%= @zero_price_count.positive? ? "text-warning" : "text-success" %>">
+      <%= status_dot(@zero_price_count.positive? ? :warning : :success) %> Prix manquants
+    </span>
+    <span class="text-display-md num"><%= @zero_price_count.zero? ? "Aucun" : pluralize(@zero_price_count, "produit") %></span>
+    <span class="text-body-sm text-secondary">
+      <%= @zero_price_count.positive? ? "Sans prix d’achat : les recettes qui les utilisent sont sous-estimées." : "Tous vos produits ont un prix." %>
+    </span>
+    <% if @zero_price_count.positive? %><span class="text-body-sm text-brand text-medium">Renseigner les prix →</span><% end %>
+  <% end %>
+
+  <%= link_to standard_deviations_path, class: "card card--link" do %>
+    <span class="cluster cluster--sm text-label-md <%= @high_variability_count.positive? ? "text-warning" : "text-success" %>">
+      <%= status_dot(@high_variability_count.positive? ? :warning : :success) %> Prix instables
+    </span>
+    <span class="text-display-md num"><%= @high_variability_count.zero? ? "Aucun" : pluralize(@high_variability_count, "produit") %></span>
+    <span class="text-body-sm text-secondary">
+      Vos achats varient de plus de <%= percent(current_user.price_variability_threshold) %> : le coût est moins fiable.
+    </span>
+    <span class="text-body-sm text-brand text-medium">Voir les produits →</span>
+  <% end %>
+
+  <a href="#changements" class="card card--link">
+    <span class="cluster cluster--sm text-label-md text-secondary"><%= status_dot(:brand) %> Derniers changements de prix</span>
+    <span class="text-display-md num"><%= recent_count.zero? ? "Aucun changement" : pluralize(recent_count, "produit") %></span>
+    <span class="text-body-sm text-secondary">Dont le dernier achat a changé le prix. Les recettes concernées ont été recalculées.</span>
+    <span class="text-body-sm text-brand text-medium">Voir le détail ↓</span>
+  </a>
+</section>
+
+<div class="split">
+  <section id="changements" class="card split__main" aria-labelledby="changes-title">
+    <div class="card__header">
+      <div class="card__heading">
+        <h2 id="changes-title" class="card__title">Derniers changements de prix</h2>
+        <p class="card__subtitle">Prix au kilo, entre l’avant-dernier et le dernier achat de chaque produit.</p>
+      </div>
+    </div>
+    <% if @recent_changes.any? %>
+      <div class="table-wrap">
+        <table class="table" style="--table-min: 700px">
+          <thead>
+            <tr>
+              <th scope="col">Produit</th>
+              <th scope="col">Fournisseur</th>
+              <th scope="col" class="num">Avant → après</th>
+              <th scope="col" class="num">Écart</th>
+              <th scope="col" class="num">Recettes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @recent_changes.each do |change| %>
+              <tr>
+                <td>
+                  <%= link_to change[:product].name, product_path(change[:product]), class: "table__link" %>
+                  <div class="table__meta"><%= short_date(change[:purchase].created_at.to_date) %></div>
+                </td>
+                <td class="text-secondary"><%= change[:purchase].supplier.name %></td>
+                <td class="num"><%= eur(change[:previous].price_per_kg) %> → <%= eur(change[:purchase].price_per_kg) %></td>
+                <td class="num text-strong <%= change[:delta_pct].positive? ? "text-warning" : "text-success" %>">
+                  <%= change[:delta_pct].positive? ? "+" : "−" %><%= percent(change[:delta_pct].abs, precision: 1) %>
+                </td>
+                <td class="num text-secondary"><%= change[:recipes_count] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= empty_state("Aucun changement de prix récent",
+                      "Dès qu’un nouvel achat modifie le prix d’un produit, il apparaît ici avec les recettes concernées.") %>
+    <% end %>
+  </section>
+
+  <aside class="split__aside">
+    <section class="card card--pad stack stack--sm" aria-labelledby="kitchen-title">
+      <h2 id="kitchen-title" class="card__title">Votre cuisine</h2>
+      <dl class="kv">
+        <div class="kv__row"><dt><%= link_to "Recettes", recipes_path %></dt><dd class="num"><%= @recipes_count %></dd></div>
+        <div class="kv__row"><dt><%= link_to "Sous-recettes", recipes_path(tab: "subrecipes") %></dt><dd class="num"><%= @subrecipes_count %></dd></div>
+        <div class="kv__row"><dt><%= link_to "Produits", products_path %></dt><dd class="num"><%= number_with_delimiter(@products_count, delimiter: " ") %></dd></div>
+        <div class="kv__row"><dt><%= link_to "Fournisseurs actifs", suppliers_path %></dt><dd class="num"><%= @suppliers_count %></dd></div>
+        <div class="kv__row"><dt><%= link_to "Barquettes", tray_sizes_path %></dt><dd class="num"><%= @tray_sizes_count %></dd></div>
+        <div class="kv__row">
+          <dt><%= link_to "Coefficient", tray_sizes_path %></dt>
+          <dd class="num">×<%= fr_number(coefficient) %><%= " · marge #{percent((1 - 1 / coefficient) * 100)}" if coefficient > 1 %></dd>
+        </div>
+      </dl>
+    </section>
+
+    <% if @recent_recipes.any? %>
+      <section class="card card--pad stack stack--sm" aria-labelledby="recent-recipes-title">
+        <h2 id="recent-recipes-title" class="card__title">Modifiées récemment</h2>
+        <ul class="list-rows">
+          <% @recent_recipes.each do |recipe| %>
+            <li class="list-rows__item">
+              <%= link_to recipe.name, recipe_path(recipe), class: "table__link" %>
+              <span class="text-body-sm text-muted num"><%= short_date(recipe.updated_at.to_date) %></span>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </aside>
 </div>

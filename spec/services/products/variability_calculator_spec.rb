@@ -71,4 +71,14 @@ RSpec.describe Products::VariabilityCalculator do
       end
     end
   end
+
+  describe '.for_prices' do
+    it 'returns nil with fewer than two prices' do
+      expect(described_class.for_prices([12.0])).to be_nil
+    end
+
+    it 'computes the same CV% as .call from prices already in memory' do
+      expect(described_class.for_prices([16.8, 14.4, 12.3])).to eq(12.68)
+    end
+  end
 end

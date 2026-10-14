@@ -1,0 +1,12 @@
+<% content_for :title, "Mot de passe oublié" %>
+<%= render layout: "shared/auth", locals: { title: "Mot de passe oublié", subtitle: "Indiquez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe." } do %>
+  <%= render "devise/shared/error_messages", resource: resource %>
+  <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "stack stack--md" }) do |f| %>
+    <div class="field">
+      <%= f.label :email, "Adresse email" %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "input", placeholder: "vous@traiteur.fr" %>
+    </div>
+    <%= f.button type: "submit", class: "btn btn--primary btn--block" do %>Recevoir le lien<% end %>
+  <% end %>
+  <p class="text-body-sm"><%= link_to "Retour à la connexion", new_session_path(resource_name) %></p>
+<% end %>

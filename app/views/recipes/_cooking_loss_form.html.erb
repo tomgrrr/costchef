@@ -1,15 +1,41 @@
-<div id="cooking_loss_form_<%= recipe.id %>">
-  <%= form_with model: recipe, method: :patch, data: { turbo_stream: true }, class: "d-flex align-items-center gap-2" do |f| %>
-    <span class="info-label text-nowrap">Perte cuisson</span>
-    <div class="input-group input-group-sm" style="max-width: 100px;">
-      <%= f.number_field :cooking_loss_percentage, min: 0, max: 100, step: 0.1,
-          value: recipe.cooking_loss_percentage || 0,
-          class: "form-control form-control-sm",
-          style: "font-size: 11px;" %>
-      <span class="input-group-text" style="font-size: 11px;">%</span>
+<%# Replaced by Turbo Stream after a cooking-loss or component change (id must stay). %>
+<section id="cooking_loss_form_<%= recipe.id %>" class="card card--pad" aria-labelledby="cooking-title">
+  <div class="cluster cluster--between cluster--bottom">
+    <div class="stack stack--xs grow">
+      <h2 id="cooking-title" class="card__title">Cuisson</h2>
+      <p class="text-body-sm text-muted">L’eau perdue à la cuisson réduit le poids vendu : le coût au kilo augmente d’autant.</p>
     </div>
-    <button type="submit" class="action-btn" title="Appliquer">
-      <i class="bi bi-check"></i>
-    </button>
+
+    <%= form_with model: recipe, method: :patch, class: "cluster cluster--sm cluster--bottom",
+                  data: { turbo_stream: true, controller: "auto-submit" } do |f| %>
+      <%= hidden_field_tag :inline, "1", id: nil %>
+      <div class="field">
+        <%= f.label :cooking_loss_percentage, "Perte à la cuisson" %>
+        <span class="affix">
+          <%= f.number_field :cooking_loss_percentage, min: 0, max: 100, step: 0.1,
+                             value: recipe.cooking_loss_percentage || 0,
+                             class: "input input--num", style: "--input-width: 120px",
+                             "aria-invalid": recipe.errors[:cooking_loss_percentage].any? || nil,
+                             data: { action: "change->auto-submit#submit" } %>
+          <span class="affix__suffix" aria-hidden="true">%</span>
+        </span>
+      </div>
+      <%= f.button type: "submit", class: "btn btn--outline" do %>Appliquer<% end %>
+    <% end %>
+
+    <div class="cluster cluster--bottom">
+      <div class="stack stack--xs">
+        <span class="text-body-sm text-muted">Avant cuisson</span>
+        <span class="text-display-md num"><%= weight_label(recipe.cached_raw_weight || 0) %></span>
+      </div>
+      <span class="text-muted" aria-hidden="true"><%= icon("arrow-right") %></span>
+      <div class="stack stack--xs">
+        <span class="text-body-sm text-muted">Après cuisson</span>
+        <span class="text-display-md num"><%= weight_label(recipe.cached_total_weight || 0) %></span>
+      </div>
+    </div>
+  </div>
+  <% if recipe.errors[:cooking_loss_percentage].any? %>
+    <p class="field__error"><%= recipe.errors.full_messages_for(:cooking_loss_percentage).to_sentence %></p>
   <% end %>
-</div>
+</section>

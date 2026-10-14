@@ -53,6 +53,18 @@ RSpec.describe 'RecipeComponents', type: :request do
         expect(response.body).to include("components_#{recipe.id}")
         expect(response.body).to include("summary_#{recipe.id}")
       end
+
+      it 'remplace chaque bloc de la recette, chacun re-rendu avec son propre id' do
+        post recipe_recipe_components_path(recipe), params: valid_params, headers: turbo_headers
+        streams = Nokogiri::HTML.fragment(response.body).css('turbo-stream[action="replace"]')
+        expect(streams.map { |s| s['target'] }).to contain_exactly(
+          *%w[components summary component_form cooking_loss_form cost_breakdown].map { |t| "#{t}_#{recipe.id}" }
+        )
+        streams.each do |stream|
+          root = Nokogiri::HTML.fragment(stream.at_css('template').inner_html).element_children.first
+          expect(root['id']).to eq(stream['target'])
+        end
+      end
     end
 
     context 'données valides — composant Product en grammes' do
@@ -158,6 +170,19 @@ RSpec.describe 'RecipeComponents', type: :request do
         params = { recipe_component: { component_type: 'Product', component_id: product.id, quantity_unit: 'kg', quantity: '1.0' } }
         patch recipe_recipe_component_path(recipe, component), params: params, headers: turbo_headers
         expect(component.reload.quantity_kg).to eq(1.0)
+      end
+
+      it "l'édition en ligne garde l'unité saisie (250 g)" do
+        patch recipe_recipe_component_path(recipe, component), headers: turbo_headers,
+                                                               params: { recipe_component: { quantity_unit: 'g', quantity: '250' } }
+        expect(component.reload).to have_attributes(quantity_kg: 0.25, quantity_unit: 'g')
+      end
+
+      it "ne remplace pas le formulaire d'ajout (saisie en cours conservée)" do
+        params = { recipe_component: { quantity_unit: 'kg', quantity: '1.0' } }
+        patch recipe_recipe_component_path(recipe, component), params: params, headers: turbo_headers
+        expect(response.body).not_to include("component_form_#{recipe.id}")
+        expect(response.body).to include("cost_breakdown_#{recipe.id}")
       end
 
       it 'appelle Dispatcher.recipe_component_changed' do

@@ -1,0 +1,262 @@
+// Surfaces and content: cards, KPI tiles, price panel, notices, chips,
+// empty states, key/value lists.
+
+// ── Card ─────────────────────────────────────────────────────
+.card {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.card--pad { padding: 18px var(--space-5); }
+.card--flush { overflow: hidden; }
+
+.card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  padding: 18px var(--space-5) 14px;
+}
+
+.card__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.card__title { font: 600 16px/1.35 var(--font-body); }
+.card__subtitle { font: 400 13.5px/1.5 var(--font-body); color: var(--muted-foreground); }
+
+.card__body { padding: 0 var(--space-5) 18px; }
+
+.card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px var(--space-4);
+}
+
+// A card that is itself a link (dashboard to-do tiles).
+.card--link {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px var(--space-5);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-standard);
+
+  &:hover {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+}
+
+// ── KPI tile ─────────────────────────────────────────────────
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-4) 18px;
+}
+
+.kpi__label { font: 400 13.5px/1.4 var(--font-body); color: var(--foreground-secondary); }
+.kpi__value { font: 400 26px/1.15 var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi__unit { font: 400 16px/1 var(--font-body); color: var(--muted-foreground); }
+.kpi__hint { font: 400 13.5px/1.4 var(--font-body); color: var(--muted-foreground); }
+
+// ── Price panel (one per screen, on the brand tint) ─────────
+.price-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 22px var(--space-5);
+  border: 1px solid var(--secondary-border);
+  border-radius: var(--radius-xl);
+  background: var(--secondary);
+}
+
+.price-panel__label { font: 500 13.5px/1.2 var(--font-body); color: var(--foreground-secondary); }
+
+.price-panel__value {
+  font: 400 48px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-panel__value--md { font-size: 28px; letter-spacing: -0.02em; color: var(--foreground); }
+
+.price-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.price-panel__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: 14px;
+  color: var(--foreground-secondary);
+
+  dd {
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &--total {
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+    color: var(--foreground);
+    font-weight: 600;
+  }
+}
+
+// ── Notice (flash messages and inline alerts) ───────────────
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.notice__text {
+  flex: 1 1 200px;
+  min-width: 0;
+  color: var(--foreground-secondary);
+
+  strong { color: var(--foreground); font-weight: 600; }
+}
+
+.notice--top { align-items: flex-start; }
+.notice--top .dot { margin-top: 8px; }
+
+.notice__list { display: flex; flex-direction: column; gap: 2px; }
+
+.flash-region {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+// ── Chip and status dot ──────────────────────────────────────
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  color: var(--foreground-secondary);
+  font: 500 12.5px/1 var(--font-body);
+  white-space: nowrap;
+
+  &--warning { color: var(--warning-text); }
+  &--success { color: var(--success-text); }
+  &--danger { color: var(--destructive-text); }
+  &--brand { background: var(--secondary); color: var(--secondary-foreground); }
+}
+
+.dot {
+  flex: none;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted-foreground);
+
+  &--success { background: var(--success); }
+  &--warning { background: var(--warning); }
+  &--danger { background: var(--destructive); }
+  &--brand { background: var(--brand); }
+  &--off { background: var(--border-strong); }
+}
+
+// ── Empty state ──────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+}
+
+.empty-state__title { font: 600 16px/1.35 var(--font-body); }
+.empty-state__text { max-width: 520px; color: var(--muted-foreground); }
+.empty-state__action { margin-top: var(--space-2); }
+
+// ── Key / value list ─────────────────────────────────────────
+.kv { display: flex; flex-direction: column; }
+
+.kv__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+
+  dt { color: var(--foreground-secondary); }
+  dd { font-weight: 500; text-align: right; }
+
+  &:first-child { border-top: 0; }
+}
+
+// Simple list of rows inside a card (used in, suppliers, recents).
+.list-rows { display: flex; flex-direction: column; }
+
+.list-rows__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+
+  &:first-child { border-top: 0; }
+}
+
+// Numbered steps (forms).
+.steps { display: flex; flex-direction: column; gap: 14px; }
+
+.steps__item {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.steps__num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--foreground-secondary);
+  font: 600 13px/1 var(--font-body);
+
+  &--current { background: var(--secondary); color: var(--secondary-foreground); }
+}
+
+.kv__row a {
+  color: var(--foreground-secondary);
+  text-decoration: none;
+
+  &:hover { color: var(--brand-text); }
+}

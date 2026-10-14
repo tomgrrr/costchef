@@ -1,35 +1,17 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Nouvelle invitation</h4>
-  <%= link_to "← Retour", admin_invitations_path %>
-</div>
+<% content_for :title, "Nouvelle invitation" %>
+<% content_for :content_class, "app__content--narrow" %>
 
-<div class="row">
-  <div class="col-md-6 mx-auto">
-    <div class="card">
-      <div class="card-body">
-        <% if @invitation.errors.any? %>
-          <div class="alert alert-danger">
-            <% @invitation.errors.full_messages.each do |message| %>
-              <p class="mb-0"><%= message %></p>
-            <% end %>
-          </div>
-        <% end %>
+<%= breadcrumb(["Invitations", admin_invitations_path], "Nouvelle invitation") %>
+<%= page_header("Inviter un traiteur",
+                subtitle: "Un email d’invitation part automatiquement. Le lien est valable 7 jours.") %>
 
-        <%= form_with(model: [:admin, @invitation]) do |f| %>
-          <div class="mb-3">
-            <%= f.label :email, "Adresse email", class: "form-label" %>
-            <%= f.email_field :email, class: "form-control", placeholder: "chef@restaurant.fr", autofocus: true %>
-            <div class="form-text">
-              Un email d'invitation sera envoyé automatiquement. Le lien sera valable 7 jours.
-            </div>
-          </div>
-
-          <div class="d-flex gap-2">
-            <%= f.submit "Envoyer l'invitation", class: "btn btn-primary" %>
-            <%= link_to "Annuler", admin_invitations_path, class: "btn btn-link text-decoration-none" %>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  </div>
-</div>
+<section class="card card--pad stack stack--md">
+  <% if @invitation.errors.any? %>
+    <%= notice_box(tone: :danger, css: "notice--top") do %>
+      <ul class="notice__list">
+        <% @invitation.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+      </ul>
+    <% end %>
+  <% end %>
+  <%= render "admin/invitations/form", invitation: @invitation, autofocus: true %>
+</section>

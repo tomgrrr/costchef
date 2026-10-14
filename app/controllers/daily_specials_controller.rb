@@ -46,8 +46,14 @@ class DailySpecialsController < ApplicationController
     @meat_average = current_user.daily_specials.meat_average
     @fish_average = current_user.daily_specials.fish_average
     @side_average = current_user.daily_specials.side_average
+    load_portions
+  end
+
+  def load_portions
     @meat_portion_cost = (@meat_average * MEAT_PORTION_KG) + (@side_average * MEAT_SIDE_PORTION_KG)
     @fish_portion_cost = (@fish_average * FISH_PORTION_KG) + (@side_average * FISH_SIDE_PORTION_KG)
+    @meat_portion_price = @meat_portion_cost * current_user.markup_coefficient
+    @fish_portion_price = @fish_portion_cost * current_user.markup_coefficient
   end
 
   def daily_special_params

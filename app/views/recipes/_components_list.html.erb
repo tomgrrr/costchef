@@ -1,82 +1,88 @@
+<%# Replaced by Turbo Stream after every component change (id must stay). %>
 <div id="components_<%= recipe.id %>">
-  <% if recipe.recipe_components.any? %>
-    <div class="table-responsive">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Composant</th>
-          <th>Quantit&eacute; (kg)</th>
-          <th>Prix/kg</th>
-          <th>Co&ucirc;t ligne</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% recipe.recipe_components.each do |rc| %>
+  <% components = recipe.recipe_components.select(&:persisted?).sort_by { |rc| -rc.line_cost.to_d } %>
+  <% total_cost = recipe.cached_total_cost.to_d %>
+  <% if components.any? %>
+    <div class="table-wrap">
+      <table class="table" style="--table-min: 780px">
+        <thead>
           <tr>
-            <td>
-              <% if rc.product_component? %>
-                <span class="badge-produit">Produit</span>
-              <% else %>
-                <span class="badge-sous-recette">Recette</span>
-              <% end %>
-            </td>
-            <td>
-              <% if rc.product_component? %>
-                <%= link_to rc.component.name, product_path(rc.component), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
-              <% else %>
-                <%= link_to rc.component.name, recipe_path(rc.component, back: request.fullpath), style: "color: inherit; text-decoration: underline; text-decoration-color: var(--sl-300);" %>
-              <% end %>
-            </td>
-            <td>
-              <%= form_with url: recipe_recipe_component_path(recipe, rc), method: :patch,
-                    data: { turbo_stream: true, controller: "auto-submit" },
-                    style: "display: inline-flex; align-items: center; gap: 4px;" do %>
-                <input type="hidden" name="recipe_component[quantity_unit]" value="kg">
-                <input type="number"
-                       name="recipe_component[quantity]"
-                       value="<%= number_with_precision(rc.quantity_kg, precision: 3) %>"
-                       step="0.001" min="0.001"
-                       class="mono"
-                       style="width: 72px; border: 1px solid var(--sl-200); border-radius: 4px; padding: 2px 6px; font-size: 13px; text-align: right; background: transparent;"
-                       data-action="change->auto-submit#submit">
-                <span style="color: var(--sl-500); font-size: 12px;">kg</span>
-              <% end %>
-            </td>
-            <td>
-              <% price_per_kg = rc.product_component? ? rc.component.avg_price_per_kg.to_f : rc.component.cached_cost_per_kg.to_f %>
-              <% if price_per_kg > 0 %>
-                <span class="mono"><%= number_with_precision(price_per_kg, precision: 2) %> &euro;/kg</span>
-              <% else %>
-                <span style="color: var(--sl-400); font-size: 12px;">—</span>
-              <% end %>
-            </td>
-            <td><span class="mono"><%= number_with_precision(rc.line_cost, precision: 2) %> &euro;</span></td>
-            <td style="text-align: right;">
-              <%= button_to recipe_recipe_component_path(recipe, rc),
-                    method: :delete,
-                    form: { data: { turbo_confirm: "Retirer ce composant ?", turbo_stream: true } },
-                    class: "action-btn danger" do %>
-                <i class="bi bi-trash"></i>
-              <% end %>
-            </td>
+            <th scope="col">Ingrédient</th>
+            <th scope="col">Quantité</th>
+            <th scope="col" class="num">Prix / kg</th>
+            <th scope="col" class="num">Coût</th>
+            <th scope="col" class="num">Part du coût</th>
+            <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
           </tr>
-        <% end %>
-      </tbody>
-      <tfoot>
-        <tr>
-          <th></th>
-          <th><%= recipe.recipe_components.size %> composant(s)</th>
-          <th><span class="mono"><%= number_with_precision(recipe.cached_raw_weight, precision: 3) %> kg</span></th>
-          <th></th>
-          <th><span class="mono"><%= number_with_precision(recipe.cached_total_cost || 0, precision: 2) %> &euro;</span></th>
-          <th></th>
-        </tr>
-      </tfoot>
-    </table>
+        </thead>
+        <tbody>
+          <% components.each do |rc| %>
+            <% product = rc.product_component? ? rc.component : nil %>
+            <% price_per_kg = product ? product.avg_price_per_kg.to_d : rc.component.cached_cost_per_kg.to_d %>
+            <% share = total_cost.positive? ? (rc.line_cost.to_d / total_cost * 100) : 0 %>
+            <% display_quantity = Units::Converter.to_display_unit(rc.quantity_kg.to_d, rc.quantity_unit, product: product) %>
+            <tr>
+              <td>
+                <div class="cluster cluster--sm">
+                  <% if product %>
+                    <%= link_to rc.component.name, product_path(rc.component), class: "table__link" %>
+                    <% if price_per_kg.zero? %><%= chip("Sans prix", tone: :warning, dot: :warning) %><% end %>
+                  <% else %>
+                    <%= link_to rc.component.name, recipe_path(rc.component, back: recipe_path(recipe)), class: "table__link" %>
+                    <%= chip("Sous-recette", tone: :brand) %>
+                  <% end %>
+                </div>
+              </td>
+              <td>
+                <%= form_with url: recipe_recipe_component_path(recipe, rc), method: :patch,
+                              class: "cluster cluster--sm cluster--nowrap",
+                              data: { turbo_stream: true, controller: "auto-submit" } do %>
+                  <input type="hidden" name="recipe_component[quantity_unit]" value="<%= rc.quantity_unit %>">
+                  <label class="sr-only" for="quantity_<%= rc.id %>">Quantité de <%= rc.component.name %> en <%= unit_label(rc.quantity_unit) %></label>
+                  <input type="number" id="quantity_<%= rc.id %>"
+                         name="recipe_component[quantity]"
+                         value="<%= number_with_precision(display_quantity, precision: rc.quantity_unit == "piece" ? 1 : 3,
+                                                          strip_insignificant_zeros: true, separator: ".", delimiter: "") %>"
+                         step="0.001" min="0.001"
+                         class="input input--num input--compact"
+                         style="--input-width: 84px"
+                         data-action="change->auto-submit#submit">
+                  <span class="text-secondary"><%= unit_label(rc.quantity_unit) %></span>
+                <% end %>
+              </td>
+              <td class="num text-secondary"><%= price_per_kg.positive? ? eur(price_per_kg) : "—" %></td>
+              <td class="num text-medium"><%= eur(rc.line_cost) %></td>
+              <td class="num">
+                <span class="cluster cluster--sm cluster--nowrap cluster--end">
+                  <span class="meter meter--sm" style="--meter-width: 56px; --value: <%= [share, 2].max.round(1) %>%" aria-hidden="true"><span class="meter__fill"></span></span>
+                  <span><%= share.positive? && share < 1 ? "< 1 %" : percent(share) %></span>
+                </span>
+              </td>
+              <td class="table__actions">
+                <%= button_to recipe_recipe_component_path(recipe, rc), method: :delete,
+                              class: "icon-btn icon-btn--danger", "aria-label": "Retirer #{rc.component.name}",
+                              title: "Retirer de la recette",
+                              form: { data: { turbo_confirm: "Retirer ce composant ?", turbo_stream: true } } do %>
+                  <%= icon("trash") %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total avant cuisson · <%= pluralize(components.size, "ingrédient") %></td>
+            <td><span class="num"><%= weight_label(recipe.cached_raw_weight) %></span></td>
+            <td></td>
+            <td class="num"><%= eur(recipe.cached_total_cost || 0) %></td>
+            <td class="num">100 %</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   <% else %>
-    <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun composant pour le moment.</p>
+    <%= empty_state("Aucun ingrédient pour le moment",
+                    "Cherchez un produit ou une sous-recette ci-dessus, indiquez la quantité : le coût se calcule tout seul.") %>
   <% end %>
 </div>

@@ -1,116 +1,32 @@
-<%# Page header %>
-<div class="page-header">
-  <div class="d-flex align-items-center gap-3">
-    <h1 class="page-title">Plats du jour</h1>
-    <span class="mono" style="color: var(--sl-400);"><%= @meats.size + @fishes.size + @sides.size %> entrée(s)</span>
+<% content_for :title, "Plats du jour" %>
+
+<%= page_header("Plats du jour",
+                subtitle: "Notez le coût de chaque plat du jour : CostChef en tire le coût moyen d’une assiette.") %>
+
+<section class="stack stack--md" aria-labelledby="plates-title">
+  <h2 id="plates-title" class="sr-only">Portionnement et prix d’une assiette</h2>
+  <div class="grid-auto" style="--grid-min: 340px">
+    <%= render "plate", title: "Assiette viande", main_label: "viande", decor: "decor-4",
+               main_grams: (DailySpecialsController::MEAT_PORTION_KG * 1000).round,
+               side_grams: (DailySpecialsController::MEAT_SIDE_PORTION_KG * 1000).round,
+               main_average: @meat_average, side_average: @side_average,
+               cost: @meat_portion_cost, price: @meat_portion_price %>
+    <%= render "plate", title: "Assiette poisson", main_label: "poisson", decor: "decor-3",
+               main_grams: (DailySpecialsController::FISH_PORTION_KG * 1000).round,
+               side_grams: (DailySpecialsController::FISH_SIDE_PORTION_KG * 1000).round,
+               main_average: @fish_average, side_average: @side_average,
+               cost: @fish_portion_cost, price: @fish_portion_price %>
   </div>
-</div>
+  <p class="text-body-sm text-muted">
+    Portionnement fixe · prix conseillé avec votre coefficient ×<%= fr_number(current_user.markup_coefficient) %>
+  </p>
+</section>
 
-<div style="padding: 24px;">
-
-  <%# 3-column grid: Viandes / Poissons / Accompagnements %>
-  <div class="row g-3">
-
-    <%= render 'category_column', category: 'meat',  entries: @meats,  average: @meat_average,
-               icon: 'bi-fire',    title: 'Viandes',          placeholder: 'Ex: Entrecôte, Poulet rôti...' %>
-
-    <%= render 'category_column', category: 'fish',  entries: @fishes, average: @fish_average,
-               icon: 'bi-water',   title: 'Poissons',         placeholder: 'Ex: Saumon, Cabillaud...' %>
-
-    <%= render 'category_column', category: 'side',  entries: @sides,  average: @side_average,
-               icon: 'bi-basket2', title: 'Accompagnements',  placeholder: 'Ex: Riz, Gratin dauphinois...' %>
-
-    <%# Portionnement info — spans all 3 columns %>
-    <div class="col-12">
-    <div class="section-card">
-      <div class="section-header">
-        <h2 class="section-title">Portionnement</h2>
-      </div>
-      <div style="padding: 0 20px 20px; display: flex; gap: 16px; flex-wrap: wrap;">
-
-        <%# Plat viande %>
-        <div style="flex: 1; min-width: 240px; background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 8px; padding: 16px;">
-          <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;">
-            <i class="bi bi-fire"></i> Plat viande — 400 g
-          </div>
-          <%# Barre de proportion %>
-          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
-            <div style="width: 50%; background: #c2410c;" title="Viande 200g"></div>
-            <div style="width: 50%; background: #d97706;" title="Accompagnement 200g"></div>
-          </div>
-          <div style="display: flex; gap: 16px;">
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-              <span style="width: 10px; height: 10px; border-radius: 2px; background: #c2410c; flex-shrink: 0;"></span>
-              <span style="color: var(--sl-600);">Viande</span>
-              <span class="mono" style="font-size: 11px; font-weight: 600;">200 g</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-              <span style="width: 10px; height: 10px; border-radius: 2px; background: #d97706; flex-shrink: 0;"></span>
-              <span style="color: var(--sl-600);">Accompagnement</span>
-              <span class="mono" style="font-size: 11px; font-weight: 600;">200 g</span>
-            </div>
-          </div>
-        </div>
-
-        <%# Plat poisson %>
-        <div style="flex: 1; min-width: 240px; background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 8px; padding: 16px;">
-          <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;">
-            <i class="bi bi-water"></i> Plat poisson — 500 g
-          </div>
-          <%# Barre de proportion 150/500 = 30% / 350/500 = 70% %>
-          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
-            <div style="width: 30%; background: #0369a1;" title="Poisson 150g"></div>
-            <div style="width: 70%; background: #0891b2;" title="Accompagnement 350g"></div>
-          </div>
-          <div style="display: flex; gap: 16px;">
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-              <span style="width: 10px; height: 10px; border-radius: 2px; background: #0369a1; flex-shrink: 0;"></span>
-              <span style="color: var(--sl-600);">Poisson</span>
-              <span class="mono" style="font-size: 11px; font-weight: 600;">150 g</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
-              <span style="width: 10px; height: 10px; border-radius: 2px; background: #0891b2; flex-shrink: 0;"></span>
-              <span style="color: var(--sl-600);">Accompagnement</span>
-              <span class="mono" style="font-size: 11px; font-weight: 600;">350 g</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-    </div>
-
-    <%# Tarification recap card — spans all 3 columns %>
-    <div class="col-12">
-    <div class="section-card">
-      <div class="section-header">
-        <h2 class="section-title">Coût et Tarif plat du jour</h2>
-      </div>
-      <div style="padding: 16px 20px;">
-        <div class="summary-row">
-          <span class="s-label">Viande + Accompagnement — coût portion 400 g</span>
-          <span class="s-value"><%= number_with_precision(@meat_portion_cost, precision: 2) %> €</span>
-        </div>
-        <div class="summary-row">
-          <span class="s-label">Viande + Accompagnement — prix conseillé</span>
-          <span class="s-value accent"><%= number_with_precision(@meat_portion_cost * current_user.markup_coefficient, precision: 2) %> €</span>
-        </div>
-        <div class="summary-row">
-          <span class="s-label">Poisson + Accompagnement — coût portion 500 g</span>
-          <span class="s-value"><%= number_with_precision(@fish_portion_cost, precision: 2) %> €</span>
-        </div>
-        <div class="summary-row">
-          <span class="s-label">Poisson + Accompagnement — prix conseillé</span>
-          <span class="s-value accent"><%= number_with_precision(@fish_portion_cost * current_user.markup_coefficient, precision: 2) %> €</span>
-        </div>
-        <div class="summary-row" style="border-bottom: none; margin-top: 4px;">
-          <span class="s-label">Coefficient appliqué</span>
-          <span class="s-value muted">×<%= number_with_precision(current_user.markup_coefficient, precision: 1) %></span>
-        </div>
-      </div>
-    </div>
-    </div>
-
-  </div>
-
+<div class="grid-auto" style="--grid-min: 320px">
+  <%= render "category_column", category: "meat", entries: @meats, average: @meat_average,
+             decor: "decor-4", title: "Viandes", placeholder: "Blanquette de veau" %>
+  <%= render "category_column", category: "fish", entries: @fishes, average: @fish_average,
+             decor: "decor-3", title: "Poissons", placeholder: "Dos de cabillaud" %>
+  <%= render "category_column", category: "side", entries: @sides, average: @side_average,
+             decor: "decor-1", title: "Accompagnements", placeholder: "Riz pilaf" %>
 </div>

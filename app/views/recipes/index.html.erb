@@ -1,178 +1,120 @@
-<%# Page header %>
-<div class="page-header">
-  <div class="d-flex align-items-center gap-3">
-    <h1 class="page-title">Recettes</h1>
-    <span class="mono" style="color: var(--sl-400);"><%= @recipes.size %> recette<%= 's' if @recipes.size > 1 %></span>
-  </div>
-  <div class="d-flex align-items-center gap-2">
-    <%= link_to recipes_path(format: :csv, tab: @tab, search: params[:search]), class: "btn-outline-slate" do %>
-      <i class="bi bi-file-earmark-spreadsheet"></i> CSV
-    <% end %>
-    <div class="dropdown d-inline-block">
-      <button class="btn-outline-slate dropdown-toggle" data-bs-toggle="dropdown">
-        <i class="bi bi-file-earmark-spreadsheet"></i> Excel
-      </button>
-      <ul class="dropdown-menu">
-        <li><%= link_to "Sans coûts", export_all_excel_recipes_path(tab: @tab), class: "dropdown-item" %></li>
-        <li><%= link_to "Avec coûts", export_all_excel_recipes_path(tab: @tab, detailed: 1), class: "dropdown-item" %></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><%= link_to "Export complet (toutes recettes)", export_full_excel_recipes_path, class: "dropdown-item" %></li>
-      </ul>
+<% subrecipes = @tab == "subrecipes" %>
+<% content_for :title, subrecipes ? "Sous-recettes" : "Recettes" %>
+
+<%= page_header(subrecipes ? "Sous-recettes" : "Recettes",
+                subtitle: (subrecipes ? "Sauces, pâtes, purées… utilisées dans d’autres recettes" :
+                  "Coût de revient au kilo de chaque recette, après cuisson")) do %>
+  <details class="menu" data-controller="menu">
+    <summary class="btn btn--outline"><%= icon("download") %> Exporter <%= icon("chevron-down") %></summary>
+    <div class="menu__panel">
+      <%= link_to recipes_path(format: :csv, tab: @tab, search: params[:search]), class: "menu__item" do %>
+        <%= icon("filetype-csv") %> <span>CSV <span class="menu__hint">Cette liste, coûts au kilo</span></span>
+      <% end %>
+      <%= link_to export_all_excel_recipes_path(tab: @tab), class: "menu__item" do %>
+        <%= icon("file-earmark-excel") %> <span>Excel sans coûts <span class="menu__hint">Compositions seulement</span></span>
+      <% end %>
+      <%= link_to export_all_excel_recipes_path(tab: @tab, detailed: 1), class: "menu__item" do %>
+        <%= icon("file-earmark-excel") %> <span>Excel avec coûts <span class="menu__hint">Compositions et coûts</span></span>
+      <% end %>
+      <%= link_to export_full_excel_recipes_path, class: "menu__item" do %>
+        <%= icon("file-earmark-excel") %> <span>Export complet <span class="menu__hint">Toutes les recettes et sous-recettes</span></span>
+      <% end %>
     </div>
-    <% if @tab == 'subrecipes' %>
-      <%= link_to new_recipe_path(type: "subrecipe"), class: "btn-accent" do %>
-        <i class="bi bi-plus-lg"></i> Nouvelle sous-recette
-      <% end %>
-    <% else %>
-      <%= link_to new_recipe_path, class: "btn-accent" do %>
-        <i class="bi bi-plus-lg"></i> Nouvelle recette
-      <% end %>
+  </details>
+  <% if subrecipes %>
+    <%= link_to new_recipe_path(type: "subrecipe"), class: "btn btn--primary" do %>
+      <%= icon("plus-lg") %> Nouvelle sous-recette
     <% end %>
-  </div>
-</div>
-
-<%# Tab bar %>
-<div class="tab-bar">
-  <%= link_to "Recettes", recipes_path(tab: "recipes"),
-        class: "tab-item #{'active' if @tab == 'recipes'}" %>
-  <%= link_to "Sous-recettes", recipes_path(tab: "subrecipes"),
-        class: "tab-item #{'active' if @tab == 'subrecipes'}" %>
-  <%= link_to "Tarifs", tarifs_recipes_path,
-        class: "tab-item #{'active' if controller.action_name == 'tarifs'}" %>
-</div>
-
-<%# Search bar %>
-<div class="search-bar" style="padding: 12px 24px; background: white; border-bottom: 1px solid var(--sl-200);">
-  <%= form_with url: recipes_path, method: :get, class: "d-flex align-items-center gap-2",
-        data: { controller: "auto-submit" } do |f| %>
-    <%= hidden_field_tag :tab, @tab %>
-    <%= f.text_field :search,
-          value: params[:search],
-          placeholder: "Rechercher une recette...",
-          class: "form-control form-control-sm flex-grow-1 flex-md-grow-0" %>
-    <%= f.select :per_page,
-          options_for_select(
-            [["20 / page", 20], ["50 / page", 50], ["100 / page", 100]],
-            params[:per_page]&.to_i || 20
-          ),
-          {},
-          class: "form-select form-select-sm",
-          style: "width: auto;",
-          data: { action: "change->auto-submit#submit" } %>
-    <%= f.submit "Rechercher", class: "btn-outline-slate" %>
-    <% if params[:search].present? %>
-      <%= link_to "✕", recipes_path(tab: @tab), class: "btn-outline-slate", style: "color: var(--cc-danger);" %>
+  <% else %>
+    <%= link_to new_recipe_path, class: "btn btn--primary" do %>
+      <%= icon("plus-lg") %> Nouvelle recette
     <% end %>
   <% end %>
-</div>
+<% end %>
 
-<%# Recipes table %>
-<div style="padding: 24px;">
+<%= render "recipes/list_toolbar", tab: @tab, view: :costs %>
+
+<div class="card">
   <% if @recipes.any? %>
-    <div class="section-card">
-      <div class="table-responsive">
-      <table class="data-table">
+    <div class="table-wrap">
+      <table class="table">
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Coût/kg</th>
-            <th>Poids final</th>
-            <th>Perte cuisson</th>
-            <% unless @tab == 'subrecipes' %>
-              <th>Barquette</th>
-            <% end %>
-            <th></th>
+            <th scope="col"><%= subrecipes ? "Sous-recette" : "Recette" %></th>
+            <th scope="col" class="num">Coût / kg</th>
+            <th scope="col" class="num">Poids final</th>
+            <th scope="col" class="num">Perte à la cuisson</th>
+            <% unless subrecipes %><th scope="col">Vendue</th><% end %>
+            <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
         <tbody>
           <% @recipes.each do |recipe| %>
+            <% show_path = recipe_path(recipe, back: request.fullpath) %>
+            <% zero_count = recipe.zero_price_products_count %>
             <tr>
               <td>
-                <%= link_to recipe_path(recipe, back: request.fullpath), style: "color: var(--sl-900); font-weight: 500; text-decoration: none; display: block;" do %>
-                  <%= recipe.name %>
-                  <% zero_count = recipe.zero_price_products_count %>
-                  <% if zero_count > 0 %>
-                    <span class="badge-warning-sl" style="font-size: 11px; margin-left: 8px;">
-                      <i class="bi bi-exclamation-triangle"></i>
-                      <%= zero_count %> produit<%= 's' if zero_count > 1 %> à 0&nbsp;€
-                    </span>
+                <%= link_to recipe.name, show_path, class: "table__link" %>
+                <div class="table__meta">
+                  <span><%= pluralize(recipe.recipe_components.size, "ingrédient") %><%= " · #{recipe.tray_size.name}" if recipe.has_tray? && recipe.tray_size %></span>
+                  <% if recipe.has_tray? && recipe.tray_size.nil? %>
+                    <%= chip("Barquette sans taille", tone: :warning, dot: :warning) %>
                   <% end %>
-                <% end %>
-              </td>
-              <td>
-                <%= link_to recipe_path(recipe, back: request.fullpath), style: "color: inherit; text-decoration: none; display: block;" do %>
-                  <% if recipe.cached_cost_per_kg.present? && recipe.cached_cost_per_kg > 0 %>
-                    <span class="mono"><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %>&nbsp;€/kg</span>
-                  <% else %>
-                    <span class="badge-warning-sl">Non calculé</span>
-                  <% end %>
-                <% end %>
-              </td>
-              <td>
-                <%= link_to recipe_path(recipe, back: request.fullpath), style: "color: inherit; text-decoration: none; display: block;" do %>
-                  <% if recipe.cached_total_weight.present? %>
-                    <span class="mono"><%= number_with_precision(recipe.cached_total_weight, precision: 3) %>&nbsp;kg</span>
-                  <% else %>
-                    <span class="mono" style="color: var(--sl-400);">&mdash;</span>
-                  <% end %>
-                <% end %>
-              </td>
-              <td>
-                <%= link_to recipe_path(recipe, back: request.fullpath), style: "color: inherit; text-decoration: none; display: block;" do %>
-                  <span class="mono"><%= recipe.cooking_loss_percentage || 0 %>&nbsp;%</span>
-                <% end %>
-              </td>
-              <% unless @tab == 'subrecipes' %>
-                <td>
-                  <%= link_to recipe_path(recipe, back: request.fullpath), style: "color: inherit; text-decoration: none; display: block;" do %>
-                    <% if recipe.has_tray? %>
-                      <span class="badge-produit">Oui</span>
-                    <% end %>
-                  <% end %>
-                </td>
-              <% end %>
-              <td>
-                <div class="row-actions">
-                  <%= link_to recipe_path(recipe, back: request.fullpath), class: "action-btn", title: "Voir" do %>
-                    <i class="bi bi-eye"></i>
-                  <% end %>
-                  <%= link_to edit_recipe_path(recipe, back: request.fullpath), class: "action-btn", title: "Modifier" do %>
-                    <i class="bi bi-pencil"></i>
-                  <% end %>
-                  <%= button_to duplicate_recipe_path(recipe),
-                        method: :post,
-                        class: "action-btn",
-                        form: { data: { turbo_confirm: "Dupliquer cette recette ?" } },
-                        title: "Dupliquer" do %>
-                    <i class="bi bi-copy"></i>
-                  <% end %>
-                  <%= button_to recipe_path(recipe),
-                        method: :delete,
-                        class: "action-btn danger",
-                        form: { data: { turbo_confirm: "Supprimer cette recette ?" } },
-                        title: "Supprimer" do %>
-                    <i class="bi bi-trash"></i>
+                  <% if zero_count.positive? %>
+                    <%= chip(dot: :warning, tone: :warning) do %><%= zero_count %> produit<%= "s" if zero_count > 1 %> sans prix<% end %>
                   <% end %>
                 </div>
+              </td>
+              <td class="num">
+                <% if recipe.cached_cost_per_kg.to_d.positive? %>
+                  <%= eur(recipe.cached_cost_per_kg) %>
+                <% else %>
+                  <%= chip("Non calculé", tone: :warning) %>
+                <% end %>
+              </td>
+              <td class="num"><%= weight_label(recipe.cached_total_weight) %></td>
+              <td class="num"><%= percent(recipe.cooking_loss_percentage || 0, precision: 2) %></td>
+              <% unless subrecipes %>
+                <td class="text-secondary nowrap">
+                  <%= recipe.sold_by_unit? ? "À l’unité · #{weight_label(recipe.unit_reference_weight_kg)}" : "Au kilo" %>
+                </td>
+              <% end %>
+              <td class="table__actions">
+                <details class="menu" data-controller="menu">
+                  <summary class="icon-btn" aria-label="Actions pour <%= recipe.name %>"><%= icon("three-dots") %></summary>
+                  <div class="menu__panel">
+                    <%= link_to show_path, class: "menu__item" do %><%= icon("eye") %> Ouvrir<% end %>
+                    <%= link_to edit_recipe_path(recipe, back: request.fullpath), class: "menu__item" do %><%= icon("pencil") %> Modifier<% end %>
+                    <%= button_to duplicate_recipe_path(recipe), method: :post, class: "menu__item",
+                                  form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
+                      <%= icon("copy") %> Dupliquer
+                    <% end %>
+                    <%= button_to recipe_path(recipe), method: :delete, class: "menu__item",
+                                  form: { data: { turbo_confirm: "Supprimer cette recette ?" } } do %>
+                      <%= icon("trash") %> Supprimer
+                    <% end %>
+                  </div>
+                </details>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-      </div>
     </div>
+    <div class="pagination">
+      <span class="text-body-sm text-muted num"><%= @pagy.from %>–<%= @pagy.to %> sur <%= @pagy.count %></span>
+      <% if @pagy.pages > 1 %><%== pagy_nav(@pagy) %><% end %>
+    </div>
+  <% elsif params[:search].present? %>
+    <%= empty_state("Aucune recette trouvée pour « #{params[:search]} »", "Vérifiez l’orthographe ou cherchez un mot plus court.") do %>
+      <%= link_to "Voir toutes les recettes", recipes_path(tab: @tab), class: "btn btn--outline" %>
+    <% end %>
   <% else %>
-    <p style="color: var(--sl-400); text-align: center; margin-top: 24px; font-size: 13px;">
-      <% if params[:search].present? %>
-        Aucune recette trouvée pour "<%= params[:search] %>".
-      <% else %>
-        Aucune recette pour le moment.
+    <%= empty_state(subrecipes ? "Aucune sous-recette pour le moment" : "Aucune recette pour le moment",
+                    "Créez une recette, ajoutez ses ingrédients : le coût et le prix de vente se calculent tout seuls.") do %>
+      <%= link_to(subrecipes ? new_recipe_path(type: "subrecipe") : new_recipe_path, class: "btn btn--primary") do %>
+        <%= icon("plus-lg") %> <%= subrecipes ? "Créer une sous-recette" : "Créer une recette" %>
       <% end %>
-    </p>
-  <% end %>
-  <% if @pagy&.pages.to_i > 1 %>
-    <div style="display: flex; justify-content: center; padding: 16px 0;">
-      <%== pagy_bootstrap_nav(@pagy) %>
-    </div>
+    <% end %>
   <% end %>
 </div>

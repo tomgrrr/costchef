@@ -1,82 +1,74 @@
-<%# Page header %>
-<div class="page-header">
-  <h1 class="page-title">Référentiel pièces</h1>
-  <div style="display: flex; gap: 8px;">
-    <%= link_to referentiel_pieces_path(format: :csv), class: "btn-outline-slate" do %>
-      <i class="bi bi-file-earmark-spreadsheet"></i> Exporter CSV
-    <% end %>
-    <%= link_to root_path, class: "btn-accent" do %>
-      <i class="bi bi-arrow-left"></i> Dashboard
-    <% end %>
-  </div>
-</div>
+<% content_for :title, "Poids des pièces" %>
 
-<div style="padding: 24px;">
-  <div class="section-card">
-    <div class="section-header">
-      <h2 class="section-title"><i class="bi bi-egg"></i> Produits à l'unité (<%= @piece_products.size %>)</h2>
-    </div>
+<%= page_header("Poids des pièces",
+                subtitle: "Pour les produits achetés à la pièce, CostChef convertit en kilos avec ce poids. Modifiez-le directement dans le tableau.") do %>
+  <%= link_to referentiel_pieces_path(format: :csv), class: "btn btn--outline" do %>
+    <%= icon("download") %> Exporter
+  <% end %>
+<% end %>
 
-    <% if @piece_products.any? %>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
+<div class="card">
+  <% if @piece_products.any? %>
+    <div class="table-wrap">
+      <table class="table" style="--table-min: 760px">
+        <thead>
+          <tr>
+            <th scope="col">Produit</th>
+            <th scope="col" class="num">Poids d’une pièce</th>
+            <th scope="col" class="num">Prix moyen / kg</th>
+            <th scope="col" class="num">Prix d’une pièce</th>
+            <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @piece_products.each do |product| %>
             <tr>
-              <th>Nom</th>
-              <th>Poids unitaire (g)</th>
-              <th>Poids unitaire (kg)</th>
-              <th>Prix moyen (€/kg)</th>
-              <th style="width: 50px;"></th>
+              <td><%= link_to product.name, product_path(product), class: "table__link" %></td>
+              <td class="num text-medium"><%= weight_label(product.unit_weight_kg) %></td>
+              <td class="num text-secondary"><%= product.avg_price_per_kg.to_d.positive? ? eur(product.avg_price_per_kg) : "—" %></td>
+              <td class="num text-strong">
+                <%= piece_price(product) ? eur(piece_price(product)) : "—" %>
+              </td>
+              <td class="table__actions">
+                <button type="button" class="btn btn--outline btn--sm" data-controller="toggle-edit"
+                        data-action="click->toggle-edit#toggle" data-toggle-edit-target-param="edit_piece_<%= product.id %>"
+                        aria-label="Modifier le poids de <%= product.name %>">
+                  <%= icon("pencil") %> Modifier
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            <% @piece_products.each do |product| %>
-              <tr>
-                <td><%= product.name %></td>
-                <td class="mono"><%= number_with_precision(product.unit_weight_kg * 1000, precision: 0) %> g</td>
-                <td class="mono"><%= number_with_precision(product.unit_weight_kg, precision: 3) %> kg</td>
-                <td class="mono"><%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €</td>
-                <td>
-                  <%= link_to "#",
-                        class: "action-btn",
-                        title: "Modifier le poids",
-                        data: { controller: "toggle-edit",
-                                action: "click->toggle-edit#toggle",
-                                toggle_edit_target_param: "edit_piece_#{product.id}" } do %>
-                    <i class="bi bi-pencil"></i>
-                  <% end %>
-                </td>
-              </tr>
-              <tr id="edit_piece_<%= product.id %>" class="d-none">
-                <td colspan="5">
-                  <%= form_with model: product, url: product_path(product), method: :patch, local: true do |f| %>
-                    <%= hidden_field_tag :return_to, "referentiel_pieces" %>
-                    <%= hidden_field_tag :input_unit, "g" %>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <label class="form-label-xs" style="margin: 0; white-space: nowrap;">Poids (g)</label>
-                      <%= f.number_field :unit_weight_kg,
-                            value: (product.unit_weight_kg * 1000).round(0),
-                            class: "form-control-sm",
-                            style: "width: 120px;",
-                            step: 1,
-                            min: 1 %>
-                      <button type="submit" class="btn-slate" style="padding: 4px 12px; font-size: 12px;">Enregistrer</button>
-                      <%= link_to "Annuler", "#",
-                            class: "btn-outline-slate",
-                            style: "padding: 4px 12px; font-size: 12px;",
-                            data: { controller: "toggle-edit",
-                                    action: "click->toggle-edit#toggle",
-                                    toggle_edit_target_param: "edit_piece_#{product.id}" } %>
-                    </div>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <p style="padding: 24px; text-align: center; color: var(--sl-400);">Aucun produit à l'unité.</p>
+            <tr id="edit_piece_<%= product.id %>" class="table__edit" hidden>
+              <td colspan="5">
+                <%= form_with model: product, url: product_path(product), method: :patch, local: true,
+                              class: "cluster cluster--sm cluster--bottom" do |f| %>
+                  <%= hidden_field_tag :return_to, "referentiel_pieces", id: nil %>
+                  <%= hidden_field_tag :input_unit, "g", id: nil %>
+                  <div class="field">
+                    <%= f.label :unit_weight_kg, "Poids d’une pièce de #{product.name}", for: "piece_weight_#{product.id}" %>
+                    <span class="affix" style="--input-width: 160px">
+                      <%= f.number_field :unit_weight_kg, id: "piece_weight_#{product.id}",
+                                         value: product.unit_weight_kg && grams_value(product.unit_weight_kg),
+                                         class: "input input--num", step: 0.1, min: 0.1 %>
+                      <span class="affix__suffix" aria-hidden="true">g</span>
+                    </span>
+                  </div>
+                  <%= f.button type: "submit", class: "btn btn--primary" do %>Enregistrer<% end %>
+                  <button type="button" class="btn btn--outline" data-controller="toggle-edit"
+                          data-action="click->toggle-edit#toggle" data-toggle-edit-target-param="edit_piece_<%= product.id %>">Annuler</button>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span class="text-body-sm text-muted"><%= pluralize(@piece_products.size, "produit acheté", plural: "produits achetés") %> à la pièce</span>
+    </div>
+  <% else %>
+    <%= empty_state("Aucun produit acheté à la pièce",
+                    "Créez un produit avec l’unité « À la pièce » (œufs, citrons…) : son poids apparaîtra ici.") do %>
+      <%= link_to new_product_path, class: "btn btn--primary" do %><%= icon("plus-lg") %> Nouveau produit<% end %>
     <% end %>
-  </div>
+  <% end %>
 </div>

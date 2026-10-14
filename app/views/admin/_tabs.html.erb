@@ -1,0 +1,8 @@
+<nav class="tabs" aria-label="Sections de l’administration">
+  <%= link_to admin_users_path, class: "tabs__item", "aria-current": (controller_name == "users" ? "page" : nil) do %>
+    Utilisateurs <span class="chip"><%= User.count %></span>
+  <% end %>
+  <%= link_to admin_invitations_path, class: "tabs__item", "aria-current": (controller_name == "invitations" ? "page" : nil) do %>
+    Invitations <span class="chip"><%= Invitation.pending.count %> en attente</span>
+  <% end %>
+</nav>

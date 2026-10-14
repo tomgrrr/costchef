@@ -1,196 +1,139 @@
-<%# Page header %>
-<div class="page-header">
-  <div class="d-flex align-items-center gap-3">
-    <h1 class="page-title"><%= @supplier.name %></h1>
-    <% if @supplier.active? %>
-      <span class="badge-produit" style="background: var(--cc-success); color: white;">Actif</span>
-    <% else %>
-      <span class="badge-produit" style="background: var(--sl-300); color: var(--sl-600);">Inactif</span>
-    <% end %>
-  </div>
-  <div class="d-flex gap-2">
-    <%= link_to suppliers_path, class: "btn-outline-slate" do %>
-      <i class="bi bi-arrow-left"></i> Retour
-    <% end %>
-    <%= link_to edit_supplier_path(@supplier), class: "btn-outline-slate" do %>
-      <i class="bi bi-pencil"></i> Modifier
-    <% end %>
-  </div>
-</div>
+<% content_for :title, @supplier.name %>
+<% all_purchases = @comparison.flat_map { |row| row[:purchases] } %>
+<% active_count = all_purchases.count(&:active?) %>
+<% priced = @comparison.select { |row| row[:delta_pct] } %>
+<% cheaper = priced.count { |row| row[:delta_pct] <= -0.5 } %>
+<% dearer = priced.count { |row| row[:delta_pct] >= 0.5 } %>
 
-<%# Stats bar %>
-<% total_purchases = @purchases_by_product.values.flatten %>
-<% active_count   = total_purchases.count(&:active?) %>
-<% inactive_count = total_purchases.count { |p| !p.active? } %>
+<%= breadcrumb(["Fournisseurs", suppliers_path], @supplier.name) %>
 
-<div style="display: flex; gap: 32px; padding: 16px 24px; background: white; border-bottom: 1px solid var(--sl-200); flex-wrap: wrap;">
-  <div>
-    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Produits</div>
-    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--sl-900);"><%= @purchases_by_product.size %></div>
-  </div>
-  <div>
-    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Conditionnements</div>
-    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--sl-900);"><%= total_purchases.size %></div>
-  </div>
-  <div>
-    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Actifs</div>
-    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--cc-success);"><%= active_count %></div>
-  </div>
-  <% if inactive_count > 0 %>
-  <div>
-    <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;">Inactifs</div>
-    <div class="mono" style="font-size: 20px; font-weight: 700; color: var(--sl-400);"><%= inactive_count %></div>
-  </div>
-  <% end %>
-</div>
-
-<div style="padding: 24px;">
-
-  <% if @purchases_by_product.empty? %>
-    <div style="text-align: center; color: var(--sl-400); font-size: 13px; padding: 48px 0;">
-      Aucun conditionnement pour ce fournisseur.
+<header class="page-header">
+  <div class="page-header__text">
+    <h1 class="text-display-lg"><%= @supplier.name %></h1>
+    <div class="cluster cluster--xs">
+      <%= @supplier.active? ? chip("Actif", dot: :success) : chip("Désactivé", dot: :off) %>
+      <% if (last = all_purchases.max_by(&:created_at)) %>
+        <%= chip("Dernier achat le #{short_date(last.created_at.to_date)}") %>
+      <% end %>
     </div>
-  <% else %>
-
-    <% @purchases_by_product.each do |product, purchases| %>
-      <%
-        active_purchases  = purchases.select(&:active?)
-        total_qty_kg      = active_purchases.sum(&:package_quantity_kg).to_f
-        weighted_avg      = total_qty_kg > 0 ?
-          active_purchases.sum { |p| p.package_quantity_kg.to_f * p.price_per_kg.to_f } / total_qty_kg :
-          nil
-        simple_avg        = active_purchases.any? ?
-          active_purchases.sum { |p| p.price_per_kg.to_f } / active_purchases.size :
-          nil
-        global_avg        = product.avg_price_per_kg.to_f > 0 ? product.avg_price_per_kg.to_f : nil
-
-        # Is this supplier cheaper or more expensive than global avg?
-        price_delta       = (weighted_avg && global_avg) ? weighted_avg - global_avg : nil
-        price_delta_pct   = (price_delta && global_avg > 0) ? (price_delta / global_avg * 100).round(1) : nil
-      %>
-
-      <div class="section-card" style="margin-bottom: 16px;">
-        <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-          <div class="d-flex align-items-center gap-2">
-            <h2 class="section-title" style="margin: 0;">
-              <%= link_to product.name, product_path(product), style: "color: inherit; text-decoration: none;" %>
-            </h2>
-            <span class="badge-produit"><%= product.base_unit %></span>
-            <% unless active_purchases.any? %>
-              <span class="badge-warning-sl" style="font-size: 10px;"><i class="bi bi-pause-circle"></i> Inactifs uniquement</span>
-            <% end %>
-          </div>
-
-          <%# Prix synthèse %>
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <% if weighted_avg %>
-              <div style="text-align: right;">
-                <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em;">PON fournisseur</div>
-                <div class="mono" style="font-size: 15px; font-weight: 700; color: var(--cc-success);">
-                  <%= number_with_precision(weighted_avg, precision: 2) %> €/<%= product.base_unit %>
-                </div>
-              </div>
-            <% end %>
-            <% if simple_avg && active_purchases.size > 1 %>
-              <div style="text-align: right;">
-                <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em;">MOY simple</div>
-                <div class="mono" style="font-size: 15px; font-weight: 700; color: var(--cc-danger);">
-                  <%= number_with_precision(simple_avg, precision: 2) %> €/<%= product.base_unit %>
-                </div>
-              </div>
-            <% end %>
-            <% if global_avg && @purchases_by_product.size > 0 %>
-              <div style="text-align: right;">
-                <div class="mono" style="font-size: 10px; color: var(--sl-400); text-transform: uppercase; letter-spacing: .08em;">Moy. globale</div>
-                <div class="mono" style="font-size: 15px; font-weight: 600; color: var(--sl-600);">
-                  <%= number_with_precision(global_avg, precision: 2) %> €/<%= product.base_unit %>
-                </div>
-              </div>
-            <% end %>
-            <% if price_delta_pct %>
-              <% delta_color = price_delta > 0 ? "var(--cc-danger)" : "var(--cc-success)" %>
-              <% delta_icon  = price_delta > 0 ? "bi-arrow-up" : "bi-arrow-down" %>
-              <% delta_label = price_delta > 0 ? "vs moy." : "vs moy." %>
-              <span class="mono" style="font-size: 12px; font-weight: 700; color: <%= delta_color %>;">
-                <i class="bi <%= delta_icon %>"></i>
-                <%= price_delta > 0 ? "+" : "" %><%= price_delta_pct %> %
-              </span>
-            <% end %>
-          </div>
-        </div>
-
-        <%# Table des conditionnements %>
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Conditionnement</th>
-                <th class="text-end">Prix achat</th>
-                <th class="text-end">Prix / <%= product.base_unit %></th>
-                <th class="text-end">Qté (kg eq.)</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% purchases.sort_by { |p| [p.active? ? 0 : 1, p.created_at] }.each do |purchase| %>
-                <tr style="<%= 'opacity: 0.45;' unless purchase.active? %>">
-                  <td style="font-weight: 500;">
-                    <%= number_with_precision(purchase.package_quantity, precision: 3, strip_insignificant_zeros: true) %>
-                    <%= purchase.package_unit %>
-                  </td>
-                  <td class="text-end">
-                    <span class="mono"><%= number_with_precision(purchase.package_price, precision: 2) %> €</span>
-                  </td>
-                  <td class="text-end">
-                    <span class="mono" style="font-weight: 600; color: <%= purchase.active? ? "var(--cc-success)" : "var(--sl-400)" %>;">
-                      <%= number_with_precision(purchase.price_per_kg, precision: 2) %> €/<%= product.base_unit %>
-                    </span>
-                  </td>
-                  <td class="text-end">
-                    <span class="mono" style="color: var(--sl-400); font-size: 12px;">
-                      <%= number_with_precision(purchase.package_quantity_kg, precision: 3, strip_insignificant_zeros: true) %>
-                    </span>
-                  </td>
-                  <td>
-                    <% if purchase.active? %>
-                      <span style="font-size: 11px; font-weight: 500; color: var(--cc-success);"><i class="bi bi-check-circle"></i> Actif</span>
-                    <% else %>
-                      <span style="font-size: 11px; color: var(--sl-400);"><i class="bi bi-pause-circle"></i> Inactif</span>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-            <% if active_purchases.size > 1 %>
-              <tfoot>
-                <tr style="background: var(--sl-50); border-top: 2px solid var(--sl-200);">
-                  <td colspan="2" style="font-size: 12px; color: var(--sl-500); font-style: italic;">
-                    Calculs sur <%= active_purchases.size %> conditionnement<%= 's' if active_purchases.size > 1 %> actif<%= 's' if active_purchases.size > 1 %>
-                  </td>
-                  <td class="text-end">
-                    <div class="mono" style="font-size: 11px; color: var(--sl-400);">PON</div>
-                    <div class="mono" style="font-weight: 700; color: var(--cc-success);">
-                      <%= number_with_precision(weighted_avg, precision: 2) %> €/<%= product.base_unit %>
-                    </div>
-                    <div class="mono" style="font-size: 11px; color: var(--sl-400); margin-top: 2px;">MOY</div>
-                    <div class="mono" style="font-weight: 600; color: var(--cc-danger);">
-                      <%= number_with_precision(simple_avg, precision: 2) %> €/<%= product.base_unit %>
-                    </div>
-                  </td>
-                  <td class="text-end">
-                    <span class="mono" style="font-size: 12px; color: var(--sl-500);">
-                      <%= number_with_precision(total_qty_kg, precision: 3, strip_insignificant_zeros: true) %> kg
-                    </span>
-                  </td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            <% end %>
-          </table>
-        </div>
-      </div>
-
+  </div>
+  <div class="page-header__actions">
+    <%= link_to edit_supplier_path(@supplier), class: "btn btn--outline" do %><%= icon("pencil") %> Modifier<% end %>
+    <% if @supplier.active? %>
+      <%= button_to "Désactiver", deactivate_supplier_path(@supplier), method: :post, class: "btn btn--outline",
+                    form: { data: { turbo_confirm: "Désactiver #{@supplier.name} ? Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>
+    <% else %>
+      <%= button_to "Réactiver", activate_supplier_path(@supplier), method: :post, class: "btn btn--outline" %>
     <% end %>
-  <% end %>
+  </div>
+</header>
 
+<div class="grid-auto" style="--grid-min: 180px">
+  <div class="card kpi"><span class="kpi__label">Produits</span><span class="kpi__value"><%= @comparison.size %></span></div>
+  <div class="card kpi"><span class="kpi__label">Achats enregistrés</span><span class="kpi__value"><%= all_purchases.size %></span></div>
+  <div class="card kpi"><span class="kpi__label">Achats actifs</span><span class="kpi__value"><%= active_count %></span></div>
+  <div class="card kpi"><span class="kpi__label">Plus utilisés</span><span class="kpi__value text-muted"><%= all_purchases.size - active_count %></span></div>
 </div>
+
+<% if @comparison.empty? %>
+  <div class="card">
+    <%= empty_state("Aucun achat chez ce fournisseur",
+                    "Les achats se saisissent sur la fiche de chaque produit.") do %>
+      <%= link_to "Voir les produits", products_path, class: "btn btn--outline" %>
+    <% end %>
+  </div>
+<% else %>
+  <section class="card" aria-labelledby="comparison-title">
+    <div class="card__header">
+      <div class="card__heading">
+        <h2 id="comparison-title" class="card__title">Ses prix comparés à votre prix moyen, tous fournisseurs</h2>
+        <p class="card__subtitle">
+          <% if priced.any? %>
+            Moins cher que la moyenne sur <%= cheaper.zero? ? "aucun produit" : pluralize(cheaper, "produit") %>, plus cher sur <%= dearer.zero? ? "aucun" : dearer %>.
+          <% end %>
+          Prix moyen pondéré de ses achats actifs, HT.
+        </p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table" style="--table-min: 820px">
+        <thead>
+          <tr>
+            <th scope="col">Produit</th>
+            <th scope="col" class="num">Prix ici</th>
+            <th scope="col" class="num">Moyenne générale</th>
+            <th scope="col" class="num">Écart</th>
+            <th scope="col" class="num">Achats actifs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @comparison.each do |row| %>
+            <% product = row[:product] %>
+            <% unit = product_price_unit(product) %>
+            <tr class="<%= "is-off" if row[:active_purchases].empty? %>">
+              <td>
+                <%= link_to product.name, product_path(product), class: "table__link" %>
+                <div class="table__meta"><%= product_unit_label(product) %></div>
+              </td>
+              <td class="num text-strong"><%= row[:weighted_avg] ? eur(row[:weighted_avg], unit: unit) : chip("Plus utilisé", dot: :off) %></td>
+              <td class="num text-secondary"><%= row[:global_avg] ? eur(row[:global_avg], unit: unit) : "—" %></td>
+              <td class="num">
+                <% if row[:delta_pct].nil? %>
+                  <span class="text-muted">—</span>
+                <% elsif row[:delta_pct].abs < 0.5 %>
+                  <span class="text-muted">Dans la moyenne</span>
+                <% elsif row[:delta_pct].positive? %>
+                  <span class="text-warning text-medium">+<%= percent(row[:delta_pct], precision: 1) %> plus cher</span>
+                <% else %>
+                  <span class="text-success text-medium"><%= percent(row[:delta_pct].abs, precision: 1) %> moins cher</span>
+                <% end %>
+              </td>
+              <td class="num text-secondary"><%= row[:active_purchases].size %> / <%= row[:purchases].size %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="purchases-detail-title">
+    <div class="card__header">
+      <div class="card__heading">
+        <h2 id="purchases-detail-title" class="card__title">Détail des achats</h2>
+        <p class="card__subtitle">Les achats actifs d’abord, du plus ancien au plus récent.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table" style="--table-min: 860px">
+        <thead>
+          <tr>
+            <th scope="col">Produit</th>
+            <th scope="col" class="num">Qté</th>
+            <th scope="col">Unité</th>
+            <th scope="col" class="num">Soit</th>
+            <th scope="col" class="num">Prix HT</th>
+            <th scope="col" class="num">Prix ramené</th>
+            <th scope="col">Date</th>
+            <th scope="col">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @comparison.each do |row| %>
+            <% row[:purchases].each do |purchase| %>
+              <tr class="<%= "is-off" unless purchase.active? %>">
+                <td><%= link_to row[:product].name, product_path(row[:product]), class: "table__link" %></td>
+                <td class="num"><%= fr_number(purchase.package_quantity, precision: 3, strip: true) %></td>
+                <td><%= unit_label(purchase.package_unit) %></td>
+                <td class="num text-secondary"><%= row[:product].base_unit == "l" ? "#{fr_number(purchase.package_quantity_kg, precision: 3, strip: true)} l" : weight_label(purchase.package_quantity_kg) %></td>
+                <td class="num"><%= eur(purchase.package_price) %></td>
+                <td class="num text-strong"><%= eur(purchase.price_per_kg, unit: product_price_unit(row[:product])) %></td>
+                <td class="num text-secondary"><%= short_date(purchase.created_at.to_date) %></td>
+                <td><%= purchase.active? ? chip("Actif", dot: :success) : chip("Inactif", dot: :off) %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>

@@ -1,14 +1,7 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Nouveau produit</h4>
-  <%= link_to "← Retour", products_path %>
-</div>
+<% content_for :title, "Nouveau produit" %>
+<% content_for :content_class, "app__content--narrow" %>
 
-<div class="row">
-  <div class="col-md-6 mx-auto">
-    <div class="card">
-      <div class="card-body">
-        <%= render "form", product: @product %>
-      </div>
-    </div>
-  </div>
-</div>
+<%= breadcrumb(["Produits", products_path], "Nouveau produit") %>
+<%= page_header("Nouveau produit",
+                subtitle: "Un ingrédient de votre bibliothèque. Ses prix viendront de vos achats.") %>
+<%= render "form", product: @product %>

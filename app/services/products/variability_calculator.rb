@@ -7,13 +7,22 @@ module Products
       new(product).call
     end
 
+    # Same CV% from prices already in memory (e.g. preloaded active purchases),
+    # so list pages don't run one query per product.
+    def self.for_prices(prices)
+      new(nil).cv_for(prices.map(&:to_f))
+    end
+
     def initialize(product)
       @product = product
     end
 
     # Retourne le CV en % (Float), ou nil si < 2 achats actifs
     def call
-      prices = @product.product_purchases.active.pluck(:price_per_kg).map(&:to_f)
+      cv_for(@product.product_purchases.active.pluck(:price_per_kg).map(&:to_f))
+    end
+
+    def cv_for(prices)
       return nil if prices.size < 2
 
       mean = calculate_mean(prices)

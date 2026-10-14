@@ -1,0 +1,112 @@
+# App-specific French names. Generic Rails messages come from rails-i18n,
+# Devise messages from devise-i18n; keys here override them.
+fr:
+  activerecord:
+    models:
+      user: Utilisateur
+      product: Produit
+      product_purchase: Achat
+      recipe: Recette
+      recipe_component: Ingrédient
+      supplier: Fournisseur
+      tray_size: Barquette
+      daily_special: Plat du jour
+      invitation: Invitation
+    attributes:
+      user:
+        email: Email
+        password: Mot de passe
+        password_confirmation: Confirmation du mot de passe
+        current_password: Mot de passe actuel
+        reset_password_token: Lien de réinitialisation
+        unlock_token: Lien de déverrouillage
+        first_name: Prénom
+        last_name: Nom
+        company_name: Entreprise
+        markup_coefficient: Coefficient
+        price_variability_threshold: Seuil de variation
+        subscription_active: Abonnement actif
+        subscription_started_at: Début de l’abonnement
+        subscription_expires_at: Fin de l’abonnement
+        subscription_notes: Notes
+      product:
+        user: Utilisateur
+        name: Nom du produit
+        base_unit: Unité
+        unit_weight_kg: Poids d’une pièce
+        avg_price_per_kg: Prix moyen
+        dehydrated: Produit déshydraté
+        rehydration_coefficient: Coefficient de réhydratation
+      product_purchase:
+        product: Produit
+        supplier: Fournisseur
+        package_quantity: Quantité
+        package_unit: Unité
+        package_quantity_kg: Quantité en kg
+        package_price: Prix HT
+        price_per_kg: Prix au kg
+        active: Actif
+      recipe:
+        user: Utilisateur
+        name: Nom de la recette
+        description: Description
+        cooking_loss_percentage: Perte à la cuisson
+        sellable_as_component: Utilisable en sous-recette
+        has_tray: Vendue en barquette
+        tray_size: Barquette
+        tray_size_id: Taille de barquette
+        sold_by_unit: Vente à l’unité
+        unit_reference_weight_kg: Poids d’une unité
+        tva_rate: TVA
+        cached_total_cost: Coût total
+        cached_total_weight: Poids total
+        cached_raw_weight: Poids brut
+        cached_cost_per_kg: Coût au kg
+      recipe_component:
+        parent_recipe: Recette
+        component: Ingrédient
+        component_type: Type d’ingrédient
+        component_id: Ingrédient
+        quantity_kg: Quantité
+        quantity_unit: Unité
+      supplier:
+        user: Utilisateur
+        name: Nom du fournisseur
+        active: Actif
+      tray_size:
+        user: Utilisateur
+        name: Nom
+        price: Prix
+      daily_special:
+        user: Utilisateur
+        item_name: Plat
+        entry_date: Date
+        cost_per_kg: Coût au kg
+        category: Catégorie
+      invitation:
+        email: Email
+        token: Lien d’invitation
+        expires_at: Date d’expiration
+        created_by_admin: Administrateur
+    errors:
+      models:
+        # These messages are already full sentences: don't prefix the field name.
+        recipe:
+          attributes:
+            has_tray:
+              format: "%{message}"
+            sold_by_unit:
+              format: "%{message}"
+        product_purchase:
+          attributes:
+            package_quantity_kg:
+              format: "%{attribute} : %{message}"
+
+  devise:
+    failure:
+      # Sign-up is by invitation only: don't suggest registering.
+      unauthenticated: Connectez-vous pour continuer.
+    sessions:
+      signed_in: Bienvenue sur CostChef.
+      signed_out: Vous êtes déconnecté(e).
+      already_signed_out: Vous êtes déconnecté(e).

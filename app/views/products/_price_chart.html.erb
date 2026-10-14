@@ -1,0 +1,33 @@
+<%# Price per kg of each purchase, oldest to newest, with the weighted average.
+    locals: purchases (sorted by created_at), product, price_unit %>
+<% chart = price_chart(purchases, product.avg_price_per_kg) %>
+<section class="card card--pad stack stack--sm" aria-labelledby="price-history-title">
+  <div class="cluster cluster--between cluster--baseline">
+    <h2 id="price-history-title" class="card__title">Évolution du prix au <%= price_unit == "l" ? "litre" : "kilo" %></h2>
+    <span class="text-body-sm text-muted">
+      <%= short_date(purchases.first.created_at.to_date) %> → <%= short_date(purchases.last.created_at.to_date) %>
+    </span>
+  </div>
+  <svg class="chart" viewBox="0 0 640 200" role="img"
+       aria-label="Prix au <%= price_unit %> des achats : <%= purchases.map { |p| "#{eur(p.price_per_kg)} le #{short_date(p.created_at.to_date)}" }.join(", ") %>. Prix moyen pondéré : <%= eur(product.avg_price_per_kg) %>.">
+    <% chart[:guides].each do |guide| %>
+      <line class="chart__grid" x1="52" x2="628" y1="<%= guide[:y] %>" y2="<%= guide[:y] %>"></line>
+      <text class="chart__axis" x="0" y="<%= guide[:y] + 4 %>"><%= guide[:label] %></text>
+    <% end %>
+    <% if chart[:average_y] %>
+      <line class="chart__avg" x1="52" x2="628" y1="<%= chart[:average_y] %>" y2="<%= chart[:average_y] %>"></line>
+      <text class="chart__avg-label" x="58" y="<%= chart[:average_y] - 6 %>">Prix moyen pondéré · <%= eur(product.avg_price_per_kg) %></text>
+    <% end %>
+    <polyline class="chart__line" points="<%= chart[:points].map { |pt| "#{pt[:x]},#{pt[:y]}" }.join(" ") %>"></polyline>
+    <% chart[:points].each do |pt| %>
+      <circle class="chart__point <%= "chart__point--off" unless pt[:purchase].active? %> <%= "chart__point--last" if pt[:last] && pt[:purchase].active? %>"
+              cx="<%= pt[:x] %>" cy="<%= pt[:y] %>" r="<%= pt[:last] ? 6 : 5 %>"></circle>
+    <% end %>
+    <% last = chart[:points].last %>
+    <% near_average = chart[:average_y] && (last[:y] - chart[:average_y]).abs < 18 %>
+    <text class="chart__value" x="<%= last[:x] %>" y="<%= near_average ? last[:y] + 22 : last[:y] - 12 %>" text-anchor="end"><%= eur(last[:purchase].price_per_kg) %></text>
+    <text class="chart__axis" x="52" y="194"><%= short_date(purchases.first.created_at.to_date) %></text>
+    <text class="chart__axis" x="628" y="194" text-anchor="end"><%= short_date(purchases.last.created_at.to_date) %></text>
+  </svg>
+  <p class="text-body-sm text-muted">Un point creux est un achat qui n’entre plus dans le calcul.</p>
+</section>

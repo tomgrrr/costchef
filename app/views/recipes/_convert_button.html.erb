@@ -1,0 +1,25 @@
+<%# Recipe page header: turns a recipe into a sub-recipe, or back. Sends the same
+    fields as the edit form's "Utilisable en sous-recette" switch.
+    locals: recipe %>
+<% if recipe.subrecipe? %>
+  <% used = recipe.parent_recipes_count %>
+  <% confirm = "Convertir « #{recipe.name} » en recette finale ? Elle ne pourra plus être ajoutée à d’autres recettes." %>
+  <% if used.positive? %>
+    <% confirm += " Elle est déjà utilisée dans #{pluralize(used, 'recette')} : elle y reste, mais sa quantité n’y sera plus modifiable." %>
+  <% end %>
+  <%= button_to recipe_path(recipe), method: :patch, class: "btn btn--outline",
+                params: { recipe: { sellable_as_component: "0" } },
+                form: { data: { turbo_confirm: confirm } } do %>
+    <%= icon("arrow-up-circle") %> Convertir en recette
+  <% end %>
+<% else %>
+  <% confirm = "Convertir « #{recipe.name} » en sous-recette ? Elle pourra être ajoutée à d’autres recettes." %>
+  <% if recipe.has_tray? || recipe.sold_by_unit? %>
+    <% confirm += " Une sous-recette n’a ni barquette ni vente à l’unité : ces réglages seront retirés." %>
+  <% end %>
+  <%= button_to recipe_path(recipe), method: :patch, class: "btn btn--outline",
+                params: { recipe: { sellable_as_component: "1", has_tray: "0", tray_size_id: "", sold_by_unit: "0" } },
+                form: { data: { turbo_confirm: confirm } } do %>
+    <%= icon("arrow-down-circle") %> Convertir en sous-recette
+  <% end %>
+<% end %>

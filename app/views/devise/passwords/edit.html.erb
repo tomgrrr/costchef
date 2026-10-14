@@ -1,0 +1,20 @@
+<% content_for :title, "Nouveau mot de passe" %>
+<%= render layout: "shared/auth", locals: { title: "Nouveau mot de passe" } do %>
+  <%= render "devise/shared/error_messages", resource: resource %>
+  <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put, class: "stack stack--md" }) do |f| %>
+    <%= f.hidden_field :reset_password_token %>
+    <div class="field">
+      <%= f.label :password, "Nouveau mot de passe" %>
+      <%= f.password_field :password, autofocus: true, autocomplete: "new-password", class: "input" %>
+      <% if @minimum_password_length %>
+        <span class="field__hint"><%= @minimum_password_length %> caractères minimum.</span>
+      <% end %>
+    </div>
+    <div class="field">
+      <%= f.label :password_confirmation, "Confirmez le mot de passe" %>
+      <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "input" %>
+    </div>
+    <%= f.button type: "submit", class: "btn btn--primary btn--block" do %>Enregistrer le mot de passe<% end %>
+  <% end %>
+  <p class="text-body-sm"><%= link_to "Retour à la connexion", new_session_path(resource_name) %></p>
+<% end %>

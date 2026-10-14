@@ -1,23 +1,25 @@
-<div class="section-card">
-  <div style="padding: 20px;">
-    <%= form_with(model: supplier) do |f| %>
-      <% if supplier.errors.any? %>
-        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--cc-danger);">
-          <% supplier.errors.full_messages.each do |message| %>
-            <div><%= message %></div>
-          <% end %>
-        </div>
+<%= form_with model: supplier, class: "card" do |f| %>
+  <% if supplier.errors.any? %>
+    <div class="form-section">
+      <%= notice_box(tone: :danger, css: "notice--top") do %>
+        <ul class="notice__list">
+          <% supplier.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+        </ul>
       <% end %>
-
-      <div style="margin-bottom: 16px;">
-        <label class="form-label-xs">Nom</label>
-        <%= f.text_field :name, class: 'form-control form-control-sm', style: 'font-size: 12px;', autofocus: true %>
-      </div>
-
-      <div style="display: flex; gap: 8px;">
-        <%= f.submit class: 'btn-slate' %>
-        <%= link_to 'Annuler', suppliers_path, class: 'btn-outline-slate' %>
-      </div>
+    </div>
+  <% end %>
+  <div class="form-section">
+    <div class="field">
+      <%= f.label :name, "Nom du fournisseur" %>
+      <%= f.text_field :name, class: "input", autofocus: true, placeholder: "Metro",
+                       "aria-invalid": supplier.errors[:name].any? || nil %>
+      <% if supplier.errors[:name].any? %><span class="field__error"><%= supplier.errors[:name].first %></span><% end %>
+    </div>
+  </div>
+  <div class="form-actions">
+    <%= link_to "Annuler", suppliers_path, class: "btn btn--outline" %>
+    <%= f.button type: "submit", class: "btn btn--primary" do %>
+      <%= supplier.persisted? ? "Enregistrer" : "Créer le fournisseur" %>
     <% end %>
   </div>
-</div>
+<% end %>

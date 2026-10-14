@@ -59,6 +59,12 @@ gem 'pagy', '~> 9.0'
 gem 'devise'
 
 # ============================================
+# COSTCHEF - French translations (Rails + Devise messages)
+# ============================================
+gem 'rails-i18n', '~> 7.0'
+gem 'devise-i18n'
+
+# ============================================
 # COSTCHEF - Excel Export
 # ============================================
 gem 'caxlsx'

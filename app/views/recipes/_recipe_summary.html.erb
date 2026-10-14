@@ -1,105 +1,128 @@
-<div id="summary_<%= recipe.id %>">
-  <div class="sidebar-section">
-    <div class="sidebar-label">Résumé</div>
+<%# Price column of the recipe page. Replaced by Turbo Stream after a recipe
+    or component change (id must stay). %>
+<% cost = recipe.cached_cost_per_kg.to_d %>
+<% coefficient = recipe.user.markup_coefficient.to_d %>
+<% zero_count = recipe.zero_price_products_count %>
+<% margin = recipe.subrecipe? ? nil : Recipes::MarginCalculator.call(recipe) %>
+<div id="summary_<%= recipe.id %>" class="stack stack--md">
 
-    <div class="summary-row">
-      <span class="s-label">Coût total</span>
-      <% if recipe.cached_total_cost.to_f > 0 %>
-        <span class="s-value"><%= number_with_precision(recipe.cached_total_cost, precision: 2) %> €</span>
-      <% else %>
-        <span class="badge-warning-sl">0 €</span>
-      <% end %>
-    </div>
-
-    <div class="summary-row">
-      <span class="s-label">Poids brut</span>
-      <span class="s-value"><%= number_with_precision(recipe.cached_raw_weight.to_f, precision: 3) %> kg</span>
-    </div>
-
-    <div class="summary-row">
-      <span class="s-label">Poids final</span>
-      <span class="s-value"><%= number_with_precision(recipe.cached_total_weight.to_f, precision: 3) %> kg</span>
-    </div>
-
-    <div class="summary-row">
-      <span class="s-label">Coût/kg</span>
-      <% if recipe.cached_cost_per_kg.to_f > 0 %>
-        <span class="s-value"><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %> €/kg</span>
-      <% else %>
-        <span class="badge-warning-sl">0 €/kg</span>
-      <% end %>
-    </div>
-
-    <% if recipe.subrecipe? %>
-      <div class="summary-row">
-        <span class="s-label" style="color: var(--sl-400); font-style: italic;">Sous-recette — coût interne uniquement</span>
+  <% if recipe.subrecipe? %>
+    <section class="price-panel" aria-labelledby="price-title">
+      <div class="stack stack--sm">
+        <h2 id="price-title" class="price-panel__label">Coût de revient</h2>
+        <p class="price-panel__value"><%= eur(cost) %></p>
+        <p class="text-body-sm text-secondary">par kilo après cuisson · sous-recette, coût interne sans prix de vente</p>
       </div>
-    <% else %>
-      <div class="summary-row">
-        <span class="s-label">Coefficient</span>
-        <span class="s-value muted">×<%= number_with_precision(recipe.user.markup_coefficient, precision: 1) %></span>
+      <dl class="price-panel__section">
+        <div class="price-panel__row"><dt>Coût total</dt><dd><%= eur(recipe.cached_total_cost || 0) %></dd></div>
+        <div class="price-panel__row"><dt>Poids avant cuisson</dt><dd><%= weight_label(recipe.cached_raw_weight || 0) %></dd></div>
+        <div class="price-panel__row"><dt>Poids après cuisson</dt><dd><%= weight_label(recipe.cached_total_weight || 0) %></dd></div>
+      </dl>
+    </section>
+  <% else %>
+    <section class="price-panel" aria-labelledby="price-title">
+      <div class="stack stack--sm">
+        <h2 id="price-title" class="price-panel__label">Prix de vente conseillé</h2>
+        <% if cost.positive? %>
+          <p class="price-panel__value"><%= eur(recipe.suggested_selling_price) %></p>
+          <p class="text-body-sm text-secondary">
+            HT par kilo · <span class="num text-medium"><%= eur(recipe.pvc_ttc) %></span> TTC
+          </p>
+        <% else %>
+          <p class="price-panel__value">—</p>
+          <p class="text-body-sm text-secondary">Ajoutez des ingrédients avec un prix : le prix de vente se calcule tout seul.</p>
+        <% end %>
       </div>
 
-      <% if recipe.has_tray? && recipe.tray_size.present? %>
-        <div class="summary-row tray-row">
-          <span class="s-label">Barquette</span>
-          <span class="s-value"><%= recipe.tray_size.name %> — <%= number_to_currency(recipe.tray_size.price, unit: "€", separator: ",", delimiter: " ") %></span>
+      <% if recipe.sold_by_unit? && recipe.unit_reference_weight_kg.present? && recipe.unit_selling_price.present? %>
+        <div class="price-panel__section cluster cluster--between cluster--bottom">
+          <div class="stack stack--xs">
+            <span class="text-body-sm text-secondary">À l’unité · <%= weight_label(recipe.unit_reference_weight_kg) %></span>
+            <span class="price-panel__value price-panel__value--md"><%= eur(recipe.unit_selling_price) %> HT</span>
+            <span class="text-body-sm text-muted">Coût à l’unité : <span class="num"><%= eur(recipe.unit_cost) %></span></span>
+          </div>
+          <span class="text-body-sm text-secondary"><span class="num text-medium"><%= eur(recipe.unit_selling_price_ttc) %></span> TTC</span>
         </div>
       <% end %>
 
-      <div class="summary-row">
-        <span class="s-label">TVA</span>
-        <span class="s-value">
-          <%= form_with model: recipe, method: :patch,
-                data: { controller: "auto-submit", turbo_stream: true },
-                class: "tva-inline-form",
-                style: "display: inline;" do |f| %>
-            <%= f.select :tva_rate,
-                  [["5,5 %", "5.5"], ["10 %", "10"], ["20 %", "20"]],
-                  { selected: format("%g", recipe.tva_rate) },
-                  data: { action: "change->auto-submit#submit" },
-                  style: "border: 1px solid var(--sl-200); border-radius: 4px; padding: 2px 6px; font-size: 13px; background: transparent;" %>
+      <div class="price-panel__section">
+        <p class="price-panel__label">Comment ce prix est calculé</p>
+        <dl class="stack stack--sm">
+          <div class="price-panel__row"><dt>Coût matière après cuisson</dt><dd><%= eur(cost, unit: "kg") %></dd></div>
+          <div class="price-panel__row"><dt>× votre coefficient</dt><dd>× <%= fr_number(coefficient) %></dd></div>
+          <% if recipe.has_tray? && recipe.tray_size %>
+            <div class="price-panel__row"><dt>+ <%= recipe.tray_size.name.downcase %></dt><dd>+ <%= eur(recipe.tray_size.price, unit: "kg") %></dd></div>
           <% end %>
-        </span>
+          <div class="price-panel__row price-panel__row--total"><dt>= Prix de vente HT</dt><dd><%= eur(recipe.suggested_selling_price, unit: "kg") %></dd></div>
+        </dl>
       </div>
+    </section>
 
-      <% if recipe.suggested_selling_price.present? %>
-        <div class="summary-row">
-          <span class="s-label">PVC HT</span>
-          <span class="s-value accent"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %> €/kg</span>
+    <% if margin %>
+      <section class="card card--pad stack stack--md" aria-labelledby="margin-title">
+        <div class="cluster cluster--between cluster--baseline">
+          <h2 id="margin-title" class="card__title">Marge sur la matière</h2>
+          <span class="text-display-md num"><%= percent(margin[:rate]) %></span>
         </div>
-
-        <div class="summary-row">
-          <span class="s-label">PVC TTC</span>
-          <span class="s-value accent"><%= number_with_precision(recipe.pvc_ttc, precision: 2) %> €/kg</span>
-        </div>
-      <% end %>
-
-      <% if recipe.sold_by_unit? && recipe.unit_reference_weight_kg.present? %>
-        <div class="summary-row">
-          <span class="s-label">Poids unité</span>
-          <span class="s-value"><%= (recipe.unit_reference_weight_kg * 1000).round %> g</span>
-        </div>
-
-        <% if recipe.unit_cost.present? %>
-          <div class="summary-row">
-            <span class="s-label">Coût à l'unité</span>
-            <span class="s-value"><%= number_with_precision(recipe.unit_cost, precision: 2) %> €</span>
-          </div>
-        <% end %>
-
-        <% if recipe.unit_selling_price.present? %>
-          <div class="summary-row">
-            <span class="s-label">PVC unité HT</span>
-            <span class="s-value accent"><%= number_with_precision(recipe.unit_selling_price, precision: 2) %> €</span>
-          </div>
-
-          <div class="summary-row">
-            <span class="s-label">PVC unité TTC</span>
-            <span class="s-value accent"><%= number_with_precision(recipe.unit_selling_price_ttc, precision: 2) %> €</span>
-          </div>
-        <% end %>
+        <span class="meter" style="--value: <%= margin[:rate].round(1) %>%" aria-hidden="true"><span class="meter__fill"></span></span>
+        <p class="text-body-sm text-secondary">
+          <span class="num text-strong"><%= eur(margin[:per_kg]) %></span> gagnés par kilo vendu, hors barquette.
+          Avec un coefficient de ×<%= fr_number(coefficient) %>, la marge sur la matière est toujours de <%= percent(margin[:rate]) %>.
+        </p>
+      </section>
+    <% elsif cost.positive? && coefficient <= 1 %>
+      <%= notice_box(tone: :warning, css: "notice--top") do %>
+        <strong>Votre coefficient (×<%= fr_number(coefficient) %>) ne couvre pas le coût matière.</strong>
+        Le prix de vente est inférieur ou égal au coût. <%= link_to "Modifier le coefficient", tray_sizes_path %>.
       <% end %>
     <% end %>
-  </div>
+
+    <section class="card card--pad stack stack--md" aria-labelledby="sale-title">
+      <h2 id="sale-title" class="card__title">Vente</h2>
+      <%= form_with model: recipe, method: :patch, class: "stack stack--sm",
+                    data: { controller: "auto-submit", turbo_stream: true } do |f| %>
+        <%= hidden_field_tag :inline, "1", id: nil %>
+        <fieldset class="stack stack--sm">
+          <legend class="field">Taux de TVA</legend>
+          <div class="seg" role="radiogroup" aria-label="Taux de TVA">
+            <% [["5,5 %", "5.5"], ["10 %", "10"], ["20 %", "20"]].each do |label, value| %>
+              <%= f.radio_button :tva_rate, value, class: "seg__radio",
+                                 checked: format("%g", recipe.tva_rate.to_d) == value,
+                                 data: { action: "change->auto-submit#submit" } %>
+              <%= f.label :tva_rate, label, value: value, class: "seg__item" %>
+            <% end %>
+          </div>
+        </fieldset>
+      <% end %>
+      <dl class="kv">
+        <div class="kv__row">
+          <dt>Vendue</dt>
+          <dd><%= recipe.sold_by_unit? && recipe.unit_reference_weight_kg.present? ? "À l’unité · #{weight_label(recipe.unit_reference_weight_kg)}" : "Au kilo" %></dd>
+        </div>
+        <div class="kv__row">
+          <dt>Barquette</dt>
+          <dd>
+            <% if recipe.has_tray? && recipe.tray_size %>
+              <%= recipe.tray_size.name %> · <span class="num"><%= eur(recipe.tray_size.price) %></span>
+            <% elsif recipe.has_tray? %>
+              <span class="text-warning">Taille à choisir</span>
+            <% else %>
+              Aucune
+            <% end %>
+          </dd>
+        </div>
+        <div class="kv__row">
+          <dt>Coefficient</dt>
+          <dd><span class="num">×<%= fr_number(coefficient) %></span> · <%= link_to "Réglages", tray_sizes_path %></dd>
+        </div>
+      </dl>
+    </section>
+  <% end %>
+
+  <% if zero_count.positive? %>
+    <%= notice_box(tone: :warning, css: "notice--top") do %>
+      <strong><%= zero_count %> produit<%= "s" if zero_count > 1 %> sans prix.</strong>
+      Le coût de cette recette est sous-estimé tant que ces prix ne sont pas renseignés.
+    <% end %>
+  <% end %>
 </div>

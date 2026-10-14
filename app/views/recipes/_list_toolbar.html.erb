@@ -1,0 +1,55 @@
+<%# Shared by recipes#index and recipes#tarifs.
+    locals: tab ("recipes" | "subrecipes"), view (:costs | :prices) %>
+<% counts = current_user.recipes.group(:sellable_as_component).count %>
+<% recipes_count = counts[false].to_i %>
+<% subrecipes_count = counts[true].to_i %>
+<div class="cluster cluster--between">
+  <div class="cluster">
+    <nav class="seg" aria-label="Type de recette">
+      <%= link_to recipes_path(tab: "recipes"), class: "seg__item",
+                  "aria-current": (tab == "recipes" ? "page" : nil) do %>
+        Recettes <span class="seg__count"><%= recipes_count %></span>
+      <% end %>
+      <%= link_to recipes_path(tab: "subrecipes"), class: "seg__item",
+                  "aria-current": (tab == "subrecipes" ? "page" : nil) do %>
+        Sous-recettes <span class="seg__count"><%= subrecipes_count %></span>
+      <% end %>
+    </nav>
+
+    <% if view == :costs %>
+      <%= form_with url: recipes_path, method: :get, class: "cluster cluster--sm",
+                    data: { controller: "auto-submit" } do |f| %>
+        <%= hidden_field_tag :tab, tab %>
+        <label class="affix affix--prefix" style="--input-width: 280px">
+          <span class="sr-only">Rechercher une recette</span>
+          <span class="affix__prefix"><%= icon("search") %></span>
+          <%= f.search_field :search, value: params[:search], placeholder: "Rechercher une recette…",
+                             class: "input", autocomplete: "off" %>
+        </label>
+        <label>
+          <span class="sr-only">Recettes par page</span>
+          <%= f.select :per_page,
+                       options_for_select([["20 par page", 20], ["50 par page", 50], ["100 par page", 100]],
+                                          params[:per_page]&.to_i || 20),
+                       {}, class: "input", data: { action: "change->auto-submit#submit" } %>
+        </label>
+        <%= f.submit "Rechercher", class: "btn btn--outline", name: nil %>
+        <% if params[:search].present? %>
+          <%= link_to "Effacer", recipes_path(tab: tab), class: "btn btn--ghost" %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if tab == "recipes" %>
+    <div class="cluster cluster--sm">
+      <span class="text-body-sm text-muted">Afficher</span>
+      <nav class="seg" aria-label="Colonnes affichées">
+        <%= link_to "Coûts", recipes_path(tab: "recipes"), class: "seg__item",
+                    "aria-current": (view == :costs ? "page" : nil) %>
+        <%= link_to "Prix de vente", tarifs_recipes_path, class: "seg__item",
+                    "aria-current": (view == :prices ? "page" : nil) %>
+      </nav>
+    </div>
+  <% end %>
+</div>

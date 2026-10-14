@@ -1,141 +1,141 @@
-<%# Page header %>
-<div class="page-header">
-  <h1 class="page-title">Barquettes & Coefficient</h1>
-  <%= link_to new_tray_size_path, class: "btn-accent" do %>
-    <i class="bi bi-plus-lg"></i> Nouvelle barquette
-  <% end %>
+<% content_for :title, "Coefficient et barquettes" %>
+<% coefficient = current_user.markup_coefficient.to_d %>
+<% example_cost = 5 %>
+
+<%= page_header("Coefficient et barquettes",
+                subtitle: "Ces réglages s’appliquent à toutes vos recettes. Chaque changement les recalcule.") %>
+
+<div class="split">
+  <section class="card card--pad stack stack--lg split__main" aria-labelledby="coef-title"
+           data-controller="coefficient" data-coefficient-cost-value="<%= example_cost %>">
+    <div class="stack stack--xs">
+      <h2 id="coef-title" class="card__title">Coefficient de vente</h2>
+      <p class="field__hint">Prix de vente HT = coût matière × coefficient, puis + la barquette s’il y en a une.</p>
+    </div>
+
+    <%= form_with url: settings_path, method: :patch, class: "stack stack--md" do |f| %>
+      <div class="cluster cluster--bottom">
+        <div class="field">
+          <label for="user_markup_coefficient">Coefficient</label>
+          <div class="cluster cluster--sm cluster--nowrap">
+            <button type="button" class="btn btn--outline" aria-label="Baisser le coefficient"
+                    data-action="coefficient#step" data-coefficient-delta-param="-0.1"><%= icon("dash-lg") %></button>
+            <span class="affix affix--prefix" style="--input-width: 130px">
+              <span class="affix__prefix" aria-hidden="true">×</span>
+              <%= number_field_tag "user[markup_coefficient]", format("%.2f", coefficient),
+                                   id: "user_markup_coefficient", step: 0.01, min: 0.1, class: "input input--num",
+                                   data: { coefficient_target: "input", action: "input->coefficient#update" } %>
+            </span>
+            <button type="button" class="btn btn--outline" aria-label="Augmenter le coefficient"
+                    data-action="coefficient#step" data-coefficient-delta-param="0.1"><%= icon("plus-lg") %></button>
+          </div>
+        </div>
+        <div class="stack stack--xs">
+          <span class="text-body-sm text-secondary">Marge sur la matière</span>
+          <span class="text-display-md num" data-coefficient-target="margin" aria-live="polite">
+            <%= coefficient > 1 ? percent((1 - 1 / coefficient) * 100) : "aucune" %>
+          </span>
+        </div>
+      </div>
+
+      <div class="price-panel">
+        <span class="text-body-sm text-secondary">Exemple : une recette qui coûte <%= eur(example_cost) %> le kilo</span>
+        <span class="text-medium">
+          serait vendue <span class="num text-brand text-strong" data-coefficient-target="example"><%= eur(example_cost * coefficient) %></span> HT le kilo, hors barquette.
+        </span>
+      </div>
+
+      <dl class="kv">
+        <div class="kv__row"><dt class="num">×2,00</dt><dd class="text-secondary">50 % de marge</dd></div>
+        <div class="kv__row"><dt class="num">×2,50</dt><dd class="text-secondary">60 % de marge</dd></div>
+        <div class="kv__row"><dt class="num">×3,00</dt><dd class="text-secondary">67 % de marge</dd></div>
+      </dl>
+
+      <div class="cluster cluster--end">
+        <%= f.button type: "submit", class: "btn btn--primary" do %>Enregistrer le coefficient<% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <section id="seuil" class="card card--pad stack stack--md split__aside" aria-labelledby="threshold-title">
+    <div class="stack stack--xs">
+      <h2 id="threshold-title" class="card__title">Seuil d’alerte des prix</h2>
+      <p class="field__hint">Un produit devient « instable » quand ses prix d’achat varient plus que ce seuil (coefficient de variation).</p>
+    </div>
+    <%= form_with url: settings_path, method: :patch, class: "stack stack--md" do |f| %>
+      <div class="field">
+        <label for="user_price_variability_threshold">Seuil</label>
+        <span class="affix" style="--input-width: 160px">
+          <%= number_field_tag "user[price_variability_threshold]", current_user.price_variability_threshold,
+                               id: "user_price_variability_threshold", step: 1, min: 0, max: 100, class: "input input--num" %>
+          <span class="affix__suffix" aria-hidden="true">%</span>
+        </span>
+        <span class="field__hint">Par défaut : 10 %.</span>
+      </div>
+      <p class="text-body-sm text-secondary"><%= link_to "Voir les produits aux prix instables", standard_deviations_path %></p>
+      <div class="cluster cluster--end">
+        <%= f.button type: "submit", class: "btn btn--outline" do %>Enregistrer le seuil<% end %>
+      </div>
+    <% end %>
+  </section>
 </div>
 
-<div style="padding: 24px;">
-
-  <%# Coefficient section %>
-  <div class="section-card">
-    <div class="section-header">
-      <h2 class="section-title"><i class="bi bi-percent"></i> Coefficient multiplicateur</h2>
+<section class="card" aria-labelledby="trays-title">
+  <div class="card__header">
+    <div class="card__heading">
+      <h2 id="trays-title" class="card__title">Barquettes</h2>
+      <p class="card__subtitle">Leur prix s’ajoute au prix de vente des recettes vendues en barquette.</p>
     </div>
-    <div class="coeff-grid" style="padding: 20px;">
-      <%# Formula card %>
-      <div style="background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 6px; padding: 20px; text-align: center;">
-        <span class="form-label-xs">Formule prix conseillé</span>
-        <div style="font-weight: 600; font-size: 14px; color: var(--sl-900); margin: 12px 0;">(Coût/kg × coeff) + barquette</div>
-        <div style="border-top: 1px solid var(--sl-200); padding-top: 12px; margin-top: 12px;">
-          <span style="font-size: 11px; color: var(--sl-400);">Exemple avec 5,00 €/kg :</span>
-          <br>
-          <span class="mono" style="color: var(--cc-success); font-size: 16px; font-weight: 600;">
-            <%= number_with_precision(5.0 * current_user.markup_coefficient, precision: 2) %> €/kg
-          </span>
-          <br>
-          <span style="font-size: 11px; color: var(--sl-400);">(hors barquette)</span>
-        </div>
+    <%= form_with model: TraySize.new, url: tray_sizes_path, class: "cluster cluster--sm cluster--bottom" do |f| %>
+      <div class="field">
+        <%= f.label :name, "Nom", for: "new_tray_name" %>
+        <%= f.text_field :name, id: "new_tray_name", class: "input", placeholder: "Barquette 750 g", required: true,
+                         style: "--input-width: 220px" %>
       </div>
-
-      <%# Coefficient form %>
-      <div>
-        <p style="font-size: 12px; color: var(--sl-600); margin-bottom: 16px;">
-          Ce coefficient est appliqué au coût/kg matière pour
-          obtenir le prix de vente conseillé. La barquette est ajoutée après application du coefficient.
-        </p>
-        <%= form_with url: settings_path, method: :patch do |f| %>
-          <label class="form-label-xs">Coefficient actuel</label>
-          <div class="coeff-input-group">
-            <span class="mono" style="color: var(--sl-400); font-size: 16px;">×</span>
-            <%= number_field_tag 'user[markup_coefficient]', current_user.markup_coefficient,
-                step: 0.1, min: 0.1, class: 'form-control form-control-sm mono', style: 'font-size: 16px; font-weight: 600; max-width: 100px;' %>
-            <%= f.submit 'Enregistrer', class: 'btn-slate' %>
-          </div>
-          <span style="font-size: 10px; color: var(--sl-400); margin-top: 4px; display: block;">Minimum : 0.1 · Défaut : 1.0</span>
-        <% end %>
+      <div class="field">
+        <%= f.label :price, "Prix", for: "new_tray_price" %>
+        <span class="affix" style="--input-width: 120px">
+          <%= f.number_field :price, id: "new_tray_price", class: "input input--num", min: 0, step: 0.01, placeholder: "0,26",
+                             required: true %>
+          <span class="affix__suffix" aria-hidden="true">€</span>
+        </span>
       </div>
-    </div>
+      <%= f.button type: "submit", class: "btn btn--primary" do %><%= icon("plus-lg") %> Ajouter<% end %>
+    <% end %>
   </div>
 
-  <%# Variability threshold section %>
-  <div class="section-card">
-    <div class="section-header">
-      <h2 class="section-title"><i class="bi bi-exclamation-triangle"></i> Seuil de variabilité</h2>
-    </div>
-    <div class="coeff-grid" style="padding: 20px;">
-      <%# Explanation card %>
-      <div style="background: var(--sl-50); border: 1px solid var(--sl-200); border-radius: 6px; padding: 20px; text-align: center;">
-        <span class="form-label-xs">Coefficient de Variation (CV%)</span>
-        <div style="font-weight: 600; font-size: 14px; color: var(--sl-900); margin: 12px 0;">écart-type / moyenne × 100</div>
-        <div style="border-top: 1px solid var(--sl-200); padding-top: 12px; margin-top: 12px;">
-          <span style="font-size: 11px; color: var(--sl-400);">Les produits dont le CV% dépasse ce seuil seront signalés avec un badge rouge.</span>
-        </div>
-      </div>
-
-      <%# Threshold form %>
-      <div>
-        <p style="font-size: 12px; color: var(--sl-600); margin-bottom: 16px;">
-          Ce seuil détermine à partir de quel coefficient de variation (CV%)
-          un produit est considéré comme ayant une forte variabilité de prix.
-        </p>
-        <%= form_with url: settings_path, method: :patch do |f| %>
-          <label class="form-label-xs">Seuil actuel</label>
-          <div class="coeff-input-group">
-            <span class="mono" style="color: var(--sl-400); font-size: 16px;">%</span>
-            <%= number_field_tag 'user[price_variability_threshold]', current_user.price_variability_threshold,
-                step: 1, min: 0, max: 100, class: 'form-control form-control-sm mono', style: 'font-size: 16px; font-weight: 600; max-width: 100px;' %>
-            <%= f.submit 'Enregistrer', class: 'btn-slate' %>
-          </div>
-          <span style="font-size: 10px; color: var(--sl-400); margin-top: 4px; display: block;">Défaut : 10%</span>
-        <% end %>
-      </div>
-    </div>
-  </div>
-
-  <%# Tray sizes table %>
-  <div class="section-card">
-    <div class="section-header">
-      <h2 class="section-title"><i class="bi bi-archive"></i> Barquettes plastique</h2>
-      <span class="mono" style="color: var(--sl-400);"><%= @tray_sizes.size %> barquette<%= 's' if @tray_sizes.size > 1 %></span>
-    </div>
-
-    <% if @tray_sizes.empty? %>
-      <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucune barquette pour le moment.</p>
-    <% else %>
-      <div class="table-responsive">
-      <table class="data-table">
+  <% if @tray_sizes.empty? %>
+    <%= empty_state("Aucune barquette pour le moment",
+                    "Ajoutez vos formats de barquette ci-dessus pour les associer à vos recettes.") %>
+  <% else %>
+    <div class="table-wrap">
+      <table class="table" style="--table-min: 640px">
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Prix</th>
-            <th>Recettes associées</th>
-            <th></th>
+            <th scope="col">Barquette</th>
+            <th scope="col" class="num">Prix</th>
+            <th scope="col">Utilisée dans</th>
+            <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
         <tbody>
           <% @tray_sizes.each do |tray_size| %>
+            <% count = tray_size.recipes_count %>
             <tr>
-              <td style="font-weight: 500; color: var(--sl-900);"><%= tray_size.name %></td>
-              <td><span class="mono"><%= number_with_precision(tray_size.price, precision: 2) %> €</span></td>
-              <td><span class="mono" style="color: var(--sl-500);"><%= tray_size.recipes_count %></span></td>
-              <td>
-                <div class="row-actions">
-                  <%= link_to edit_tray_size_path(tray_size), class: "action-btn", title: "Modifier" do %>
-                    <i class="bi bi-pencil"></i>
-                  <% end %>
-                  <% if tray_size.recipes_count > 0 %>
-                    <%= button_to tray_size_path(tray_size), method: :delete,
-                          data: { turbo_confirm: "Cette barquette est utilisée dans #{tray_size.recipes_count} recette(s). Les recettes concernées perdront leur barquette. Continuer ?" },
-                          class: "action-btn danger", title: "Supprimer" do %>
-                      <i class="bi bi-trash"></i>
-                    <% end %>
-                  <% else %>
-                    <%= button_to tray_size_path(tray_size), method: :delete,
-                          data: { turbo_confirm: "Supprimer la barquette « #{tray_size.name} » ?" },
-                          class: "action-btn danger", title: "Supprimer" do %>
-                      <i class="bi bi-trash"></i>
-                    <% end %>
-                  <% end %>
-                </div>
+              <td class="text-medium"><%= tray_size.name %></td>
+              <td class="num"><%= eur(tray_size.price) %></td>
+              <td class="text-secondary"><%= count.positive? ? pluralize(count, "recette") : "Aucune recette" %></td>
+              <td class="table__actions">
+                <span class="row-actions">
+                  <%= link_to "Modifier", edit_tray_size_path(tray_size), class: "btn btn--outline btn--sm" %>
+                  <%= button_to "Supprimer", tray_size_path(tray_size), method: :delete, class: "btn btn--danger btn--sm",
+                                form: { data: { turbo_confirm: count.positive? ? "Cette barquette est utilisée dans #{count} recette(s). Les recettes concernées perdront leur barquette. Continuer ?" : "Supprimer la barquette « #{tray_size.name} » ?" } } %>
+                </span>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-      </div>
-    <% end %>
-  </div>
-
-</div>
+    </div>
+  <% end %>
+</section>

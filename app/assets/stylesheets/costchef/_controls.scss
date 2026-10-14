@@ -1,0 +1,379 @@
+// Controls: buttons, icon buttons, form fields, switch, segmented control.
+
+// ── Buttons ──────────────────────────────────────────────────
+// Variants: --primary (one per view), --outline (default), --ghost (link-like),
+// --danger (destructive, outlined). Sizes: default (44px touch target), --sm.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  font: 500 14px/1 var(--font-body);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+
+  .bi { font-size: 16px; line-height: 1; }
+
+  &:hover { color: var(--foreground); }
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+
+  &:hover {
+    background: var(--primary-hover);
+    color: var(--primary-foreground);
+  }
+}
+
+.btn--outline {
+  border-color: var(--border-strong);
+
+  &:hover { background: var(--accent); }
+}
+
+.btn--ghost {
+  padding: 0 10px;
+  background: transparent;
+  color: var(--brand-text);
+
+  &:hover {
+    background: var(--secondary);
+    color: var(--brand-text);
+  }
+}
+
+.btn--danger {
+  border-color: var(--border-strong);
+  color: var(--destructive-text);
+
+  &:hover {
+    background: var(--accent);
+    color: var(--destructive-text);
+  }
+}
+
+.btn--sm {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  font-size: 13.5px;
+}
+
+.btn--block { width: 100%; }
+
+// Rails `button_to` wraps the button in a form: keep it inline.
+form.button_to { display: inline-flex; margin: 0; }
+
+// Icon-only button: always give it an aria-label.
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  cursor: pointer;
+
+  .bi { font-size: 17px; line-height: 1; }
+
+  &:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  &--sm { width: 36px; height: 36px; }
+  &--danger:hover { color: var(--destructive-text); }
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+// ── Fields ───────────────────────────────────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font: 500 13px/1.2 var(--font-body);
+  color: var(--foreground-secondary);
+}
+
+.field__optional { font-weight: 400; color: var(--muted-foreground); }
+.field__hint { font: 400 13px/1.45 var(--font-body); color: var(--muted-foreground); }
+.field__error { font: 500 13px/1.45 var(--font-body); color: var(--destructive-text); }
+
+.input {
+  width: var(--input-width, 100%);
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  font: 400 14.5px/1.2 var(--font-body);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+
+  &::placeholder { color: var(--subtle-foreground); }
+
+  &:hover { border-color: var(--border-strong); }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+
+  &[aria-invalid="true"],
+  .field_with_errors & { border-color: var(--destructive); }
+
+  &--num {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  &--compact {
+    height: 38px;
+    padding: 0 10px;
+  }
+}
+
+select.input {
+  appearance: none;
+  padding-right: 36px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+textarea.input {
+  height: auto;
+  min-height: 104px;
+  padding: var(--space-3);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+// Rails wraps invalid fields in a div: keep the layout intact.
+.field_with_errors { display: contents; }
+
+// Input with a unit or icon inside (€, %, g, search glass).
+.affix {
+  position: relative;
+  display: block;
+  width: var(--input-width, auto);
+  max-width: 100%;
+  min-width: 0;
+
+  .input { padding-right: 34px; }
+}
+
+.affix__suffix,
+.affix__prefix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  font: 400 14.5px/1 var(--font-body);
+  pointer-events: none;
+}
+
+.affix__suffix { right: var(--space-3); }
+.affix__prefix { left: var(--space-3); }
+
+.affix--prefix .input { padding-left: 38px; padding-right: var(--space-3); }
+.affix--prefix.affix--suffix .input { padding-right: 44px; }
+
+.kbd {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font: 500 11.5px/1.3 var(--font-mono);
+  pointer-events: none;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+
+  > .field { flex: 1 1 200px; }
+  > .field--xs { flex: 0 0 96px; }
+  > .field--sm { flex: 0 0 120px; }
+  > .field--md { flex: 0 0 180px; }
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 22px var(--space-6);
+  border-top: 1px solid var(--border);
+
+  &:first-child { border-top: 0; }
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+// Checkbox and radio: native control, brand accent.
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  font: 500 14.5px/1.3 var(--font-body);
+  color: var(--foreground);
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--primary);
+  }
+}
+
+// Switch: a real checkbox styled as a toggle (role="switch").
+.switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  cursor: pointer;
+}
+
+.switch-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font: 500 15px/1.35 var(--font-body);
+  color: var(--foreground);
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 28px;
+  margin: 0;
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  appearance: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--background);
+    box-shadow: var(--material-raised-shadow);
+    transition: left var(--duration-fast) var(--ease-standard);
+  }
+
+  &:checked { background: var(--primary); }
+  &:checked::after { left: 22px; }
+  &--success:checked { background: var(--success); }
+}
+
+// ── Segmented control (filters, tabs-in-place) ──────────────
+// Items are <a aria-current="page"> or <button aria-pressed="true">.
+.seg {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--muted);
+}
+
+.seg__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground-secondary);
+  font: 500 13.5px/1 var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover { color: var(--foreground); }
+
+  &[aria-current="page"],
+  &[aria-current="true"],
+  &[aria-pressed="true"],
+  input:checked + & {
+    background: var(--surface-raised);
+    color: var(--foreground);
+    box-shadow: var(--material-raised-shadow);
+  }
+}
+
+.seg__count {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+// Radio-backed segmented control (TVA, unit): hide the radio, style the label.
+.seg__radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+
+  &:focus-visible + .seg__item {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}

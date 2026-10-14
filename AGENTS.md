@@ -3,7 +3,7 @@
 Ruby on Rails SaaS for catering businesses: calculates recipe material costs (replaces Excel).
 **Multi-tenant: every user owns and sees only their own data.**
 
-**Stack:** Rails 7.1.6 · Ruby 3.3.5 · PostgreSQL · Bootstrap 5 · Stimulus/Turbo (Hotwire)
+**Stack:** Rails 7.1.6 · Ruby 3.3.5 · PostgreSQL · SCSS design system (Bureau Core tokens) · Stimulus/Turbo (Hotwire)
 
 ## Commands
 ```bash
@@ -12,7 +12,7 @@ bin/setup                 # set up environment
 bin/rails db:prepare      # create + migrate
 bin/rails db:migrate      # run migrations
 bin/rails db:seed         # load seed data
-bundle exec rspec         # test suite (593 specs)
+bundle exec rspec         # test suite (~840 specs)
 rubocop -a                # lint + auto-fix
 yarn build:css            # one-off CSS build
 bin/rails console         # console
@@ -37,7 +37,9 @@ Seed users (all `password123`): `admin@costchef.fr`, `tom.grenie@gmail.com` (adm
   every calculation and the recalculation cascade.
 - **Controllers** — thin; `authenticate_user!` + `ensure_subscription!` + Pagy pagination;
   Turbo Streams for dynamic updates.
-- **Frontend** — ERB + Bootstrap 5, Stimulus controllers, custom design system.
+- **Frontend** — ERB + Stimulus + Turbo on a token design system: `app/assets/stylesheets/costchef/`
+  (tokens in `_tokens.scss`, Bureau Core names), helpers in `app/helpers/ui_helper.rb` /
+  `format_helper.rb`. No Bootstrap. Full reference: `docs/design-system.md`.
 
 ## Code rules
 - Max 10 lines per method — decompose into private sub-methods.
@@ -100,8 +102,21 @@ Unique index `[user_id, name]` on Product.
 - Strict CSP (fonts from Google, icons bundled locally). `ensure_subscription!` gate in
   `ApplicationController`; `/admin` behind `require_admin!`.
 
+## Design system — rules for new UI
+- 🚫 **No raw colour, no inline style** in views or components: values come from
+  `costchef/_tokens.scss` (`var(--…)`); a view may only pass a CSS custom property
+  (`style="--value: 60%"`). `spec/design/design_system_guard_spec.rb` enforces it.
+- Compose existing components (`page_header`, `.card`, `.table`, `.btn--*`, `chip`,
+  `notice_box`, `empty_state`); add a missing one to the right `costchef/*.scss` file.
+- Money, weights and percentages go through `eur`, `weight_label`, `percent`, `fr_number`
+  (French formatting). One `.btn--primary` per view, one `.price-panel` per screen.
+- Show/hide with the `hidden` attribute (Stimulus), never a utility class.
+- Turbo Stream targets (`components_<id>`, `summary_<id>`, `cooking_loss_form_<id>`,
+  `cost_breakdown_<id>`, `component_form_<id>`, `purchases_<id>`) must stay the outermost
+  element of the partial that replaces them.
+
 ## Testing
-593 specs, run with `bundle exec rspec`. Conventions:
+Run with `bundle exec rspec` (about 840 specs). Conventions:
 - Request specs: `sign_in user`, `before(:each)` only (no `before(:all)`).
 - Use `let!` for the invitation in POST specs asserting `change(User, :count)` (the invitation
   factory creates an admin user).
@@ -110,5 +125,6 @@ Unique index `[user_id, name]` on Product.
   `spec/deployment/pre_deploy_spec.rb` (secrets/gitignore/schema/CSP/Docker checks).
 
 ## Key dependencies
-Backend: Devise, Pagy, Rack::Attack, caxlsx (Excel). Frontend: Turbo/Stimulus, cssbundling,
-Bootstrap 5. Test: RSpec, FactoryBot, Shoulda-Matchers, Capybara.
+Backend: Devise, Pagy, Rack::Attack, caxlsx (Excel), rails-i18n + devise-i18n (the app runs in French:
+`default_locale :fr`, app names in `config/locales/fr.yml`, French plurals in `config/initializers/inflections.rb`).
+Frontend: Turbo/Stimulus, cssbundling (Dart Sass), Bootstrap Icons. Test: RSpec, FactoryBot, Shoulda-Matchers, Capybara.

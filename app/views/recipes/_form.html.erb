@@ -1,104 +1,164 @@
-<%= form_with model: recipe, class: "needs-validation" do |f| %>
-  <%= hidden_field_tag :back, params[:back] if params[:back].present? %>
+<%# Recipe form (new and edit). unit_reference_weight_kg is entered in grams;
+    RecipesController#recipe_params converts it to kg. %>
+<% tva = recipe.tva_rate.present? ? format("%g", recipe.tva_rate.to_d) : "5.5" %>
+<%# Use the saved type: a failed switch to sub-recipe must keep the tray and
+    unit-sale fields so the user can fix the error. %>
+<% as_sub = recipe.persisted? ? recipe.sellable_as_component_in_database : recipe.subrecipe? %>
+<% error_for = ->(attr) { recipe.errors[attr].first } %>
+<div class="split">
+  <%= form_with model: recipe, class: "card split__main" do |f| %>
+    <%= hidden_field_tag :back, params[:back] if params[:back].present? %>
 
-  <% if recipe.errors.any? %>
-    <div class="alert alert-danger mb-3">
-      <h6 class="alert-heading"><%= pluralize(recipe.errors.count, "erreur") %> :</h6>
-      <ul class="mb-0">
-        <% recipe.errors.full_messages.each do |msg| %>
-          <li><%= msg %></li>
+    <% if recipe.errors.any? %>
+      <div class="form-section">
+        <%= notice_box(tone: :danger, css: "notice--top") do %>
+          <strong>La recette n’a pas pu être enregistrée (<%= pluralize(recipe.errors.count, "erreur") %>).</strong>
+          <ul class="notice__list">
+            <% recipe.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
         <% end %>
-      </ul>
-    </div>
-  <% end %>
+      </div>
+    <% end %>
 
-  <%# Badge type en édition %>
-  <% if recipe.persisted? %>
-    <div class="mb-3">
-      <% if recipe.subrecipe? %>
-        <span class="badge bg-info">Sous-recette</span>
-      <% else %>
-        <span class="badge bg-success">Recette</span>
+    <div class="form-section">
+      <div class="cluster cluster--between">
+        <h2 class="card__title">Informations</h2>
+        <% if recipe.persisted? %>
+          <%= as_sub ? chip("Sous-recette", tone: :brand) : chip("Recette finale") %>
+        <% end %>
+      </div>
+      <div class="field">
+        <%= f.label :name, as_sub ? "Nom de la sous-recette" : "Nom de la recette" %>
+        <%= f.text_field :name, class: "input", required: true, autofocus: recipe.new_record?,
+                         placeholder: as_sub ? "Purée maison" : "Parmentier de canard barquette",
+                         "aria-invalid": recipe.errors[:name].any? || nil %>
+        <% if recipe.errors[:name].any? %><span class="field__error"><%= recipe.errors[:name].first %></span><% end %>
+      </div>
+      <div class="field" data-controller="char-counter" data-char-counter-max-value="2000">
+        <%= f.label :description do %>Description <span class="field__optional">(facultatif)</span><% end %>
+        <%= f.text_area :description, class: "input", rows: 4, maxlength: 2000,
+                        placeholder: "Étapes, allergènes, conseils de dressage…",
+                        data: { char_counter_target: "input", action: "input->char-counter#update" } %>
+        <span class="field__hint text-right"><span class="num" data-char-counter-target="count"><%= fr_number(recipe.description.to_s.length, precision: 0) %></span> / 2 000 caractères</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="card__title">Cuisson</h2>
+      <div class="cluster cluster--bottom">
+        <div class="field">
+          <%= f.label :cooking_loss_percentage, "Perte à la cuisson" %>
+          <span class="affix" style="--input-width: 160px">
+            <%= f.number_field :cooking_loss_percentage, class: "input input--num", min: 0, max: 100, step: 0.1,
+                               placeholder: "0", "aria-invalid": recipe.errors[:cooking_loss_percentage].any? || nil %>
+            <span class="affix__suffix" aria-hidden="true">%</span>
+          </span>
+        </div>
+        <p class="field__hint grow">L’eau perdue en cuisant. 12,7 kg crus qui donnent 11,7 kg cuits, c’est 8 % de perte.</p>
+      </div>
+      <% if error_for.call(:cooking_loss_percentage) %><span class="field__error"><%= error_for.call(:cooking_loss_percentage) %></span><% end %>
+    </div>
+
+    <% if as_sub %>
+      <%# Sub-recipe: keep the flag, no tray and no unit sale. %>
+      <%= f.hidden_field :sellable_as_component, value: "1" %>
+    <% else %>
+      <div class="form-section">
+        <h2 class="card__title">Utilisation</h2>
+        <label class="switch-row">
+          <span class="switch-row__text">
+            Utilisable comme sous-recette
+            <span class="field__hint">Une sauce, une pâte ou une purée qu’on retrouve dans d’autres recettes.</span>
+          </span>
+          <%= f.check_box :sellable_as_component, class: "switch", role: "switch" %>
+        </label>
+      </div>
+
+      <div class="form-section">
+        <h2 class="card__title">Vente</h2>
+        <div class="stack stack--md" data-controller="unit-toggle">
+          <label class="switch-row">
+            <span class="switch-row__text">
+              Vendue à l’unité
+              <span class="field__hint">Le prix sera aussi donné par portion.</span>
+            </span>
+            <%= f.check_box :sold_by_unit, class: "switch", role: "switch",
+                            data: { unit_toggle_target: "checkbox", action: "change->unit-toggle#toggle" } %>
+          </label>
+          <div class="field" data-unit-toggle-target="wrapper" <%= "hidden" unless recipe.sold_by_unit? %>>
+            <%= f.label :unit_reference_weight_kg, "Poids d’une unité" %>
+            <span class="affix" style="--input-width: 200px">
+              <%= f.number_field :unit_reference_weight_kg, class: "input input--num", min: 1, step: 1, placeholder: "350",
+                                 value: recipe.unit_reference_weight_kg ? (recipe.unit_reference_weight_kg * 1000).round : nil,
+                                 "aria-invalid": recipe.errors[:unit_reference_weight_kg].any? || nil %>
+              <span class="affix__suffix" aria-hidden="true">g</span>
+            </span>
+            <% if error_for.call(:unit_reference_weight_kg) %><span class="field__error"><%= error_for.call(:unit_reference_weight_kg) %></span><% end %>
+          </div>
+        </div>
+
+        <div class="stack stack--md" data-controller="tray-toggle">
+          <label class="switch-row">
+            <span class="switch-row__text">
+              Vendue en barquette
+              <span class="field__hint">Le prix de la barquette s’ajoute au prix de vente.</span>
+            </span>
+            <%= f.check_box :has_tray, class: "switch", role: "switch",
+                            data: { tray_toggle_target: "checkbox", action: "change->tray-toggle#toggle" } %>
+          </label>
+          <div class="field" data-tray-toggle-target="wrapper" <%= "hidden" unless recipe.has_tray? %>>
+            <%= f.label :tray_size_id, "Taille de barquette" %>
+            <% if @tray_sizes.any? %>
+              <%= f.select :tray_size_id, @tray_sizes.map { |t| ["#{t.name} · #{eur(t.price)}", t.id] },
+                           { include_blank: "Choisir une barquette" }, class: "input", style: "--input-width: 320px",
+                           "aria-invalid": (recipe.errors[:tray_size_id].any? || recipe.errors[:tray_size].any? || nil) %>
+              <% if (msg = error_for.call(:tray_size_id) || error_for.call(:tray_size) || error_for.call(:has_tray)) %>
+                <span class="field__error"><%= msg %></span>
+              <% end %>
+            <% else %>
+              <span class="field__hint">Aucune barquette pour l’instant. <%= link_to "Créer une barquette", tray_sizes_path %>.</span>
+            <% end %>
+          </div>
+        </div>
+
+        <fieldset class="stack stack--sm">
+          <legend class="text-heading-sm">Taux de TVA</legend>
+          <div class="seg" role="radiogroup" aria-label="Taux de TVA">
+            <% [["5,5 %", "5.5"], ["10 %", "10"], ["20 %", "20"]].each do |label, value| %>
+              <%= f.radio_button :tva_rate, value, class: "seg__radio", checked: tva == value %>
+              <%= f.label :tva_rate, label, value: value, class: "seg__item" %>
+            <% end %>
+          </div>
+        </fieldset>
+      </div>
+    <% end %>
+
+    <div class="form-actions">
+      <%= link_to "Annuler", recipe.persisted? ? recipe_path(recipe, back: params[:back]) : recipes_path(tab: as_sub ? "subrecipes" : "recipes"),
+                  class: "btn btn--outline" %>
+      <%= f.button type: "submit", class: "btn btn--primary" do %>
+        <%= recipe.persisted? ? "Enregistrer" : "Créer et ajouter les ingrédients" %>
       <% end %>
     </div>
   <% end %>
 
-  <div class="mb-3">
-    <%= f.label :name, "Nom", class: "form-label" %>
-    <%= f.text_field :name, class: "form-control", required: true %>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :description, "Description", class: "form-label" %>
-    <%= f.text_area :description,
-          class: "form-control",
-          rows: 3,
-          maxlength: 2000,
-          data: { controller: "char-counter", char_counter_max_value: 2000 } %>
-    <div class="form-text text-end">
-      <span data-char-counter-target="count"><%= recipe.description&.length || 0 %></span> / 2000
-    </div>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :cooking_loss_percentage, "Perte cuisson", class: "form-label" %>
-    <div class="input-group">
-      <%= f.number_field :cooking_loss_percentage,
-            class: "form-control",
-            min: 0, max: 100, step: 0.1 %>
-      <span class="input-group-text">%</span>
-    </div>
-  </div>
-
-  <% if recipe.subrecipe? %>
-    <%# Sous-recette : champ caché pour conserver la valeur, pas de barquette %>
-    <%= f.hidden_field :sellable_as_component, value: "1" %>
-  <% else %>
-    <div class="mb-3 form-check">
-      <%= f.check_box :sellable_as_component, class: "form-check-input" %>
-      <%= f.label :sellable_as_component, "Utilisable comme sous-recette", class: "form-check-label" %>
-    </div>
-
-    <div class="mb-3" data-controller="tray-toggle">
-      <div class="form-check">
-        <%= f.check_box :has_tray,
-              class: "form-check-input",
-              data: { tray_toggle_target: "checkbox", action: "change->tray-toggle#toggle" } %>
-        <%= f.label :has_tray, "Barquette plastique", class: "form-check-label" %>
-      </div>
-
-      <div class="mt-2" data-tray-toggle-target="wrapper" style="display: none;">
-        <%= f.label :tray_size_id, "Taille de barquette", class: "form-label" %>
-        <%= f.collection_select :tray_size_id,
-              @tray_sizes, :id, :name,
-              { include_blank: "-- Choisir --", prompt: false },
-              { class: "form-select" } %>
-      </div>
-    </div>
-
-    <div class="mb-3" data-controller="unit-toggle">
-      <div class="form-check">
-        <%= f.check_box :sold_by_unit,
-              class: "form-check-input",
-              data: { unit_toggle_target: "checkbox", action: "change->unit-toggle#toggle" } %>
-        <%= f.label :sold_by_unit, "Vendue à l'unité", class: "form-check-label" %>
-      </div>
-
-      <div class="mt-2" data-unit-toggle-target="wrapper" style="display: none;">
-        <%= f.label :unit_reference_weight_kg, "Poids de référence (g)", class: "form-label" %>
-        <div class="input-group">
-          <%= f.number_field :unit_reference_weight_kg,
-                class: "form-control",
-                min: 1, step: 1,
-                value: recipe.unit_reference_weight_kg ? (recipe.unit_reference_weight_kg * 1000).round : nil %>
-          <span class="input-group-text">g</span>
-        </div>
-      </div>
-    </div>
-  <% end %>
-
-  <div class="d-flex gap-2">
-    <%= f.submit recipe.persisted? ? "Mettre à jour" : "Créer", class: "btn btn-primary" %>
-    <%= link_to "Annuler", recipe.persisted? ? recipe_path(recipe, back: params[:back]) : recipes_path, class: "btn btn-outline-secondary" %>
-  </div>
-<% end %>
+  <aside class="split__aside">
+    <section class="card card--pad stack stack--md" aria-labelledby="how-title">
+      <h2 id="how-title" class="card__title">Comment ça marche</h2>
+      <ol class="steps">
+        <li class="steps__item">
+          <span class="steps__num <%= "steps__num--current" if recipe.new_record? %>" aria-hidden="true">1</span>
+          <span><span class="text-strong">Les informations</span><br><span class="field__hint">Nom, cuisson et mode de vente.</span></span>
+        </li>
+        <li class="steps__item">
+          <span class="steps__num" aria-hidden="true">2</span>
+          <span><span class="text-strong">Les ingrédients</span><br><span class="field__hint">Produits et sous-recettes, avec leurs quantités.</span></span>
+        </li>
+        <li class="steps__item">
+          <span class="steps__num" aria-hidden="true">3</span>
+          <span><span class="text-strong">Le prix de vente</span><br><span class="field__hint">Calculé tout seul avec votre coefficient ×<%= fr_number(current_user.markup_coefficient) %>.</span></span>
+        </li>
+      </ol>
+    </section>
+  </aside>
+</div>

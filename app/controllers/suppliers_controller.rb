@@ -8,13 +8,11 @@ class SuppliersController < ApplicationController
     base = base.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
     @pagy, @active_suppliers   = pagy(base.where(active: true).order(:name))
     @inactive_suppliers        = base.where(active: false).order(:name)
+    @stats = Suppliers::PurchaseStats.call(@active_suppliers.map(&:id) + @inactive_suppliers.map(&:id))
   end
 
   def show
-    @purchases_by_product = @supplier.product_purchases
-      .includes(:product)
-      .order("products.name ASC, product_purchases.created_at ASC")
-      .group_by(&:product)
+    @comparison = Suppliers::PriceComparison.call(@supplier)
   end
 
   def new
@@ -45,10 +43,10 @@ class SuppliersController < ApplicationController
     if params[:force] == "true"
       impacted_product_ids = @supplier.force_destroy!
       Recalculations::Dispatcher.supplier_force_destroyed(impacted_product_ids)
-      redirect_to suppliers_path, notice: "Fournisseur et ses conditionnements supprimés."
+      redirect_to suppliers_path, notice: "Fournisseur et ses achats supprimés."
     elsif @supplier.has_purchases?
       redirect_to suppliers_path,
-                  alert: "Ce fournisseur possède #{@supplier.product_purchases.count} conditionnement(s). " \
+                  alert: "Ce fournisseur possède #{@supplier.product_purchases.count} achat(s). " \
                          "Désactivez-le ou utilisez la suppression forcée."
     else
       @supplier.destroy!

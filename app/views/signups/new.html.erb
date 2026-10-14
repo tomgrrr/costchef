@@ -1,37 +1,37 @@
-<div class="row mt-5">
-  <div class="col-md-4 offset-md-4">
-    <div class="card">
-      <div class="card-header text-center">
-        <h4>Créer votre compte</h4>
-      </div>
-      <div class="card-body">
-        <% if @user.errors.any? %>
-          <div class="alert alert-danger">
-            <% @user.errors.full_messages.each do |message| %>
-              <p class="mb-0"><%= message %></p>
-            <% end %>
-          </div>
-        <% end %>
+<% content_for :title, "Créer votre compte" %>
+<%= render layout: "shared/auth", locals: { title: "Créer votre compte", subtitle: "Vous avez été invité sur CostChef. Choisissez votre mot de passe pour commencer." } do %>
+  <% if @user.errors.any? %>
+    <%= notice_box(tone: :danger, css: "notice--top") do %>
+      <ul class="notice__list">
+        <% @user.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+      </ul>
+    <% end %>
+  <% end %>
 
-        <%= form_for @user, url: signup_path(token: @invitation.token), method: :post do |f| %>
-          <div class="mb-3">
-            <%= f.label :email, "Email", class: "form-label" %>
-            <input type="email" class="form-control" value="<%= @invitation.email %>" readonly disabled>
-          </div>
-
-          <div class="mb-3">
-            <%= f.label :password, "Mot de passe", class: "form-label" %>
-            <%= f.password_field :password, autocomplete: "new-password", class: "form-control" %>
-          </div>
-
-          <div class="mb-3">
-            <%= f.label :password_confirmation, "Confirmation du mot de passe", class: "form-label" %>
-            <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
-          </div>
-
-          <%= f.submit "Créer mon compte", class: "btn btn-success w-100" %>
-        <% end %>
-      </div>
+  <%= form_for @user, url: signup_path(token: @invitation.token), method: :post, html: { class: "stack stack--md" } do |f| %>
+    <div class="field">
+      <label for="invitation_email">Adresse email</label>
+      <input type="email" id="invitation_email" class="input" value="<%= @invitation.email %>" readonly disabled>
+      <span class="field__hint">L’adresse de votre invitation.</span>
     </div>
-  </div>
-</div>
+
+    <div class="field">
+      <%= f.label :password, "Mot de passe" %>
+      <%= f.password_field :password, autocomplete: "new-password", class: "input", autofocus: true,
+                           "aria-invalid": @user.errors[:password].any? || nil %>
+      <span class="field__hint">8 caractères minimum.</span>
+    </div>
+
+    <div class="field">
+      <%= f.label :password_confirmation, "Confirmez le mot de passe" %>
+      <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "input",
+                           "aria-invalid": @user.errors[:password_confirmation].any? || nil %>
+    </div>
+
+    <%= f.button type: "submit", class: "btn btn--primary btn--block" do %>Créer mon compte<% end %>
+  <% end %>
+
+  <% if @invitation.expires_at %>
+    <p class="text-body-sm text-muted">Invitation valable jusqu’au <%= short_date(@invitation.expires_at.to_date) %>.</p>
+  <% end %>
+<% end %>

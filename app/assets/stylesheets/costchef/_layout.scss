@@ -1,0 +1,345 @@
+// Layout: app shell (sidebar + page), page header, breadcrumb,
+// and the layout primitives views compose with (stack, cluster, split, grid).
+
+// ── App shell ────────────────────────────────────────────────
+.app {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+}
+
+.app__main {
+  flex: 999 1 560px;
+  min-width: 0;
+  padding: var(--space-8) var(--gutter-outer) var(--space-16);
+}
+
+.app__content {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.app__content--narrow { max-width: 1040px; }
+
+// ── Sidebar ──────────────────────────────────────────────────
+.sidebar {
+  flex: 1 1 var(--sidebar-width);
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) 14px;
+  border-right: 1px solid var(--border);
+  background: var(--background);
+}
+
+.sidebar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--foreground);
+  text-decoration: none;
+  font: 500 20px/1 var(--font-display);
+  letter-spacing: -0.02em;
+
+  &:hover { color: var(--foreground); }
+}
+
+// The caterer's logo (Maison Lassalas) next to the CostChef name.
+.sidebar__logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+
+  &--lg { width: 56px; height: 56px; }
+}
+
+.sidebar .sidebar__toggle { display: none; }
+
+.sidebar__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__label {
+  padding: 14px 10px 6px;
+  font: 500 12px/1 var(--font-body);
+  color: var(--muted-foreground);
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  color: var(--foreground-secondary);
+  text-decoration: none;
+  font: 500 14px/1 var(--font-body);
+  transition: background var(--duration-fast) var(--ease-standard);
+
+  .bi { font-size: 17px; line-height: 1; }
+
+  &:hover {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+
+  &[aria-current="page"] {
+    background: var(--card);
+    color: var(--foreground);
+    box-shadow: inset 0 0 0 1px var(--border);
+
+    .bi { color: var(--brand); }
+  }
+}
+
+.sidebar__count {
+  margin-left: auto;
+  font: 500 12px/1 var(--font-body);
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-3) var(--space-1) 0 10px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar__account-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font: 500 14px/1.2 var(--font-body);
+  overflow-wrap: anywhere;
+}
+
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font: 600 11px/1 var(--font-body);
+  text-transform: uppercase;
+
+  &--lg { width: 34px; height: 34px; font-size: 12px; }
+  &--muted { background: var(--muted); color: var(--foreground-secondary); }
+}
+
+// Phone and small tablet: the sidebar becomes a top bar with a menu button.
+@media (max-width: 899px) {
+  .sidebar {
+    flex-basis: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: var(--space-3) var(--gutter-outer);
+  }
+
+  .sidebar .sidebar__toggle { display: inline-grid; }
+  .sidebar__body { display: none; }
+  .sidebar[data-open] .sidebar__body { display: flex; }
+}
+
+// ── Page header ──────────────────────────────────────────────
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.page-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 760px;
+}
+
+.page-header__subtitle { color: var(--muted-foreground); }
+
+.page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13.5px;
+  color: var(--muted-foreground);
+
+  a {
+    color: var(--foreground-secondary);
+    text-decoration: none;
+
+    &:hover { color: var(--brand-text); }
+  }
+}
+
+// ── Layout primitives ────────────────────────────────────────
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+
+  &--xs { gap: var(--space-1); }
+  &--sm { gap: var(--space-2); }
+  &--md { gap: var(--space-3); }
+  &--lg { gap: var(--space-6); }
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+
+  &--sm { gap: var(--space-2); }
+  &--xs { gap: 6px; }
+  &--between { justify-content: space-between; }
+  &--end { justify-content: flex-end; }
+  &--baseline { align-items: baseline; }
+  &--top { align-items: flex-start; }
+  &--bottom { align-items: flex-end; }
+  &--nowrap { flex-wrap: nowrap; }
+}
+
+// Main column + aside that stacks under 940px of available width.
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.split__main {
+  flex: 999 1 600px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.split__aside {
+  flex: 1 1 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-min, 220px), 1fr));
+  gap: var(--space-3);
+  align-items: start;
+
+  &--stretch { align-items: stretch; }
+}
+
+.grow { flex: 1 1 auto; min-width: 0; }
+.push-right { margin-left: auto; }
+
+// ── Auth layout (signed out) ─────────────────────────────────
+.auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.auth__aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: var(--space-10) var(--gutter-outer);
+  background: var(--secondary);
+}
+
+.auth__tagline {
+  max-width: 460px;
+  font: 400 clamp(28px, 3.4vw, 40px)/1.12 var(--font-display);
+  letter-spacing: -0.025em;
+  color: var(--secondary-foreground);
+}
+
+.auth__plates {
+  display: flex;
+  gap: var(--space-3);
+
+  span {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 10px color-mix(in oklab, var(--background) 55%, transparent);
+  }
+
+  span:nth-child(1) { background: var(--decor-4); }
+  span:nth-child(2) { background: var(--decor-1); }
+  span:nth-child(3) { background: var(--decor-2); }
+  span:nth-child(4) { background: var(--decor-3); }
+}
+
+.auth__main {
+  display: grid;
+  place-items: center;
+  padding: var(--space-10) var(--gutter-outer);
+}
+
+.auth__panel {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.auth-flash:not(:empty) {
+  max-width: 560px;
+  margin: var(--space-4) auto 0;
+  padding: 0 var(--gutter-outer);
+}

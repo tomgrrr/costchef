@@ -1,0 +1,8 @@
+<%= form_with(model: [:admin, invitation], class: "cluster cluster--sm cluster--bottom") do |f| %>
+  <div class="field grow">
+    <%= f.label :email, "Adresse email du traiteur" %>
+    <%= f.email_field :email, class: "input", placeholder: "chef@traiteur.fr", autofocus: local_assigns[:autofocus],
+                      required: true, "aria-invalid": invitation.errors[:email].any? || nil %>
+  </div>
+  <%= f.button type: "submit", class: "btn btn--primary" do %><%= icon("send") %> Envoyer l’invitation<% end %>
+<% end %>

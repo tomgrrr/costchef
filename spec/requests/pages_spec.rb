@@ -134,7 +134,7 @@ RSpec.describe 'Pages', type: :request do
           expect(response.content_type).to include('text/csv')
 
           lines = response.body.lines
-          expect(lines[0]).to include('Nom;Poids unitaire (g);Poids unitaire (kg);Prix moyen')
+          expect(lines[0]).to include('Nom;Poids d’une pièce (g);Poids d’une pièce (kg);Prix moyen pondéré')
           expect(lines[1]).to include('Oeuf;60;0.06;3.5')
         end
       end

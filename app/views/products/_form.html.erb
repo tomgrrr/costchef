@@ -1,85 +1,101 @@
-<% if product.errors.any? %>
-  <div class="alert alert-danger">
-    <% product.errors.full_messages.each do |msg| %>
-      <div><i class="bi bi-x-circle"></i> <%= msg %></div>
+<%# Product form (new and edit). The piece weight is entered in grams:
+    input_unit=g makes ProductsController convert it to kg. %>
+<% unit = product.base_unit.presence || "kg" %>
+<div class="split">
+  <%= form_with model: product, class: "card split__main", data: { controller: "unit-select" } do |f| %>
+    <%= hidden_field_tag :input_unit, "g" %>
+
+    <% if product.errors.any? %>
+      <div class="form-section">
+        <%= notice_box(tone: :danger, css: "notice--top") do %>
+          <strong>Le produit n’a pas pu être enregistré.</strong>
+          <ul class="notice__list">
+            <% product.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
+        <% end %>
+      </div>
     <% end %>
-  </div>
-<% end %>
 
-<%= form_with model: product do |f| %>
-  <div data-controller="unit-select">
-
-    <%# Nom %>
-    <div class="mb-3">
-      <%= f.label :name, "Nom du produit", class: "form-label fw-semibold" %>
-      <%= f.text_field :name,
-            class: "form-control #{'is-invalid' if product.errors[:name].any?}",
-            autofocus: true,
-            placeholder: "Ex: Farine T55" %>
-      <% if product.errors[:name].any? %>
-        <div class="invalid-feedback"><%= product.errors[:name].first %></div>
-      <% end %>
-    </div>
-
-    <%# Unité de base %>
-    <div class="mb-3">
-      <%= f.label :base_unit, "Unité de saisie", class: "form-label fw-semibold" %>
-      <%= f.select :base_unit,
-            [["Kilogramme (kg)", "kg"], ["Litre (l)", "l"], ["Pièce", "piece"]],
-            {},
-            class: "form-select",
-            data: { unit_select_target: "unitSelect",
-                    action: "change->unit-select#toggle" } %>
-      <div class="form-text">
-        Unité utilisée lors de la saisie des quantités dans les recettes.
-      </div>
-    </div>
-
-    <%# Produit déshydraté (visible uniquement si kg) %>
-    <div class="mb-3 <%= 'd-none' unless product.base_unit == 'kg' %>" data-unit-select-target="dehydratedField">
-      <div class="form-check">
-        <%= f.check_box :dehydrated,
-              class: "form-check-input",
-              data: { action: "change->unit-select#toggleDehydrated" } %>
-        <%= f.label :dehydrated, "Produit déshydraté", class: "form-check-label fw-semibold" %>
-      </div>
-      <div data-unit-select-target="coefficientField" class="mt-2 <%= 'd-none' unless product.dehydrated? %>">
-        <%= f.label :rehydration_coefficient,
-              "Coefficient de réhydratation",
-              class: "form-label" %>
-        <%= f.number_field :rehydration_coefficient,
-              step: "0.1", min: "1.1",
-              class: "form-control #{'is-invalid' if product.errors[:rehydration_coefficient].any?}",
-              placeholder: "Ex: 2.5",
-              style: "max-width: 200px;" %>
-        <div class="form-text">Multiplie le poids dans les recettes. Ex: 2.5 = le produit prend ×2.5 son poids sec.</div>
-        <% if product.errors[:rehydration_coefficient].any? %>
-          <div class="invalid-feedback"><%= product.errors[:rehydration_coefficient].first %></div>
+    <div class="form-section">
+      <h2 class="card__title">Nom</h2>
+      <div class="field">
+        <%= f.label :name, "Nom du produit" %>
+        <%= f.text_field :name, class: "input", autofocus: true, placeholder: "Farine T55",
+                         "aria-invalid": product.errors[:name].any? || nil %>
+        <% if product.errors[:name].any? %>
+          <span class="field__error"><%= product.errors[:name].first %></span>
+        <% else %>
+          <span class="field__hint">Chaque nom n’existe qu’une fois dans votre bibliothèque.</span>
         <% end %>
       </div>
     </div>
 
-    <%# Poids unitaire (visible uniquement si piece) %>
-    <div class="mb-3" data-unit-select-target="weightField">
-      <%= f.label :unit_weight_kg,
-            "Poids unitaire (kg/pièce)",
-            class: "form-label fw-semibold" %>
-      <%= f.number_field :unit_weight_kg,
-            step: "0.001", min: "0.001",
-            class: "form-control #{'is-invalid' if product.errors[:unit_weight_kg].any?}",
-            placeholder: "Ex: 0.060" %>
-      <div class="form-text">Ex: 0.060 pour un œuf de 60g, 0.250 pour une pomme.</div>
-      <% if product.errors[:unit_weight_kg].any? %>
-        <div class="invalid-feedback">
-          <%= product.errors[:unit_weight_kg].first %>
+    <div class="form-section">
+      <fieldset class="stack stack--sm">
+        <legend class="card__title">Comment vous l’achetez</legend>
+        <div class="seg" role="radiogroup" aria-label="Unité d’achat">
+          <% [["Au kilo", "kg"], ["Au litre", "l"], ["À la pièce", "piece"]].each do |label, value| %>
+            <%= f.radio_button :base_unit, value, class: "seg__radio", checked: unit == value,
+                               data: { action: "change->unit-select#toggle" } %>
+            <%= f.label :base_unit, label, value: value, class: "seg__item" %>
+          <% end %>
         </div>
-      <% end %>
+        <span class="field__hint">L’unité de vos achats. Un litre compte pour un kilo dans les calculs.</span>
+      </fieldset>
+
+      <div class="field" data-unit-select-target="weightField" <%= "hidden" unless unit == "piece" %>>
+        <%= f.label :unit_weight_kg, "Poids d’une pièce" %>
+        <span class="affix" style="--input-width: 200px">
+          <%= f.number_field :unit_weight_kg, step: "0.1", min: "0.1", placeholder: "60",
+                             value: product.unit_weight_kg && grams_value(product.unit_weight_kg),
+                             class: "input input--num", "aria-invalid": product.errors[:unit_weight_kg].any? || nil %>
+          <span class="affix__suffix" aria-hidden="true">g</span>
+        </span>
+        <% if product.errors[:unit_weight_kg].any? %>
+          <span class="field__error"><%= product.errors[:unit_weight_kg].first %></span>
+        <% else %>
+          <span class="field__hint">60 g pour un œuf, 250 g pour une pomme. Sert à convertir vos pièces en kilos.</span>
+        <% end %>
+      </div>
+
+      <div class="stack stack--md" data-unit-select-target="dehydratedField" <%= "hidden" unless unit == "kg" %>>
+        <label class="switch-row">
+          <span class="switch-row__text">
+            Produit déshydraté
+            <span class="field__hint">Morilles, cèpes séchés… Il prend du poids une fois réhydraté.</span>
+          </span>
+          <%= f.check_box :dehydrated, class: "switch", role: "switch",
+                          data: { action: "change->unit-select#toggleDehydrated" } %>
+        </label>
+        <div class="field" data-unit-select-target="coefficientField" <%= "hidden" unless product.dehydrated? %>>
+          <%= f.label :rehydration_coefficient, "Coefficient de réhydratation" %>
+          <span class="affix affix--prefix" style="--input-width: 200px">
+            <span class="affix__prefix" aria-hidden="true">×</span>
+            <%= f.number_field :rehydration_coefficient, step: "0.1", min: "1.1", placeholder: "2,5",
+                               class: "input input--num", "aria-invalid": product.errors[:rehydration_coefficient].any? || nil %>
+          </span>
+          <% if product.errors[:rehydration_coefficient].any? %>
+            <span class="field__error"><%= product.errors[:rehydration_coefficient].first %></span>
+          <% else %>
+            <span class="field__hint">×2,5 : 1 kg sec donne 2,5 kg réhydratés. Le coût reste calculé sur le poids sec.</span>
+          <% end %>
+        </div>
+      </div>
     </div>
 
-  </div><%# fin data-controller %>
+    <div class="form-actions">
+      <%= link_to "Annuler", product.persisted? ? product_path(product) : products_path, class: "btn btn--outline" %>
+      <%= f.button type: "submit", class: "btn btn--primary" do %>
+        <%= product.persisted? ? "Enregistrer" : "Créer le produit" %>
+      <% end %>
+    </div>
+  <% end %>
 
-  <div class="d-flex gap-2 mt-4">
-    <%= f.submit class: "btn btn-primary" %>
-    <%= link_to "Annuler", product.persisted? ? product_path(product) : products_path, class: "btn btn-link text-decoration-none" %>
-  </div>
-<% end %>
+  <aside class="split__aside">
+    <section class="card card--pad stack stack--sm" aria-labelledby="next-title">
+      <h2 id="next-title" class="card__title">Et ensuite</h2>
+      <p class="text-body-sm text-secondary">Sur la fiche du produit, ajoutez vos achats : le fournisseur, la quantité et le prix payé.</p>
+      <p class="text-body-sm text-secondary">CostChef en déduit le prix au kilo, puis met à jour toutes les recettes qui utilisent ce produit.</p>
+    </section>
+  </aside>
+</div>

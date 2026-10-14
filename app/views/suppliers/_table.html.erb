@@ -1,0 +1,53 @@
+<%# Suppliers table. locals: suppliers, stats (from SuppliersController#purchase_stats), active (bool) %>
+<div class="table-wrap">
+  <table class="table" style="--table-min: 820px">
+    <thead>
+      <tr>
+        <th scope="col">Fournisseur</th>
+        <th scope="col" class="num">Produits</th>
+        <th scope="col" class="num">Achats actifs</th>
+        <th scope="col" class="num">Achats au total</th>
+        <th scope="col">Dernier achat</th>
+        <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% suppliers.each do |supplier| %>
+        <% stat = stats[supplier.id] || { total: 0, active: 0, products: 0, last: nil } %>
+        <tr class="<%= "is-off" unless active %>">
+          <td><%= link_to supplier.name, supplier_path(supplier), class: "table__link" %></td>
+          <td class="num"><%= stat[:products] %></td>
+          <td class="num"><%= stat[:active] %></td>
+          <td class="num text-secondary"><%= stat[:total] %></td>
+          <td class="num text-secondary"><%= stat[:last] ? short_date(stat[:last].to_date) : "Aucun achat" %></td>
+          <td class="table__actions">
+            <span class="row-actions">
+              <%= link_to edit_supplier_path(supplier), class: "icon-btn icon-btn--sm", title: "Modifier",
+                                                        "aria-label": "Modifier #{supplier.name}" do %>
+                <%= icon("pencil") %>
+              <% end %>
+              <% if active %>
+                <%= button_to "Désactiver", deactivate_supplier_path(supplier), method: :post, class: "btn btn--outline btn--sm",
+                              form: { data: { turbo_confirm: "Désactiver #{supplier.name} ? Ses achats ne seront plus utilisés dans les prix, et une réactivation ne les rétablira pas automatiquement." } } %>
+                <% if stat[:total].positive? %>
+                  <span class="icon-btn icon-btn--sm" aria-disabled="true"
+                        title="Ce fournisseur a des achats : désactivez-le d’abord"><%= icon("trash", label: "Suppression impossible : ce fournisseur a des achats") %></span>
+                <% else %>
+                  <%= button_to supplier_path(supplier), method: :delete, class: "icon-btn icon-btn--sm icon-btn--danger",
+                                "aria-label": "Supprimer #{supplier.name}", title: "Supprimer",
+                                form: { data: { turbo_confirm: "Supprimer ce fournisseur ?" } } do %>
+                    <%= icon("trash") %>
+                  <% end %>
+                <% end %>
+              <% else %>
+                <%= button_to "Réactiver", activate_supplier_path(supplier), method: :post, class: "btn btn--outline btn--sm" %>
+                <%= button_to "Supprimer", supplier_path(supplier, force: true), method: :delete, class: "btn btn--danger btn--sm",
+                              form: { data: { turbo_confirm: "Supprimer ce fournisseur et tous ses achats définitivement ? Les recettes concernées seront recalculées. Cette action est irréversible." } } %>
+              <% end %>
+            </span>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
