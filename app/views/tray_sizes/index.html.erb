@@ -129,8 +129,8 @@
                 <span class="row-actions">
                   <%= link_to "Modifier", edit_tray_size_path(tray_size), class: "btn btn--outline btn--sm" %>
                   <%= button_to "Supprimer", tray_size_path(tray_size), method: :delete, class: "btn btn--danger btn--sm",
-                                form: { data: { turbo_confirm: "Supprimer la barquette « #{tray_size.name} » ?" +
-                                                                 (count.positive? ? " Elle est utilisée dans #{pluralize(count, 'recette')}, qui perdront leur barquette." : "") } } %>
+                                form: { data: { turbo_confirm: "Supprimer la barquette « #{tray_size.name} » ?",
+                                                confirm_detail: ("Elle est utilisée dans #{pluralize(count, 'recette')}, qui perdront leur barquette." if count.positive?) } } %>
                 </span>
               </td>
             </tr>

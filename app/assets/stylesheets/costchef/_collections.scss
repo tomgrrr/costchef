@@ -233,7 +233,7 @@ nav.pagy {
 
 // ── Dialog (native <dialog>) ─────────────────────────────────
 .dialog {
-  width: min(520px, calc(100vw - 32px));
+  width: min(var(--dialog-width), calc(100vw - var(--space-8)));
   padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -269,7 +269,7 @@ nav.pagy {
 
 // Confirmation dialog: replaces the browser's confirm() (shared/_confirm_dialog).
 .dialog--confirm {
-  width: min(440px, calc(100vw - 32px));
+  width: min(var(--dialog-width-sm), calc(100vw - var(--space-8)));
 
   .dialog__header { padding-bottom: var(--space-4); }
   .dialog__body { padding-top: 0; }
