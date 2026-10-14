@@ -42,9 +42,9 @@ RSpec.describe 'DailySpecials', type: :request do
 
         # meat portion: 20.0 * 0.200 + 5.0 * 0.200 = 5.00
         # fish portion: 30.0 * 0.150 + 5.0 * 0.350 = 6.25
-        expect(response.body).to include('coût portion 400g')
-        expect(response.body).to include('5.00 €')
-        expect(response.body).to include('6.25 €')
+        plates = Nokogiri::HTML(response.body).css('.price-panel').map { |panel| panel.text.squish }
+        expect(plates[0]).to include('coût portion 400 g').and include("Coût matière 5,00 €")
+        expect(plates[1]).to include('coût portion 500 g').and include("Coût matière 6,25 €")
         expect(response.body).to include('Portionnement')
       end
 

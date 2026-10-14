@@ -64,6 +64,17 @@ RSpec.describe 'ProductPurchases', type: :request do
       end
     end
 
+    context 'aucun fournisseur choisi' do
+      it "ré-affiche le formulaire avec l'erreur au lieu de rediriger" do
+        params = valid_params.deep_merge(product_purchase: { supplier_id: '' })
+        expect { post product_purchases_path, params: params, headers: turbo_headers }
+          .not_to change(ProductPurchase, :count)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("purchases_#{product.id}")
+        expect(response.body).to include('L’achat n’a pas été ajouté.')
+      end
+    end
+
     context "supplier_id d'un autre user" do
       let(:other_supplier) { create(:supplier, name: 'Pomona', user: other_user) }
 

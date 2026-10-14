@@ -1,5 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Ingredient picker on the recipe page: searches products and sub-recipes,
+// fills the hidden component_id / component_type fields and enables "Ajouter".
+// The results list is a popover under the search field: it opens on click or
+// typing, closes on Escape, outside click or selection.
 export default class extends Controller {
   static targets = [
     "searchInput",
@@ -25,11 +29,28 @@ export default class extends Controller {
     this.recentItems = [...this.allItems].sort((a, b) => b.id - a.id)
 
     this.renderResults(this.recentItems.slice(0, this.maxRecentValue))
-    this.searchInputTarget.focus()
+    this.outsideClick = (event) => {
+      if (!this.element.contains(event.target)) this.close()
+    }
+    document.addEventListener("click", this.outsideClick)
+  }
+
+  disconnect() {
+    document.removeEventListener("click", this.outsideClick)
+  }
+
+  open() {
+    this.resultsListTarget.hidden = false
+  }
+
+  close() {
+    this.resultsListTarget.hidden = true
   }
 
   search() {
     const query = this.searchInputTarget.value.trim().toLowerCase()
+    this.open()
+    this.dropStaleSelection()
 
     if (query === "") {
       this.renderResults(this.recentItems.slice(0, this.maxRecentValue))
@@ -52,6 +73,7 @@ export default class extends Controller {
     this.componentIdTarget.value = id
     this.componentTypeTarget.value = kind
     this.selectedDisplayTarget.textContent = name
+    this.searchInputTarget.value = name
 
     this.resultsListTarget.querySelectorAll(".search-result-item").forEach(item => {
       item.classList.remove("selected")
@@ -59,6 +81,19 @@ export default class extends Controller {
     el.classList.add("selected")
 
     this.submitBtnTarget.removeAttribute("disabled")
+    this.close()
+  }
+
+  // Typing after a selection means the user wants something else: forget
+  // the previous choice so "Ajouter" can't submit it.
+  dropStaleSelection() {
+    if (!this.componentIdTarget.value) return
+    if (this.searchInputTarget.value === this.selectedDisplayTarget.textContent) return
+
+    this.componentIdTarget.value = ""
+    this.componentTypeTarget.value = ""
+    this.selectedDisplayTarget.textContent = "Aucune sélection"
+    this.submitBtnTarget.setAttribute("disabled", "disabled")
   }
 
   clear() {
@@ -69,31 +104,26 @@ export default class extends Controller {
     this.submitBtnTarget.setAttribute("disabled", "disabled")
     this.renderResults(this.recentItems.slice(0, this.maxRecentValue))
     this.searchInputTarget.focus()
+    this.open()
   }
 
   renderResults(items) {
     const list = this.resultsListTarget
 
     if (items.length === 0) {
-      list.style.display = "block"
-      list.innerHTML = `
-        <div class="search-result-item" style="justify-content: center; color: var(--sl-400); cursor: default;">
-          Aucun résultat
-        </div>`
+      list.innerHTML = `<div class="search-result-item search-result-item--empty">Aucun résultat</div>`
       return
     }
 
-    list.style.display = "block"
     list.innerHTML = items.map(item => `
       <div class="search-result-item"
+           role="option"
            data-action="click->unified-search#select"
            data-id="${item.id}"
            data-name="${this.escapeHtml(item.name)}"
            data-kind="${item.kind}">
         <span>${this.escapeHtml(item.name)}</span>
-        <span class="${item.kind === 'Product' ? 'badge-produit' : 'badge-sous-recette'}">
-          ${item.label}
-        </span>
+        <span class="chip ${item.kind === "Product" ? "" : "chip--brand"}">${item.label}</span>
       </div>`
     ).join("")
   }

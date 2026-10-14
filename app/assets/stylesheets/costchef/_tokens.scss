@@ -1,0 +1,119 @@
+// ============================================================
+// CostChef — design tokens (single source of truth)
+//
+// Names: Bureau Core vocabulary (Pillet-Grenie-Bureau/bureau-design-system,
+// core/vocabulary.json). Values: the CostChef brand, "app" expression
+// (compact type, small radii, quiet motion).
+//
+// Rules (from Bureau Core core/rules.md):
+// - Every colour, font, size, radius, shadow and easing used in a component
+//   or a view comes from a token below. No raw hex/rgb anywhere else.
+// - Text stays on the ladder: foreground › foreground-secondary ›
+//   muted-foreground › subtle-foreground.
+// - `accent` is the neutral hover background; the highlight colour is `brand`.
+// - `decor-1…5` are for illustration only (charts, plates), never text or states.
+// - `destructive` is for errors and destructive actions only.
+//
+// To re-colour the app, change --brand. Every brand tint derives from it.
+// ============================================================
+
+:root {
+  // ── Brand ────────────────────────────────────────────────
+  --brand: #5A2D4F;            // aubergine
+  --brand-foreground: #FFFFFF;
+  --brand-text: color-mix(in oklab, var(--brand) 90%, black);
+
+  // ── Surfaces ─────────────────────────────────────────────
+  --background: #FFFFFF;
+  --card: #F5F6F7;             // gris perle: every panel, table and card
+  --card-foreground: #191A1D;
+  --popover: #FFFFFF;
+  --popover-foreground: #191A1D;
+  --surface-raised: #FFFFFF;   // selected segment, menus
+  --surface-inverse: #191A1D;
+  --surface-inverse-foreground: #FFFFFF;
+  --muted: #EBEDEF;            // chips, tiles, segmented track
+  --accent: #EDEFF1;           // neutral hover
+  --accent-foreground: #191A1D;
+
+  // ── Actions ──────────────────────────────────────────────
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: color-mix(in oklab, var(--brand) 8%, white);   // the price block
+  --secondary-foreground: var(--brand-text);
+
+  // Pending Core vocabulary (no state/tint names in Core v1 yet — see
+  // docs/refonte/questions.md). Derived from the tokens above.
+  --primary-hover: color-mix(in oklab, var(--primary) 86%, black);
+  --secondary-border: color-mix(in oklab, var(--brand) 16%, white);
+  --brand-selection: color-mix(in oklab, var(--brand) 18%, transparent);
+
+  // ── Text ladder ──────────────────────────────────────────
+  --foreground: #191A1D;
+  --foreground-secondary: rgb(25 26 29 / 0.76);
+  --muted-foreground: rgb(25 26 29 / 0.64);   // ≥ 4.5:1 on --card and --muted
+  --subtle-foreground: rgb(25 26 29 / 0.5);   // placeholders and hints only
+
+  // ── Lines ────────────────────────────────────────────────
+  --border: rgb(25 26 29 / 0.09);
+  --border-strong: rgb(25 26 29 / 0.17);
+  --input: rgb(25 26 29 / 0.2);
+  --ring: var(--brand);
+
+  // ── States ───────────────────────────────────────────────
+  --success: #2F7A4D;
+  --success-text: #24603C;
+  --warning: #C08422;
+  --warning-text: #7A5214;
+  --destructive: #B93A2E;
+  --destructive-foreground: #FFFFFF;
+  --destructive-text: #9A2F25;
+
+  // ── Decor (illustration only) ────────────────────────────
+  --decor-1: #EFE3CC;   // farine
+  --decor-2: #D3E2CE;   // sauge
+  --decor-3: #E2D5E3;   // lavande
+  --decor-4: #F2CFC1;   // tomate
+  --decor-5: #F1E0B0;   // safran
+
+  // ── Fonts ────────────────────────────────────────────────
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Hanken Grotesk", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  // ── Space ────────────────────────────────────────────────
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --container-max: 1180px;
+  --gutter-outer: clamp(16px, 3vw, 48px);
+
+  // ── Radius ───────────────────────────────────────────────
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  // ── Materials ────────────────────────────────────────────
+  --material-raised-shadow: 0 1px 2px rgb(25 26 29 / 0.07), 0 2px 6px rgb(25 26 29 / 0.04);
+  --material-overlay-shadow: 0 12px 32px rgb(25 26 29 / 0.14), 0 2px 8px rgb(25 26 29 / 0.08);
+  --material-overlay-backdrop: rgb(25 26 29 / 0.32);
+
+  // ── Motion ───────────────────────────────────────────────
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+
+  // ── Layout ───────────────────────────────────────────────
+  --sidebar-width: 248px;
+  --control-height: 44px;   // touch target, kitchen tablets
+}

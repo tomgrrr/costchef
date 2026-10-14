@@ -1,83 +1,58 @@
+<%# Add-ingredient form. Replaced by Turbo Stream after each add (id must stay). %>
 <% products_json = available_products.map { |p| { id: p.id, name: p.name } }.to_json %>
 <% subrecipes_json = available_subrecipes.map { |r| { id: r.id, name: r.name } }.to_json %>
 
 <div id="component_form_<%= recipe.id %>"
+     class="stack stack--sm"
      data-controller="unified-search"
      data-unified-search-products-value="<%= products_json %>"
      data-unified-search-subrecipes-value="<%= subrecipes_json %>">
 
   <% if component.errors.any? %>
-    <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--cc-danger);">
-      <% component.errors.full_messages.each do |msg| %>
-        <div><i class="bi bi-x-circle"></i> <%= msg %></div>
-      <% end %>
-    </div>
+    <%= notice_box(tone: :danger, css: "notice--top") do %>
+      <ul class="notice__list">
+        <% component.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    <% end %>
   <% end %>
 
-  <%= form_with url: recipe_recipe_components_path(recipe),
-                scope: :recipe_component,
-                data: { turbo_stream: true } do |f| %>
+  <%= form_with url: recipe_recipe_components_path(recipe), scope: :recipe_component,
+                data: { turbo_stream: true }, class: "stack stack--sm" do |f| %>
+    <input type="hidden" name="recipe_component[component_id]" data-unified-search-target="componentId">
+    <input type="hidden" name="recipe_component[component_type]" data-unified-search-target="componentType">
 
-    <%# Search input + selected display %>
-    <div class="add-component-form">
-      <div style="margin-bottom: 12px;">
-        <label class="form-label-xs">Recherche</label>
-        <input type="text"
-               class="form-control form-control-sm"
-               style="font-size: 12px;"
-               autocomplete="off"
-               placeholder="Rechercher un produit ou une sous-recette..."
-               data-unified-search-target="searchInput"
-               data-action="input->unified-search#search">
-        <div class="d-flex align-items-center justify-content-between" style="margin-top: 4px;">
-          <span class="selected-display" data-unified-search-target="selectedDisplay">
-            Aucune sélection
-          </span>
-          <button type="button" class="action-btn"
-                  data-action="click->unified-search#clear"
-                  title="Effacer">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
+    <div class="form-row">
+      <div class="field picker">
+        <label for="component_search_<%= recipe.id %>">Ajouter un ingrédient</label>
+        <span class="affix affix--prefix">
+          <span class="affix__prefix"><%= icon("search") %></span>
+          <input type="text" id="component_search_<%= recipe.id %>" class="input" autocomplete="off"
+                 <%= "autofocus" if local_assigns[:autofocus] %>
+                 placeholder="Produit ou sous-recette : crème, purée…"
+                 data-unified-search-target="searchInput"
+                 data-action="input->unified-search#search click->unified-search#open keydown.esc->unified-search#close">
+        </span>
+        <div class="search-results" hidden data-unified-search-target="resultsList"></div>
       </div>
-
-      <%# Search results dropdown %>
-      <div class="search-results-dropdown" style="display: none; margin-bottom: 12px;"
-           data-unified-search-target="resultsList">
+      <div class="field field--sm">
+        <%= f.label :quantity, "Quantité" %>
+        <%= f.number_field :quantity, step: "0.001", min: "0.001", placeholder: "0,250",
+                           class: "input input--num" %>
       </div>
-
-      <%# Hidden fields %>
-      <input type="hidden"
-             name="recipe_component[component_id]"
-             data-unified-search-target="componentId">
-      <input type="hidden"
-             name="recipe_component[component_type]"
-             data-unified-search-target="componentType">
-
-      <%# Quantity + Unit + Submit %>
-      <div class="form-row">
-        <div>
-          <label class="form-label-xs">Quantité</label>
-          <%= f.number_field :quantity,
-                step: "0.001", min: "0.001",
-                placeholder: "0.000",
-                class: "form-control form-control-sm",
-                style: "font-size: 12px;" %>
-        </div>
-        <div>
-          <label class="form-label-xs">Unité</label>
-          <%= f.select :quantity_unit,
-                Units::VALID_UNITS,
-                { include_blank: false },
-                { class: "form-select form-select-sm", style: "font-size: 12px;" } %>
-        </div>
-        <div style="align-self: end;">
-          <%= f.submit "Ajouter",
-                class: "btn-slate",
-                disabled: true,
-                data: { unified_search_target: "submitBtn" } %>
-        </div>
+      <div class="field field--xs">
+        <%= f.label :quantity_unit, "Unité" %>
+        <%= f.select :quantity_unit, unit_options(Units::VALID_UNITS), { include_blank: false }, class: "input" %>
       </div>
+      <%= f.button type: "submit", class: "btn btn--primary", disabled: true,
+                   data: { unified_search_target: "submitBtn" } do %>
+        <%= icon("plus-lg") %> Ajouter
+      <% end %>
     </div>
+
+    <p class="picker-selection">
+      <span>Sélection :</span>
+      <strong data-unified-search-target="selectedDisplay">Aucune sélection</strong>
+      <button type="button" class="btn btn--ghost btn--sm" data-action="click->unified-search#clear">Effacer</button>
+    </p>
   <% end %>
 </div>

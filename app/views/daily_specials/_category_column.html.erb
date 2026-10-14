@@ -1,105 +1,107 @@
-<div class="col-md-4">
-<div class="section-card">
-  <div class="section-header">
-    <h2 class="section-title"><i class="bi <%= icon %>"></i> <%= title %></h2>
-    <span class="mono" style="color: var(--cc-success); font-size: 11px; font-weight: 600;">
-      Moy: <%= number_with_precision(average, precision: 2) %> €/kg
-    </span>
+<%# One category (meat, fish, side): average, add form, entries with inline edit.
+    locals: category, entries, average, decor, title, placeholder %>
+<section class="card card--pad stack stack--md" aria-labelledby="ds-<%= category %>-title">
+  <div class="cluster cluster--between cluster--top">
+    <div class="cluster cluster--sm">
+      <span class="decor-dot <%= decor %>" aria-hidden="true"></span>
+      <h2 id="ds-<%= category %>-title" class="card__title"><%= title %></h2>
+    </div>
+    <div class="stack stack--xs text-right">
+      <span class="text-display-md num"><%= eur(average) %></span>
+      <span class="text-body-sm text-muted">moyenne au kilo · <%= pluralize(entries.size, "plat") %></span>
+    </div>
   </div>
 
-  <div class="ds-add-form">
-    <%= form_with url: daily_specials_path, method: :post, scope: :daily_special do |f| %>
-      <%= f.hidden_field :category, value: category %>
-      <label class="form-label-xs">Date</label>
-      <%= f.date_field :entry_date, value: Date.today, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
-      <label class="form-label-xs">Nom</label>
-      <%= f.text_field :item_name, placeholder: placeholder, class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
-      <label class="form-label-xs">Coût (€/kg)</label>
-      <%= f.number_field :cost_per_kg, step: 0.01, min: 0.01, placeholder: '€/kg', class: 'form-control form-control-sm', style: 'font-size: 12px;' %>
-      <%= f.submit 'Ajouter', class: 'btn-slate', style: 'width: 100%; margin-top: 4px;' %>
-    <% end %>
-  </div>
+  <%= form_with url: daily_specials_path, method: :post, scope: :daily_special, class: "stack stack--sm" do |f| %>
+    <%= f.hidden_field :category, value: category, id: nil %>
+    <div class="form-row">
+      <div class="field">
+        <%= f.label :item_name, "Plat", for: "ds_#{category}_name" %>
+        <%= f.text_field :item_name, id: "ds_#{category}_name", placeholder: placeholder, class: "input", required: true %>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <%= f.label :entry_date, "Date", for: "ds_#{category}_date" %>
+        <%= f.date_field :entry_date, id: "ds_#{category}_date", value: Date.today, class: "input" %>
+      </div>
+      <div class="field field--sm">
+        <%= f.label :cost_per_kg, "Coût / kg", for: "ds_#{category}_cost" %>
+        <span class="affix">
+          <%= f.number_field :cost_per_kg, id: "ds_#{category}_cost", step: 0.01, min: 0.01, placeholder: "0,00",
+                             class: "input input--num", required: true %>
+          <span class="affix__suffix" aria-hidden="true">€</span>
+        </span>
+      </div>
+      <%= f.button type: "submit", class: "btn btn--primary", "aria-label": "Ajouter à #{title.downcase}" do %><%= icon("plus-lg") %><% end %>
+    </div>
+  <% end %>
 
-  <div class="table-responsive">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Nom</th>
-        <th>€/kg</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if entries.any? %>
-        <% entries.each do |entry| %>
-          <tr id="display-<%= category %>-<%= entry.id %>">
-            <td><span class="mono"><%= l(entry.entry_date, format: :short) %></span></td>
-            <td><%= entry.item_name %></td>
-            <td><span class="mono"><%= number_with_precision(entry.cost_per_kg, precision: 2) %></span></td>
-            <td>
-              <div class="row-actions" style="opacity: 1;">
-                <span data-controller="toggle-edit"
-                      data-action="click->toggle-edit#toggle"
-                      data-toggle-edit-target-param="display-<%= category %>-<%= entry.id %>">
-                  <%= link_to "#",
-                        class: "action-btn",
-                        title: "Modifier",
-                        data: { controller: "toggle-edit",
-                                action: "click->toggle-edit#toggle",
-                                toggle_edit_target_param: "edit-#{category}-#{entry.id}" } do %>
-                    <i class="bi bi-pencil"></i>
+  <% if entries.any? %>
+    <div class="table-wrap">
+      <table class="table table--compact" style="--table-min: 280px">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Plat</th>
+            <th scope="col" class="num">€ / kg</th>
+            <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% entries.each do |entry| %>
+            <% rows = "display-#{category}-#{entry.id},edit-#{category}-#{entry.id}" %>
+            <tr id="display-<%= category %>-<%= entry.id %>">
+              <td class="num text-secondary"><%= short_date(entry.entry_date) %></td>
+              <td><%= entry.item_name %></td>
+              <td class="num text-medium"><%= eur(entry.cost_per_kg) %></td>
+              <td class="table__actions">
+                <span class="row-actions">
+                  <button type="button" class="icon-btn icon-btn--sm" title="Modifier" aria-label="Modifier <%= entry.item_name %>"
+                          data-controller="toggle-edit" data-action="click->toggle-edit#toggle"
+                          data-toggle-edit-target-param="<%= rows %>"><%= icon("pencil") %></button>
+                  <%= button_to daily_special_path(entry), method: :delete, class: "icon-btn icon-btn--sm icon-btn--danger",
+                                "aria-label": "Supprimer #{entry.item_name}", title: "Supprimer",
+                                form: { data: { turbo_confirm: "Supprimer cette entrée ?" } } do %>
+                    <%= icon("trash") %>
                   <% end %>
                 </span>
-                <%= button_to daily_special_path(entry), method: :delete,
-                      data: { turbo_confirm: 'Supprimer cette entrée ?' },
-                      class: 'action-btn danger', title: 'Supprimer' do %>
-                  <i class="bi bi-trash"></i>
+              </td>
+            </tr>
+            <tr id="edit-<%= category %>-<%= entry.id %>" class="table__edit" hidden>
+              <td colspan="4">
+                <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special, class: "stack stack--sm" do |f| %>
+                  <%= f.hidden_field :category, value: entry.category, id: nil %>
+                  <div class="form-row">
+                    <div class="field">
+                      <%= f.label :item_name, "Plat", for: "ds_edit_#{entry.id}_name" %>
+                      <%= f.text_field :item_name, id: "ds_edit_#{entry.id}_name", value: entry.item_name, class: "input" %>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="field">
+                      <%= f.label :entry_date, "Date", for: "ds_edit_#{entry.id}_date" %>
+                      <%= f.date_field :entry_date, id: "ds_edit_#{entry.id}_date", value: entry.entry_date, class: "input" %>
+                    </div>
+                    <div class="field field--sm">
+                      <%= f.label :cost_per_kg, "Coût / kg", for: "ds_edit_#{entry.id}_cost" %>
+                      <%= f.number_field :cost_per_kg, id: "ds_edit_#{entry.id}_cost", value: entry.cost_per_kg,
+                                         step: 0.01, min: 0.01, class: "input input--num" %>
+                    </div>
+                  </div>
+                  <div class="cluster cluster--sm cluster--end">
+                    <button type="button" class="btn btn--outline btn--sm" data-controller="toggle-edit"
+                            data-action="click->toggle-edit#toggle" data-toggle-edit-target-param="<%= rows %>">Annuler</button>
+                    <%= f.button type: "submit", class: "btn btn--primary btn--sm" do %>Enregistrer<% end %>
+                  </div>
                 <% end %>
-              </div>
-            </td>
-          </tr>
-          <tr id="edit-<%= category %>-<%= entry.id %>" class="d-none">
-            <td colspan="4" style="background: var(--sl-50); padding: 10px 16px;">
-              <%= form_with url: daily_special_path(entry), method: :patch, scope: :daily_special do |f| %>
-                <%= f.hidden_field :category, value: entry.category %>
-                <div style="display: flex; gap: 6px; align-items: end; flex-wrap: wrap;">
-                  <div style="flex: 1;">
-                    <label class="form-label-xs">Date</label>
-                    <%= f.date_field :entry_date, value: entry.entry_date, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
-                  </div>
-                  <div style="flex: 1;">
-                    <label class="form-label-xs">Nom</label>
-                    <%= f.text_field :item_name, value: entry.item_name, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
-                  </div>
-                  <div style="flex: 1;">
-                    <label class="form-label-xs">€/kg</label>
-                    <%= f.number_field :cost_per_kg, value: entry.cost_per_kg, step: 0.01, min: 0.01, class: 'form-control form-control-sm', style: 'font-size: 11px;' %>
-                  </div>
-                  <%= f.submit 'OK', class: 'btn-slate' %>
-                  <span data-controller="toggle-edit"
-                        data-action="click->toggle-edit#toggle"
-                        data-toggle-edit-target-param="display-<%= category %>-<%= entry.id %>">
-                    <%= link_to "#",
-                          class: "btn-outline-slate",
-                          title: "Annuler",
-                          style: "padding: 7px 10px;",
-                          data: { controller: "toggle-edit",
-                                  action: "click->toggle-edit#toggle",
-                                  toggle_edit_target_param: "edit-#{category}-#{entry.id}" } do %>
-                      <i class="bi bi-x-lg"></i>
-                    <% end %>
-                  </span>
-                </div>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      <% else %>
-        <tr><td colspan="4" style="text-align: center; color: var(--sl-400); font-size: 12px; padding: 12px;">Aucune entrée.</td></tr>
-      <% end %>
-    </tbody>
-  </table>
-  </div>
-</div>
-</div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-body-sm text-muted">Aucun plat noté pour l’instant.</p>
+  <% end %>
+</section>

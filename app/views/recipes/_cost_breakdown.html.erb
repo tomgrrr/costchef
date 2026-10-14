@@ -1,0 +1,30 @@
+<%# Replaced by Turbo Stream after a component change (id must stay). %>
+<% lines = Recipes::CostBreakdown.call(recipe) %>
+<section id="cost_breakdown_<%= recipe.id %>" class="card card--pad stack stack--md" aria-labelledby="breakdown-title">
+  <div class="stack stack--xs">
+    <h2 id="breakdown-title" class="card__title">Où part le coût</h2>
+    <% if lines.any? %>
+      <p class="text-body-sm text-muted">
+        <%= lines.first[:name] %> pèse <%= percent(lines.first[:share]) %> du coût de la recette<%= " : c’est le prix à surveiller" if lines.first[:share] >= 40 %>.
+      </p>
+    <% else %>
+      <p class="text-body-sm text-muted">La répartition apparaît dès qu’un ingrédient a un prix.</p>
+    <% end %>
+  </div>
+  <% if lines.any? %>
+    <div class="share-bar" role="img"
+         aria-label="Répartition du coût : <%= lines.map { |l| "#{l[:name]} #{percent(l[:share])}" }.join(", ") %>">
+      <% lines.each_with_index do |line, index| %>
+        <span class="share-bar__part decor-<%= [4, 1, 2, 5, 3][index % 5] %>" style="--share: <%= line[:share] %>"></span>
+      <% end %>
+    </div>
+    <ul class="legend">
+      <% lines.each_with_index do |line, index| %>
+        <li class="legend__item">
+          <span class="legend__swatch decor-<%= [4, 1, 2, 5, 3][index % 5] %>" aria-hidden="true"></span>
+          <%= line[:name] %> <span class="text-muted num"><%= line[:share] < 1 ? "< 1 %" : percent(line[:share]) %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

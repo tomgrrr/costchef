@@ -1,0 +1,11 @@
+// CostChef — stylesheet entry.
+// Order: icons → tokens (the only place values live) → base → layout → components.
+// Token names follow Bureau Core; see app/assets/stylesheets/costchef/_tokens.scss
+// and docs/design-system.md.
+@import 'bootstrap-icons/font/bootstrap-icons';
+@import 'costchef/tokens';
+@import 'costchef/base';
+@import 'costchef/layout';
+@import 'costchef/controls';
+@import 'costchef/surfaces';
+@import 'costchef/collections';

@@ -1,88 +1,81 @@
-<%# Page header %>
-<div class="page-header">
-  <div class="d-flex align-items-center gap-3">
-    <h1 class="page-title">Tarifs</h1>
-    <span class="mono" style="color: var(--sl-400);"><%= @recipes.size %> recette<%= 's' if @recipes.size > 1 %></span>
-  </div>
-  <div class="d-flex align-items-center gap-2">
-    <%= link_to tarifs_recipes_path(format: :csv), class: "btn-outline-slate" do %>
-      <i class="bi bi-file-earmark-spreadsheet"></i> CSV
-    <% end %>
-    <%= link_to export_tarifs_excel_recipes_path, class: "btn-outline-slate" do %>
-      <i class="bi bi-file-earmark-spreadsheet"></i> Excel
-    <% end %>
-    <%= link_to recipes_path, class: "btn-outline-slate" do %>
-      <i class="bi bi-arrow-left"></i> Recettes
-    <% end %>
-  </div>
-</div>
+<% content_for :title, "Prix de vente" %>
 
-<%# Tab bar %>
-<div class="tab-bar">
-  <%= link_to "Recettes", recipes_path(tab: "recipes"), class: "tab-item" %>
-  <%= link_to "Sous-recettes", recipes_path(tab: "subrecipes"), class: "tab-item" %>
-  <%= link_to "Tarifs", tarifs_recipes_path, class: "tab-item active" %>
-</div>
+<%= page_header("Recettes",
+                subtitle: "Prix de vente calculés avec votre coefficient ×#{fr_number(current_user.markup_coefficient)}") do %>
+  <details class="menu" data-controller="menu">
+    <summary class="btn btn--outline"><%= icon("download") %> Exporter les prix <%= icon("chevron-down") %></summary>
+    <div class="menu__panel">
+      <%= link_to tarifs_recipes_path(format: :csv), class: "menu__item" do %>
+        <%= icon("filetype-csv") %> <span>CSV <span class="menu__hint">Prix HT, TTC et à l’unité</span></span>
+      <% end %>
+      <%= link_to export_tarifs_excel_recipes_path, class: "menu__item" do %>
+        <%= icon("file-earmark-excel") %> <span>Excel <span class="menu__hint">Prix HT, TTC et à l’unité</span></span>
+      <% end %>
+    </div>
+  </details>
+  <%= link_to new_recipe_path, class: "btn btn--primary" do %>
+    <%= icon("plus-lg") %> Nouvelle recette
+  <% end %>
+<% end %>
 
-<%# Tarifs table %>
-<div style="padding: 24px;">
+<%= render "recipes/list_toolbar", tab: "recipes", view: :prices %>
+
+<div class="card">
   <% if @recipes.any? %>
-    <div class="section-card">
-      <div class="table-responsive">
-      <table class="data-table">
+    <div class="table-wrap">
+      <table class="table">
         <thead>
           <tr>
-            <th>Recette</th>
-            <th>Coût de revient (€/kg)</th>
-            <th>Prix de vente conseillé (€/kg)</th>
-            <th>Prix unité</th>
-            <th>Barquette</th>
+            <th scope="col">Recette</th>
+            <th scope="col" class="num">Coût / kg</th>
+            <th scope="col" class="num">Prix HT / kg</th>
+            <th scope="col" class="num">Prix TTC / kg</th>
+            <th scope="col" class="num">Prix à l’unité HT</th>
+            <th scope="col">Barquette</th>
           </tr>
         </thead>
         <tbody>
           <% @recipes.each do |recipe| %>
             <tr>
-              <td>
-                <%= link_to recipe.name, recipe_path(recipe, back: request.fullpath), style: "color: var(--sl-900); font-weight: 500; text-decoration: none;" %>
-              </td>
-              <td>
-                <% if recipe.cached_cost_per_kg.present? && recipe.cached_cost_per_kg > 0 %>
-                  <span class="mono"><%= number_with_precision(recipe.cached_cost_per_kg, precision: 2) %>&nbsp;€/kg</span>
+              <td><%= link_to recipe.name, recipe_path(recipe, back: request.fullpath), class: "table__link" %></td>
+              <td class="num">
+                <% if recipe.cached_cost_per_kg.to_d.positive? %>
+                  <%= eur(recipe.cached_cost_per_kg) %>
                 <% else %>
-                  <span class="badge-warning-sl">Non calculé</span>
+                  <%= chip("Non calculé", tone: :warning) %>
                 <% end %>
               </td>
-              <td>
-                <% if recipe.suggested_selling_price %>
-                  <span class="mono" style="color: var(--cc-success); font-weight: 600;"><%= number_with_precision(recipe.suggested_selling_price, precision: 2) %>&nbsp;€/kg</span>
-                <% else %>
-                  <span class="mono" style="color: var(--sl-400);">&mdash;</span>
-                <% end %>
-              </td>
-              <td>
+              <td class="num text-strong"><%= eur(recipe.suggested_selling_price) %></td>
+              <td class="num"><%= eur(recipe.pvc_ttc) %></td>
+              <td class="num">
                 <% if recipe.unit_selling_price.present? %>
-                  <span class="mono" style="color: var(--cc-success); font-weight: 600;"><%= number_with_precision(recipe.unit_selling_price, precision: 2) %>&nbsp;€</span>
-                  <span class="mono" style="color: var(--sl-400); font-size: 11px;">(<%= (recipe.unit_reference_weight_kg * 1000).round %>&nbsp;g)</span>
+                  <%= eur(recipe.unit_selling_price) %>
+                  <span class="text-muted">· <%= weight_label(recipe.unit_reference_weight_kg) %></span>
                 <% else %>
-                  <span class="mono" style="color: var(--sl-400);">&mdash;</span>
+                  —
                 <% end %>
               </td>
-              <td>
+              <td class="text-secondary">
                 <% if recipe.has_tray? && recipe.tray_size %>
-                  <span class="mono"><%= recipe.tray_size.name %> (<%= number_with_precision(recipe.tray_size.price, precision: 2) %>&nbsp;€)</span>
-                <% elsif recipe.has_tray? && recipe.tray_size.nil? %>
-                  <span class="badge-warning-sl">Taille manquante</span>
+                  <%= recipe.tray_size.name %> · <span class="num"><%= eur(recipe.tray_size.price) %></span>
+                <% elsif recipe.has_tray? %>
+                  <%= chip("Taille manquante", tone: :warning, dot: :warning) %>
                 <% else %>
-                  <span class="mono" style="color: var(--sl-400);">&mdash;</span>
+                  —
                 <% end %>
               </td>
             </tr>
           <% end %>
         </tbody>
       </table>
-      </div>
+    </div>
+    <div class="pagination">
+      <span class="text-body-sm text-muted"><%= pluralize(@recipes.size, "recette") %> · TVA appliquée selon chaque recette</span>
     </div>
   <% else %>
-    <p style="color: var(--sl-400); text-align: center; margin-top: 24px; font-size: 13px;">Aucune recette pour le moment.</p>
+    <%= empty_state("Aucune recette pour le moment",
+                    "Les prix de vente apparaissent ici dès qu’une recette a des ingrédients.") do %>
+      <%= link_to new_recipe_path, class: "btn btn--primary" do %><%= icon("plus-lg") %> Créer une recette<% end %>
+    <% end %>
   <% end %>
 </div>

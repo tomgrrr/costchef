@@ -1,11 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Supplier picker for purchase forms: filters the user's active suppliers,
+// writes the chosen id into the hidden field. Results are a popover that
+// opens on focus or typing and closes on Escape, outside click or selection.
 export default class extends Controller {
-  static targets = ["input", "hidden", "results", "display"]
+  static targets = ["input", "hidden", "results"]
   static values = { suppliers: Array, selected: { type: Number, default: 0 } }
 
   connect() {
+    this.selectedName = this.inputTarget.value
     this.renderResults(this.suppliersValue)
+    this.outsideClick = (event) => {
+      if (!this.element.contains(event.target)) this.close()
+    }
     document.addEventListener("click", this.outsideClick)
   }
 
@@ -13,15 +20,18 @@ export default class extends Controller {
     document.removeEventListener("click", this.outsideClick)
   }
 
-  outsideClick = (event) => {
-    if (!this.element.contains(event.target)) {
-      this.resultsTarget.style.display = "none"
-    }
+  close() {
+    this.resultsTarget.hidden = true
   }
 
   search() {
     const query = this.inputTarget.value.trim().toLowerCase()
-    this.resultsTarget.style.display = "block"
+    this.resultsTarget.hidden = false
+    // Typed text no longer matches the chosen supplier: forget it.
+    if (this.hiddenTarget.value && this.inputTarget.value !== this.selectedName) {
+      this.hiddenTarget.value = ""
+      this.selectedValue = 0
+    }
 
     if (query === "") {
       this.renderResults(this.suppliersValue)
@@ -35,34 +45,30 @@ export default class extends Controller {
   }
 
   focus() {
-    this.resultsTarget.style.display = "block"
     this.search()
   }
 
   select(event) {
     const el = event.currentTarget
-    const id = el.dataset.id
-    const name = el.dataset.name
 
-    this.hiddenTarget.value = id
-    this.inputTarget.value = name
-    this.selectedValue = parseInt(id)
-    this.resultsTarget.style.display = "none"
+    this.hiddenTarget.value = el.dataset.id
+    this.inputTarget.value = el.dataset.name
+    this.selectedName = el.dataset.name
+    this.selectedValue = parseInt(el.dataset.id)
+    this.close()
   }
 
   renderResults(items) {
     const list = this.resultsTarget
 
     if (items.length === 0) {
-      list.innerHTML = `
-        <div class="search-result-item" style="justify-content: center; color: var(--sl-400); cursor: default;">
-          Aucun fournisseur
-        </div>`
+      list.innerHTML = `<div class="search-result-item search-result-item--empty">Aucun fournisseur</div>`
       return
     }
 
     list.innerHTML = items.map(s => `
-      <div class="search-result-item ${s.id === this.selectedValue ? 'selected' : ''}"
+      <div class="search-result-item ${s.id === this.selectedValue ? "selected" : ""}"
+           role="option"
            data-action="click->supplier-search#select"
            data-id="${s.id}"
            data-name="${this.escapeHtml(s.name)}">

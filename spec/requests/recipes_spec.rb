@@ -89,7 +89,7 @@ RSpec.describe 'Recipes', type: :request do
         create(:recipe_component, parent_recipe: recipe, component: product_zero)
 
         get recipes_path
-        expect(response.body).to include('1 produit à 0')
+        expect(response.body).to include('1 produit sans prix')
       end
 
       it 'tab=subrecipes affiche uniquement les sous-recettes' do
@@ -229,6 +229,14 @@ RSpec.describe 'Recipes', type: :request do
       allow(Recalculations::Dispatcher).to receive(:recipe_changed)
     end
 
+    it 'enregistre le taux de TVA choisi et le coche en édition' do
+      post recipes_path, params: { recipe: { name: 'Quiche', tva_rate: '10' } }
+      recipe = user.recipes.find_by(name: 'Quiche')
+      expect(recipe.tva_rate).to eq(10)
+      get edit_recipe_path(recipe)
+      assert_select 'input#recipe_tva_rate_10[checked]'
+    end
+
     context 'données valides' do
       it 'crée la recette' do
         expect { post recipes_path, params: { recipe: { name: 'Pâte brisée' } } }
@@ -323,6 +331,19 @@ RSpec.describe 'Recipes', type: :request do
     end
 
     let!(:recipe) { create(:recipe, name: 'Pâte brisée', cooking_loss_percentage: 10, user: user) }
+
+    it 'redirige après une mise à jour soumise par Turbo depuis le formulaire complet' do
+      patch recipe_path(recipe), params: { recipe: { name: 'Nouveau nom' } },
+                                 headers: { 'Accept' => 'text/vnd.turbo-stream.html, text/html' }
+      expect(response).to redirect_to(recipe_path(recipe))
+    end
+
+    it 'répond en Turbo Stream aux formulaires en ligne de la fiche (inline=1)' do
+      patch recipe_path(recipe), params: { inline: '1', recipe: { tva_rate: '20' } },
+                                 headers: { 'Accept' => 'text/vnd.turbo-stream.html, text/html' }
+      expect(response.media_type).to eq('text/vnd.turbo-stream.html')
+      expect(response.body).to include("summary_#{recipe.id}")
+    end
 
     context 'données valides (format HTML)' do
       it 'met à jour le nom' do

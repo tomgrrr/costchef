@@ -1,229 +1,300 @@
-<div class="section-card" style="margin-top: 4px;">
+<%# Body of the product page, inside turbo-frame "purchases_<id>".
+    Re-rendered by ProductPurchasesController after every purchase change.
+    locals: product, purchases, new_purchase, suppliers %>
+<% price_unit = product_price_unit(product) %>
+<% active = purchases.select(&:active?) %>
+<% cv = Products::VariabilityCalculator.call(product) %>
+<% ordered = purchases.to_a %>
+<% latest = ordered.last %>
+<% previous = ordered[-2] %>
+<% editing = new_purchase if new_purchase&.persisted? && new_purchase.errors.any? %>
+<% adding_errors = new_purchase && !new_purchase.persisted? && new_purchase.errors.any? %>
+<% latest_change = latest && previous && previous.price_per_kg.to_d.positive? ? ((latest.price_per_kg.to_d - previous.price_per_kg.to_d) / previous.price_per_kg.to_d * 100) : nil %>
+<% suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
+<% used_in = product.used_in_recipes %>
 
-  <%# Alert D14: avg_price_per_kg == 0 %>
-  <% if product.avg_price_per_kg.to_f == 0 %>
-    <div style="background: #fef3c7; border-bottom: 1px solid #fde68a; padding: 8px 16px; font-size: 12px; color: #92400e;">
-      <i class="bi bi-exclamation-triangle"></i>
-      Aucun achat actif — le prix moyen pondéré est à 0.
+<div class="stack">
+  <div class="grid-auto" style="--grid-min: 210px">
+    <div class="card kpi">
+      <span class="kpi__label">Prix moyen pondéré</span>
+      <% if product.avg_price_per_kg.to_d.positive? %>
+        <span class="kpi__value text-brand"><%= eur(product.avg_price_per_kg) %> <span class="kpi__unit">/ <%= price_unit %></span></span>
+        <span class="kpi__hint">Celui utilisé dans vos recettes</span>
+      <% else %>
+        <span class="kpi__value text-warning">Prix non défini</span>
+        <span class="kpi__hint">Ajoutez un achat actif pour le calculer</span>
+      <% end %>
     </div>
-  <% end %>
-
-  <%# Header: title + avg price badge %>
-  <div class="section-header">
-    <h2 class="section-title">Conditionnements</h2>
-    <span class="mono" style="color: var(--cc-success); font-size: 11px; font-weight: 600;">
-      Prix moy: <%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €/kg
-    </span>
-  </div>
-
-  <%# Existing purchases table %>
-  <% if purchases.any? %>
-    <div class="table-responsive">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Fournisseur</th>
-          <th>Qté</th>
-          <th>Unité</th>
-          <th>Prix HT</th>
-          <th>€/kg</th>
-          <th>Statut</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% purchases.each do |purchase| %>
-          <%= turbo_frame_tag "purchase_#{purchase.id}" do %>
-            <%# Display row %>
-            <tr style="<%= 'opacity: 0.45;' unless purchase.active? %>">
-              <td><%= purchase.supplier.name %></td>
-              <td><span class="mono"><%= number_with_precision(purchase.package_quantity, precision: 3, strip_insignificant_zeros: true) %></span></td>
-              <td><span class="mono"><%= purchase.package_unit %></span></td>
-              <td><span class="mono"><%= number_with_precision(purchase.package_price, precision: 2) %> €</span></td>
-              <td><span class="mono"><%= number_with_precision(purchase.price_per_kg, precision: 2) %> €/kg</span></td>
-              <td>
-                <% if purchase.active? %>
-                  <span class="badge-produit">Actif</span>
-                <% else %>
-                  <span style="background: var(--sl-200); color: var(--sl-500); padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em;">Inactif</span>
-                <% end %>
-              </td>
-              <td>
-                <div class="row-actions" style="opacity: 1;">
-                  <%# Toggle edit inline %>
-                  <%= link_to "#",
-                        class: "action-btn",
-                        title: "Modifier",
-                        data: { controller: "toggle-edit",
-                                action: "click->toggle-edit#toggle",
-                                toggle_edit_target_param: "edit_purchase_#{purchase.id}" } do %>
-                    <i class="bi bi-pencil"></i>
-                  <% end %>
-
-                  <%# Toggle active/inactive %>
-                  <%= button_to toggle_active_product_purchase_path(purchase),
-                        method: :post,
-                        params: { product_id: product.id },
-                        form: { data: { turbo_frame: "purchases_#{product.id}" } },
-                        class: "action-btn",
-                        title: purchase.active? ? "Désactiver" : "Activer" do %>
-                    <i class="bi bi-<%= purchase.active? ? 'pause-circle' : 'play-circle' %>"></i>
-                  <% end %>
-
-                  <%# Delete %>
-                  <%= button_to product_purchase_path(purchase),
-                        method: :delete,
-                        params: { product_id: product.id },
-                        form: { data: { turbo_confirm: "Supprimer ce conditionnement ?",
-                                        turbo_frame: "purchases_#{product.id}" } },
-                        class: "action-btn danger",
-                        title: "Supprimer" do %>
-                    <i class="bi bi-trash"></i>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
-
-            <%# Inline edit row (hidden by default) %>
-            <tr id="edit_purchase_<%= purchase.id %>" class="d-none">
-              <td colspan="7" style="background: var(--sl-50); padding: 12px 16px;">
-                <%= form_with url: product_purchase_path(purchase),
-                              scope: :product_purchase,
-                              method: :patch do |f| %>
-                  <%= hidden_field_tag :product_id, product.id %>
-                  <% edit_suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
-                  <div class="form-row form-row-purchase-edit"
-                       data-controller="supplier-search"
-                       data-supplier-search-suppliers-value="<%= edit_suppliers_json %>"
-                       data-supplier-search-selected-value="<%= purchase.supplier_id %>">
-                    <div style="position: relative;">
-                      <label class="form-label-xs">Fournisseur</label>
-                      <input type="text"
-                             class="form-control form-control-sm"
-                             style="font-size: 12px;"
-                             value="<%= purchase.supplier.name %>"
-                             autocomplete="off"
-                             data-supplier-search-target="input"
-                             data-action="input->supplier-search#search focus->supplier-search#focus">
-                      <input type="hidden"
-                             name="product_purchase[supplier_id]"
-                             value="<%= purchase.supplier_id %>"
-                             data-supplier-search-target="hidden">
-                      <div class="search-results-dropdown" style="display: none; position: absolute; z-index: 10; width: 100%; margin-top: 2px;"
-                           data-supplier-search-target="results">
-                      </div>
-                    </div>
-                    <div>
-                      <label class="form-label-xs">Quantité</label>
-                      <%= f.number_field :package_quantity,
-                            value: purchase.package_quantity,
-                            step: "0.001", min: "0.001",
-                            class: "form-control form-control-sm", style: "font-size: 12px;" %>
-                    </div>
-                    <div>
-                      <label class="form-label-xs">Unité</label>
-                      <%= f.select :package_unit,
-                            Units.allowed_for(product.base_unit),
-                            { selected: purchase.package_unit },
-                            class: "form-select form-select-sm", style: "font-size: 12px;" %>
-                    </div>
-                    <div>
-                      <label class="form-label-xs">Prix HT</label>
-                      <%= f.number_field :package_price,
-                            value: purchase.package_price,
-                            step: "0.01", min: "0",
-                            class: "form-control form-control-sm", style: "font-size: 12px;" %>
-                    </div>
-                    <div style="align-self: end;">
-                      <%= f.submit "Enregistrer", class: "btn-slate" %>
-                    </div>
-                    <div style="align-self: end;">
-                      <button type="button"
-                              class="btn-outline-slate"
-                              onclick="document.getElementById('edit_purchase_<%= purchase.id %>').classList.add('d-none')">
-                        Annuler
-                      </button>
-                    </div>
-                  </div>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        <% end %>
-      </tbody>
-    </table>
+    <div class="card kpi">
+      <span class="kpi__label">Moyenne simple</span>
+      <span class="kpi__value"><%= active.any? ? eur(product.simple_avg_price_per_kg) : "—" %> <% if active.any? %><span class="kpi__unit">/ <%= price_unit %></span><% end %></span>
+      <span class="kpi__hint"><%= active.size > 1 ? "Moyenne des #{active.size} prix actifs" : "Sans tenir compte des quantités" %></span>
     </div>
-  <% else %>
-    <p style="padding: 16px; color: var(--sl-400); font-size: 12px; margin: 0;">Aucun conditionnement pour le moment.</p>
-  <% end %>
-
-  <%# Add purchase form %>
-  <div style="padding: 16px;">
-    <div class="add-component-form">
-      <div style="margin-bottom: 10px;">
-        <span class="form-label-xs" style="margin-bottom: 0;">Ajouter un conditionnement</span>
-      </div>
-
-      <%= form_with url: product_purchases_path,
-                    scope: :product_purchase,
-                    data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
-        <%= hidden_field_tag :product_id, product.id %>
-        <% suppliers_json = suppliers.map { |s| { id: s.id, name: s.name } }.to_json %>
-        <div class="form-row form-row-purchase-add"
-             data-controller="supplier-search"
-             data-supplier-search-suppliers-value="<%= suppliers_json %>">
-          <div style="position: relative;">
-            <label class="form-label-xs">Fournisseur</label>
-            <input type="text"
-                   class="form-control form-control-sm"
-                   style="font-size: 12px;"
-                   placeholder="Rechercher..."
-                   autocomplete="off"
-                   data-supplier-search-target="input"
-                   data-action="input->supplier-search#search focus->supplier-search#focus">
-            <input type="hidden"
-                   name="product_purchase[supplier_id]"
-                   data-supplier-search-target="hidden">
-            <div class="search-results-dropdown" style="display: none; position: absolute; z-index: 10; width: 100%; margin-top: 2px;"
-                 data-supplier-search-target="results">
-            </div>
-          </div>
-          <div>
-            <label class="form-label-xs">Quantité</label>
-            <%= f.number_field :package_quantity,
-                  placeholder: "0.000",
-                  step: "0.001", min: "0.001",
-                  class: "form-control form-control-sm", style: "font-size: 12px;" %>
-          </div>
-          <div>
-            <label class="form-label-xs">Unité</label>
-            <%= f.select :package_unit,
-                  Units.allowed_for(product.base_unit),
-                  { include_blank: false },
-                  class: "form-select form-select-sm", style: "font-size: 12px;" %>
-          </div>
-          <div>
-            <label class="form-label-xs">Prix HT (€)</label>
-            <%= f.number_field :package_price,
-                  placeholder: "0.00",
-                  step: "0.01", min: "0",
-                  class: "form-control form-control-sm", style: "font-size: 12px;" %>
-          </div>
-          <div style="align-self: end;">
-            <%= f.submit "Ajouter", class: "btn-slate" %>
-          </div>
-        </div>
-
-        <%# New purchase errors %>
-        <% if new_purchase.errors.any? %>
-          <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 8px 12px; margin-top: 10px; font-size: 12px; color: var(--cc-danger);">
-            <% new_purchase.errors.full_messages.each do |msg| %>
-              <div><i class="bi bi-x-circle"></i> <%= msg %></div>
-            <% end %>
-          </div>
-        <% end %>
+    <div class="card kpi">
+      <span class="kpi__label">Variation des prix</span>
+      <span class="kpi__value"><%= cv ? "± #{percent(cv)}" : "—" %></span>
+      <% if cv.nil? %>
+        <span class="kpi__hint">À partir de 2 achats actifs</span>
+      <% elsif cv > product.user.price_variability_threshold %>
+        <span class="kpi__hint text-warning">Au-dessus de votre seuil de <%= percent(product.user.price_variability_threshold) %></span>
+      <% else %>
+        <span class="kpi__hint">Sous votre seuil de <%= percent(product.user.price_variability_threshold) %></span>
+      <% end %>
+    </div>
+    <div class="card kpi">
+      <span class="kpi__label">Dernier achat</span>
+      <% if latest %>
+        <span class="kpi__value"><%= eur(latest.price_per_kg) %> <span class="kpi__unit">/ <%= price_unit %></span></span>
+        <span class="kpi__hint">
+          <%= short_date(latest.created_at.to_date) %>
+          <% if latest_change %> · <%= latest_change.positive? ? "+" : "" %><%= percent(latest_change) %> vs le précédent<% end %>
+        </span>
+      <% else %>
+        <span class="kpi__value">—</span>
+        <span class="kpi__hint">Aucun achat enregistré</span>
       <% end %>
     </div>
   </div>
 
+  <div class="split">
+    <div class="split__main">
+      <% if purchases.size >= 2 %>
+        <%= render "products/price_chart", purchases: purchases.sort_by(&:created_at), product: product, price_unit: price_unit %>
+      <% end %>
+
+      <section id="achats" class="card" aria-labelledby="purchases-title">
+        <div class="card__header">
+          <div class="card__heading">
+            <h2 id="purchases-title" class="card__title">Achats</h2>
+            <p class="card__subtitle">Chaque achat de <%= product.name %> donne un prix au <%= price_unit == "l" ? "litre" : "kilo" %>. Les achats actifs forment le prix moyen.</p>
+          </div>
+        </div>
+
+        <div class="card__body">
+          <%= form_with url: product_purchases_path, scope: :product_purchase, class: "stack stack--sm",
+                        data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
+            <%= hidden_field_tag :product_id, product.id, id: nil %>
+            <div class="form-row" data-controller="supplier-search"
+                 data-supplier-search-suppliers-value="<%= suppliers_json %>">
+              <div class="field picker">
+                <label for="new_purchase_supplier_<%= product.id %>">Fournisseur</label>
+                <input type="text" id="new_purchase_supplier_<%= product.id %>" class="input" autocomplete="off"
+                       placeholder="Rechercher un fournisseur…"
+                       data-supplier-search-target="input"
+                       data-action="input->supplier-search#search focus->supplier-search#focus keydown.esc->supplier-search#close">
+                <input type="hidden" name="product_purchase[supplier_id]" data-supplier-search-target="hidden">
+                <div class="search-results" hidden data-supplier-search-target="results"></div>
+              </div>
+              <div class="field field--sm">
+                <%= f.label :package_quantity, "Quantité" %>
+                <%= f.number_field :package_quantity, step: "0.001", min: "0.001", placeholder: "2,5",
+                                   class: "input input--num" %>
+              </div>
+              <div class="field field--xs">
+                <%= f.label :package_unit, "Unité" %>
+                <%= f.select :package_unit, unit_options(Units.allowed_for(product.base_unit)),
+                             { include_blank: false }, class: "input" %>
+              </div>
+              <div class="field field--sm">
+                <%= f.label :package_price, "Prix HT" %>
+                <span class="affix">
+                  <%= f.number_field :package_price, step: "0.01", min: "0", placeholder: "42,00",
+                                     class: "input input--num" %>
+                  <span class="affix__suffix" aria-hidden="true">€</span>
+                </span>
+              </div>
+              <%= f.button type: "submit", class: "btn btn--primary" do %><%= icon("plus-lg") %> Ajouter l’achat<% end %>
+            </div>
+            <% if adding_errors %>
+              <%= notice_box(tone: :danger, css: "notice--top") do %>
+                <strong>L’achat n’a pas été ajouté.</strong>
+                <ul class="notice__list">
+                  <% new_purchase.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+                </ul>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+
+        <% if purchases.any? %>
+          <div class="table-wrap">
+            <table class="table" style="--table-min: 860px">
+              <thead>
+                <tr>
+                  <th scope="col">Fournisseur</th>
+                  <th scope="col" class="num">Qté</th>
+                  <th scope="col">Unité</th>
+                  <th scope="col" class="num">Prix HT</th>
+                  <th scope="col" class="num">Prix / <%= price_unit %></th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Statut</th>
+                  <th scope="col" class="table__actions"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% purchases.each do |purchase| %>
+                  <tr class="<%= "is-off" unless purchase.active? %>">
+                    <td><%= link_to purchase.supplier.name, supplier_path(purchase.supplier), class: "table__link" %></td>
+                    <td class="num"><%= fr_number(purchase.package_quantity, precision: 3, strip: true) %></td>
+                    <td><%= unit_label(purchase.package_unit) %></td>
+                    <td class="num"><%= eur(purchase.package_price) %></td>
+                    <td class="num text-strong"><%= eur(purchase.price_per_kg) %></td>
+                    <td class="num text-secondary"><%= short_date(purchase.created_at.to_date) %></td>
+                    <td><%= purchase.active? ? chip("Actif", dot: :success) : chip("Inactif", dot: :off) %></td>
+                    <td class="table__actions">
+                      <span class="row-actions">
+                        <button type="button" class="icon-btn" title="Modifier" aria-label="Modifier l’achat chez <%= purchase.supplier.name %>"
+                                data-controller="toggle-edit" data-action="click->toggle-edit#toggle"
+                                data-toggle-edit-target-param="edit_purchase_<%= purchase.id %>">
+                          <%= icon("pencil") %>
+                        </button>
+                        <%= button_to toggle_active_product_purchase_path(purchase), method: :post,
+                                      params: { product_id: product.id },
+                                      form: { data: { turbo_frame: "purchases_#{product.id}" } },
+                                      class: "icon-btn",
+                                      title: purchase.active? ? "Ne plus utiliser ce prix" : "Réutiliser ce prix",
+                                      "aria-label": purchase.active? ? "Désactiver l’achat" : "Activer l’achat" do %>
+                          <%= icon(purchase.active? ? "pause-circle" : "play-circle") %>
+                        <% end %>
+                        <%= button_to product_purchase_path(purchase), method: :delete,
+                                      params: { product_id: product.id },
+                                      form: { data: { turbo_confirm: "Supprimer cet achat ?",
+                                                      turbo_frame: "purchases_#{product.id}" } },
+                                      class: "icon-btn icon-btn--danger", title: "Supprimer",
+                                      "aria-label": "Supprimer l’achat" do %>
+                          <%= icon("trash") %>
+                        <% end %>
+                      </span>
+                    </td>
+                  </tr>
+                  <% failed = editing && editing.id == purchase.id %>
+                  <tr id="edit_purchase_<%= purchase.id %>" class="table__edit" <%= "hidden" unless failed %>>
+                    <td colspan="8">
+                      <% if failed %>
+                        <%= notice_box(tone: :danger, css: "notice--top") do %>
+                          <strong>La modification n’a pas été enregistrée.</strong>
+                          <ul class="notice__list">
+                            <% editing.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+                          </ul>
+                        <% end %>
+                      <% end %>
+                      <%= form_with url: product_purchase_path(purchase), scope: :product_purchase, method: :patch,
+                                    data: { turbo_frame: "purchases_#{product.id}" } do |f| %>
+                        <%= hidden_field_tag :product_id, product.id, id: nil %>
+                        <div class="form-row" data-controller="supplier-search"
+                             data-supplier-search-suppliers-value="<%= suppliers_json %>"
+                             data-supplier-search-selected-value="<%= purchase.supplier_id %>">
+                          <div class="field picker">
+                            <label for="edit_purchase_supplier_<%= purchase.id %>">Fournisseur</label>
+                            <input type="text" id="edit_purchase_supplier_<%= purchase.id %>" class="input" autocomplete="off"
+                                   value="<%= purchase.supplier.name %>"
+                                   data-supplier-search-target="input"
+                                   data-action="input->supplier-search#search focus->supplier-search#focus keydown.esc->supplier-search#close">
+                            <input type="hidden" name="product_purchase[supplier_id]" value="<%= purchase.supplier_id %>"
+                                   data-supplier-search-target="hidden">
+                            <div class="search-results" hidden data-supplier-search-target="results"></div>
+                          </div>
+                          <div class="field field--sm">
+                            <%= f.label :package_quantity, "Quantité", for: "edit_quantity_#{purchase.id}" %>
+                            <%= f.number_field :package_quantity, value: purchase.package_quantity, id: "edit_quantity_#{purchase.id}",
+                                               step: "0.001", min: "0.001", class: "input input--num" %>
+                          </div>
+                          <div class="field field--xs">
+                            <%= f.label :package_unit, "Unité", for: "edit_unit_#{purchase.id}" %>
+                            <%= f.select :package_unit, unit_options(Units.allowed_for(product.base_unit)),
+                                         { selected: purchase.package_unit }, class: "input", id: "edit_unit_#{purchase.id}" %>
+                          </div>
+                          <div class="field field--sm">
+                            <%= f.label :package_price, "Prix HT", for: "edit_price_#{purchase.id}" %>
+                            <span class="affix">
+                              <%= f.number_field :package_price, value: purchase.package_price, id: "edit_price_#{purchase.id}",
+                                                 step: "0.01", min: "0", class: "input input--num" %>
+                              <span class="affix__suffix" aria-hidden="true">€</span>
+                            </span>
+                          </div>
+                          <%= f.button type: "submit", class: "btn btn--primary" do %>Enregistrer<% end %>
+                          <button type="button" class="btn btn--outline" data-controller="toggle-edit"
+                                  data-action="click->toggle-edit#toggle"
+                                  data-toggle-edit-target-param="edit_purchase_<%= purchase.id %>">Annuler</button>
+                        </div>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <%= empty_state("Aucun achat pour le moment",
+                          "Ajoutez un premier achat ci-dessus : fournisseur, quantité et prix payé.") %>
+        <% end %>
+      </section>
+    </div>
+
+    <aside class="split__aside">
+      <% by_supplier = Products::SupplierBreakdown.call(product) %>
+      <section class="card card--pad stack stack--sm" aria-labelledby="by-supplier-title">
+        <h2 id="by-supplier-title" class="card__title">Par fournisseur</h2>
+        <% if by_supplier.any? %>
+          <ul class="list-rows">
+            <% by_supplier.each do |line| %>
+              <li class="list-rows__item">
+                <span class="stack stack--xs">
+                  <%= link_to line[:supplier].name, supplier_path(line[:supplier]), class: "table__link" %>
+                  <span class="text-body-sm text-muted"><%= pluralize(line[:purchases_count], "achat actif", plural: "achats actifs") %></span>
+                </span>
+                <span class="stack stack--xs text-right">
+                  <span class="num text-strong"><%= eur(line[:avg_price_per_kg], unit: price_unit) %></span>
+                  <% if line[:delta_pct] && line[:delta_pct].abs >= 0.5 %>
+                    <span class="text-body-sm num <%= line[:delta_pct].positive? ? "text-warning" : "text-success" %>">
+                      <%= line[:delta_pct].positive? ? "+" : "" %><%= percent(line[:delta_pct]) %> vs moyenne
+                    </span>
+                  <% elsif line[:delta_pct] %>
+                    <span class="text-body-sm text-muted">Dans la moyenne</span>
+                  <% end %>
+                </span>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="text-body-sm text-muted">Aucun achat actif.</p>
+        <% end %>
+      </section>
+
+      <section class="card card--pad stack stack--sm" aria-labelledby="used-in-title">
+        <h2 id="used-in-title" class="card__title"><%= used_in.any? ? "Utilisé dans #{pluralize(used_in.size, 'recette')}" : "Utilisé dans aucune recette" %></h2>
+        <% if used_in.any? %>
+          <ul class="list-rows">
+            <% used_in.each do |recipe| %>
+              <li class="list-rows__item">
+                <span class="cluster cluster--sm">
+                  <%= link_to recipe.name, recipe_path(recipe), class: "table__link" %>
+                  <% if recipe.sellable_as_component? %><%= chip("Sous-recette", tone: :brand) %><% end %>
+                </span>
+                <span class="text-body-sm num text-muted"><%= recipe.cached_cost_per_kg.to_d.positive? ? eur(recipe.cached_cost_per_kg, unit: "kg") : "—" %></span>
+              </li>
+            <% end %>
+          </ul>
+          <p class="text-body-sm text-muted">Chaque nouvel achat met à jour ces recettes automatiquement.</p>
+        <% else %>
+          <p class="text-body-sm text-muted">Non utilisé dans aucune recette.</p>
+        <% end %>
+      </section>
+
+      <section class="card card--pad stack stack--sm" aria-labelledby="info-title">
+        <h2 id="info-title" class="card__title">Informations</h2>
+        <dl class="kv">
+          <div class="kv__row"><dt>Unité de base</dt><dd><%= { "kg" => "Kilo", "l" => "Litre", "piece" => "Pièce" }[product.base_unit] %></dd></div>
+          <% if product.piece_unit? %>
+            <div class="kv__row"><dt>Poids unitaire</dt><dd class="num"><%= weight_label(product.unit_weight_kg) %></dd></div>
+          <% end %>
+          <% if product.dehydrated? %>
+            <div class="kv__row"><dt>Déshydraté</dt><dd class="num">Réhydratation ×<%= fr_number(product.rehydration_coefficient, strip: true) %></dd></div>
+          <% end %>
+          <div class="kv__row"><dt>Achats actifs</dt><dd class="num"><%= active.size %></dd></div>
+          <div class="kv__row"><dt>Ajouté le</dt><dd class="num"><%= short_date(product.created_at.to_date) %></dd></div>
+        </dl>
+      </section>
+    </aside>
+  </div>
 </div>

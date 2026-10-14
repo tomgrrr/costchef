@@ -1,8 +1,21 @@
-<div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
-  <div class="text-center">
-    <i class="bi bi-lock fs-1 text-secondary mb-3 d-block"></i>
-    <h2>Votre abonnement n'est pas actif</h2>
-    <p class="text-muted">Contactez l'administrateur pour activer votre compte.</p>
-    <%= link_to "Se déconnecter", destroy_user_session_path, data: { turbo_method: :delete }, class: "btn btn-outline-secondary mt-3" %>
-  </div>
-</div>
+<% content_for :title, "Abonnement" %>
+<% if app_shell? %>
+  <%# Inside the app (subscribed users, or admins who skip the gate): no sign-in screen. %>
+  <% active = current_user.subscription_active? %>
+  <%= page_header(active ? "Votre abonnement est actif" : "Votre abonnement n’est pas actif",
+                  subtitle: active ? "Vous avez accès à toute l’application." : "En tant qu’administrateur, vous gardez l’accès à l’administration.") do %>
+    <%= link_to "Retour à l’accueil", root_path, class: "btn btn--primary" %>
+  <% end %>
+<% else %>
+<%# The gate's redirect already says the subscription is inactive: the title says it once. %>
+<%= render layout: "shared/auth", locals: { title: "Votre abonnement n’est pas actif", hide_flash: true,
+                                             subtitle: "Vos recettes et vos prix sont conservés. Contactez votre administrateur pour réactiver l’accès." } do %>
+  <%= notice_box(tone: :warning, css: "notice--top") do %>
+    Connecté en tant que <strong><%= current_user.email %></strong>.
+  <% end %>
+  <%= button_to destroy_user_session_path, method: :delete, class: "btn btn--outline btn--block",
+                form: { class: "stack" } do %>
+    <%= icon("box-arrow-right") %> Se déconnecter
+  <% end %>
+<% end %>
+<% end %>

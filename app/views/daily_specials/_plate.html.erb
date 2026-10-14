@@ -1,0 +1,26 @@
+<%# One plate: main + side portions, material cost and suggested price.
+    locals: title, main_label, main_grams, main_average, side_grams, side_average, cost, price, decor %>
+<section class="price-panel" aria-label="<%= title %>">
+  <div class="cluster cluster--between cluster--baseline">
+    <h3 class="card__title"><%= title %> · <%= main_grams + side_grams %> g</h3>
+    <span class="text-body-sm text-secondary">coût portion <%= main_grams + side_grams %> g</span>
+  </div>
+  <div class="share-bar" aria-hidden="true">
+    <span class="share-bar__part <%= decor %>" style="--share: <%= main_grams %>"></span>
+    <span class="share-bar__part decor-1" style="--share: <%= side_grams %>"></span>
+  </div>
+  <p class="text-body-sm text-secondary">
+    <%= main_grams %> g de <%= main_label %> à <span class="num"><%= eur(main_average, unit: "kg") %></span>
+    + <%= side_grams %> g d’accompagnement à <span class="num"><%= eur(side_average, unit: "kg") %></span>
+  </p>
+  <div class="price-panel__section cluster cluster--bottom">
+    <div class="stack stack--xs">
+      <span class="text-body-sm text-secondary">Coût matière</span>
+      <span class="text-display-md num"><%= eur(cost) %></span>
+    </div>
+    <div class="stack stack--xs">
+      <span class="text-body-sm text-secondary">Prix conseillé HT</span>
+      <span class="text-display-md num text-brand"><%= eur(price) %></span>
+    </div>
+  </div>
+</section>

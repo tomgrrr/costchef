@@ -287,4 +287,44 @@ RSpec.describe 'Suppliers', type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe 'GET /suppliers/:id' do
+    let(:supplier) { create(:supplier, user: user, name: 'Allier volailles') }
+
+    before { sign_in user }
+
+    it 'affiche ses prix comparés, avec la bonne unité pour un produit au litre' do
+      canard = create(:product, user: user, name: 'Canard', avg_price_per_kg: 15)
+      creme = create(:product, user: user, name: 'Crème', base_unit: 'l', avg_price_per_kg: 4)
+      create(:product_purchase, product: canard, supplier: supplier, package_quantity: 2.5,
+                                package_quantity_kg: 2.5, package_unit: 'kg', package_price: 39)
+      create(:product_purchase, product: creme, supplier: supplier, package_quantity: 1,
+                                package_quantity_kg: 1, package_unit: 'l', package_price: 4)
+
+      get supplier_path(supplier)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("15,60\u00A0€\u00A0/\u00A0kg")
+      expect(response.body).to include("4,00\u00A0€\u00A0/\u00A0l")
+    end
+
+    it "redirige pour le fournisseur d'un autre utilisateur" do
+      get supplier_path(create(:supplier, user: other_user, name: 'Secret'))
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  describe 'GET /suppliers avec des achats' do
+    before { sign_in user }
+
+    it "ne propose pas la suppression d'un fournisseur qui a des achats" do
+      supplier = create(:supplier, user: user, name: 'Metro')
+      create(:product_purchase, product: create(:product, user: user), supplier: supplier)
+
+      get suppliers_path
+
+      expect(response.body).not_to include(%(action="#{supplier_path(supplier)}"))
+      expect(response.body).to include('Suppression impossible')
+    end
+  end
 end

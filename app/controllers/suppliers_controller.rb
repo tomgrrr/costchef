@@ -8,13 +8,11 @@ class SuppliersController < ApplicationController
     base = base.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
     @pagy, @active_suppliers   = pagy(base.where(active: true).order(:name))
     @inactive_suppliers        = base.where(active: false).order(:name)
+    @stats = Suppliers::PurchaseStats.call(@active_suppliers.map(&:id) + @inactive_suppliers.map(&:id))
   end
 
   def show
-    @purchases_by_product = @supplier.product_purchases
-      .includes(:product)
-      .order("products.name ASC, product_purchases.created_at ASC")
-      .group_by(&:product)
+    @comparison = Suppliers::PriceComparison.call(@supplier)
   end
 
   def new

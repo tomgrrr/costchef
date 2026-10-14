@@ -1,0 +1,61 @@
+<% section = sidebar_section %>
+<nav class="sidebar" aria-label="Navigation principale" data-controller="sidebar">
+  <div class="sidebar__top">
+    <%= link_to root_path, class: "sidebar__brand", "aria-label": "CostChef, accueil" do %>
+      <svg class="sidebar__mark" viewBox="0 0 30 30" aria-hidden="true">
+        <rect class="mark__bg" width="30" height="30" rx="9"></rect>
+        <circle class="mark__ring" cx="15" cy="15" r="8"></circle>
+        <circle class="mark__dot" cx="15" cy="15" r="2.6"></circle>
+      </svg>
+      <span>CostChef</span>
+    <% end %>
+    <button type="button" class="icon-btn sidebar__toggle" data-action="sidebar#toggle"
+            data-sidebar-target="toggle" aria-expanded="false" aria-controls="sidebar-body" aria-label="Ouvrir le menu">
+      <%= icon("list") %>
+    </button>
+  </div>
+
+  <div class="sidebar__body" id="sidebar-body">
+    <div class="sidebar__nav">
+      <%= sidebar_link "Accueil", root_path, icon_name: "house", active: section == :home %>
+
+      <p class="sidebar__label">Cuisine</p>
+      <%= sidebar_link "Recettes", recipes_path, icon_name: "journal-text", active: section == :recipes,
+                       count: current_user.recipes.count %>
+      <%= sidebar_link "Produits", products_path, icon_name: "box-seam", active: section == :products,
+                       count: number_with_delimiter(current_user.products.count, delimiter: " ") %>
+      <%= sidebar_link "Fournisseurs", suppliers_path, icon_name: "truck", active: section == :suppliers,
+                       count: current_user.suppliers.active.count %>
+      <%= sidebar_link "Plats du jour", daily_specials_path, icon_name: "calendar-check",
+                       active: section == :daily_specials %>
+
+      <p class="sidebar__label">Suivi des prix</p>
+      <%= sidebar_link "Prix instables", standard_deviations_path, icon_name: "graph-up-arrow",
+                       active: section == :variability %>
+      <%= sidebar_link "Poids des pièces", referentiel_pieces_path, icon_name: "egg",
+                       active: section == :pieces %>
+    </div>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__nav">
+        <%= sidebar_link "Coefficient et barquettes", tray_sizes_path, icon_name: "sliders",
+                         active: section == :settings %>
+        <% if current_user.admin? %>
+          <%= sidebar_link "Administration", admin_users_path, icon_name: "shield-lock",
+                           active: section == :admin %>
+        <% end %>
+      </div>
+      <div class="sidebar__account">
+        <span class="avatar" aria-hidden="true"><%= initials_for(account_label) %></span>
+        <span class="sidebar__account-name">
+          <%= account_label %>
+          <span class="text-body-sm text-muted">Abonnement actif</span>
+        </span>
+        <%= button_to destroy_user_session_path, method: :delete, class: "icon-btn",
+                      "aria-label": "Se déconnecter", title: "Se déconnecter" do %>
+          <%= icon("box-arrow-right") %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</nav>

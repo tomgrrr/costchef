@@ -1,59 +1,54 @@
-<%= turbo_frame_tag "product_#{product.id}" do %>
-  <div class="product-card">
-    <%# Hover actions %>
-    <div class="card-actions">
-      <%= link_to edit_product_path(product),
-            class: "action-btn",
-            data: { turbo_frame: "_top" },
-            title: "Modifier" do %>
-        <i class="bi bi-pencil"></i>
-      <% end %>
-
-      <%= button_to product_path(product),
-            method: :delete,
-            form: { data: { turbo_confirm: "Supprimer ce produit ?", turbo_frame: "_top" } },
-            class: "action-btn danger #{'disabled' if product.used_in_recipes?}",
-            title: product.used_in_recipes? ? "Utilisé dans #{product.recipes_count} recette(s)" : "Supprimer" do %>
-        <i class="bi bi-trash"></i>
-      <% end %>
-    </div>
-
-    <%# Unit badge %>
-    <div class="p-unit"><%= product.base_unit %></div>
-
-    <div class="product-card-badge-slot">
-      <% if product.high_variability? %>
-        <div class="badge-variability">
-          <i class="bi bi-exclamation-triangle-fill"></i> Forte variabilité
-        </div>
-      <% end %>
-    </div>
-
-    <%# Name %>
-    <div class="p-name"><%= product.name %></div>
-
-    <%# Price %>
-    <% if product.simple_avg_price_per_kg.to_f > 0 || product.avg_price_per_kg.to_f > 0 %>
-      <div class="p-price-row">
-        <span class="p-price"><span class="p-price-label">PON</span> <%= number_with_precision(product.avg_price_per_kg, precision: 2) %> €/kg</span>
-        <span class="p-price-simple"><span class="p-price-label p-price-label--blue">MOY</span> <%= number_with_precision(product.simple_avg_price_per_kg, precision: 2) %> €/kg</span>
-      </div>
+<%# One row of the products table. locals: product, usage_count (optional) %>
+<% usage_count = local_assigns.fetch(:usage_count) { product.recipes_count } %>
+<% price_unit = product_price_unit(product) %>
+<% active = loaded_active_purchases(product) %>
+<% cv = product_variability(product) %>
+<% last = latest_purchase(product) %>
+<tr id="product_<%= product.id %>">
+  <td>
+    <%= link_to product.name, product_path(product), class: "table__link", data: { turbo_frame: "_top" } %>
+    <div class="table__meta"><%= product_unit_label(product) %></div>
+  </td>
+  <td class="num text-medium">
+    <% if product.avg_price_per_kg.to_d.positive? %>
+      <%= eur(product.avg_price_per_kg, unit: price_unit) %>
     <% else %>
-      <div class="p-price">
-        <span class="badge-warning-sl">
-          <i class="bi bi-exclamation-triangle"></i> Prix non défini
-        </span>
+      <%= chip("Prix non défini", tone: :warning, dot: :warning) %>
+    <% end %>
+  </td>
+  <td class="num text-secondary">
+    <%= active.any? ? eur(loaded_simple_average(product), unit: price_unit) : "—" %>
+  </td>
+  <td class="num">
+    <% if cv.nil? %>
+      <span class="text-muted"><%= active.size == 1 ? "1 seul prix" : "—" %></span>
+    <% elsif variability_alert?(cv) %>
+      <%= chip(dot: :warning, tone: :warning) do %>± <%= percent(cv) %><% end %>
+    <% else %>
+      <span class="text-muted">± <%= percent(cv) %></span>
+    <% end %>
+  </td>
+  <td class="text-body-sm text-secondary">
+    <%= last ? "#{short_date(last.created_at.to_date)} · #{last.supplier.name}" : "Aucun achat" %>
+  </td>
+  <td class="num text-secondary"><%= usage_count %></td>
+  <td class="table__actions">
+    <details class="menu" data-controller="menu">
+      <summary class="icon-btn" aria-label="Actions pour <%= product.name %>"><%= icon("three-dots") %></summary>
+      <div class="menu__panel">
+        <%= link_to product_path(product), class: "menu__item", data: { turbo_frame: "_top" } do %><%= icon("box-seam") %> Ouvrir la fiche<% end %>
+        <%= link_to edit_product_path(product), class: "menu__item", data: { turbo_frame: "_top" } do %><%= icon("pencil") %> Modifier<% end %>
+        <% if usage_count.positive? %>
+          <span class="menu__item" aria-disabled="true">
+            <%= icon("trash") %> <span>Supprimer <span class="menu__hint">Utilisé dans <%= pluralize(usage_count, "recette") %></span></span>
+          </span>
+        <% else %>
+          <%= button_to product_path(product), method: :delete, class: "menu__item",
+                        form: { data: { turbo_confirm: "Supprimer ce produit ?", turbo_frame: "_top" } } do %>
+            <%= icon("trash") %> Supprimer
+          <% end %>
+        <% end %>
       </div>
-    <% end %>
-
-    <%# Meta %>
-    <div class="p-meta">
-      <%= product.product_purchases.active.count %> conditionnement(s) actif(s)
-    </div>
-
-
-    <%= link_to product_path(product), class: "stock-btn", data: { turbo_frame: "_top" } do %>
-      <i class="bi bi-box-seam"></i> Gérer les conditionnements
-    <% end %>
-  </div>
-<% end %>
+    </details>
+  </td>
+</tr>

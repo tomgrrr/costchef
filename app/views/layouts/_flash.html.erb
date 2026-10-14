@@ -1,0 +1,14 @@
+<% if flash[:notice].present? || flash[:alert].present? %>
+  <div class="flash-region">
+    <% { notice: :success, alert: :danger }.each do |key, tone| %>
+      <% next if flash[key].blank? %>
+      <div class="notice" role="<%= key == :alert ? "alert" : "status" %>" data-controller="dismiss">
+        <%= status_dot(tone) %>
+        <p class="notice__text"><%= flash[key] %></p>
+        <button type="button" class="icon-btn icon-btn--sm" data-action="dismiss#close" aria-label="Fermer le message">
+          <%= icon("x-lg") %>
+        </button>
+      </div>
+    <% end %>
+  </div>
+<% end %>

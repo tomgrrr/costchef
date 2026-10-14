@@ -6,7 +6,9 @@ class ProductPurchasesController < ApplicationController
 
   def create
     @purchase = @product.product_purchases.build(purchase_params)
-    @purchase.supplier = current_user.suppliers.find(purchase_params[:supplier_id])
+    # No supplier picked: let the "must exist" validation re-render the form
+    # instead of a RecordNotFound redirect that wipes the product page.
+    @purchase.supplier = current_user.suppliers.find(purchase_params[:supplier_id]) if purchase_params[:supplier_id].present?
 
     if @purchase.save
       Recalculations::Dispatcher.product_purchase_changed(@purchase)
@@ -84,41 +86,27 @@ class ProductPurchasesController < ApplicationController
           .permit(:supplier_id, :package_quantity, :package_unit, :package_price)
   end
 
+  # The whole product body lives in turbo-frame "purchases_<id>" on the
+  # product page; every change re-renders it.
   def render_success_streams
-    render turbo_stream: [
-      turbo_stream.replace("product_#{@product.id}",
-                           partial: "products/product_card",
-                           locals: { product: @product }),
-      turbo_stream.update("purchases_#{@product.id}",
-                          partial: "product_purchases/purchases_section",
-                          locals: { product: @product,
-                                    purchases: @product.product_purchases.order(:created_at),
-                                    new_purchase: @new_purchase || ProductPurchase.new,
-                                    suppliers: active_suppliers })
-    ]
+    render_purchases_section(@product, @new_purchase || ProductPurchase.new)
   end
 
   def render_purchases_stream
-    render turbo_stream: turbo_stream.update("purchases_#{@product.id}",
-                                             partial: "product_purchases/purchases_section",
-                                             locals: { product: @product,
-                                                       purchases: @product.product_purchases.order(:created_at),
-                                                       new_purchase: @new_purchase,
-                                                       suppliers: active_suppliers })
+    render_purchases_section(@product, @new_purchase)
   end
 
   def render_streams_for(product)
-    render turbo_stream: [
-      turbo_stream.replace("product_#{product.id}",
-                           partial: "products/product_card",
-                           locals: { product: product }),
-      turbo_stream.update("purchases_#{product.id}",
-                          partial: "product_purchases/purchases_section",
-                          locals: { product: product,
-                                    purchases: product.product_purchases.order(:created_at),
-                                    new_purchase: ProductPurchase.new,
-                                    suppliers: active_suppliers })
-    ]
+    render_purchases_section(product, ProductPurchase.new)
+  end
+
+  def render_purchases_section(product, new_purchase)
+    render turbo_stream: turbo_stream.update(
+      "purchases_#{product.id}",
+      partial: "product_purchases/purchases_section",
+      locals: { product: product, new_purchase: new_purchase, suppliers: active_suppliers,
+                purchases: product.product_purchases.includes(:supplier).order(:created_at) }
+    )
   end
 
   def active_suppliers

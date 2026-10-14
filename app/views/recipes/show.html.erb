@@ -1,134 +1,82 @@
-<%# Page header %>
-<div class="page-header">
-  <div class="d-flex align-items-center gap-3">
-    <h1 class="page-title"><%= @recipe.name %></h1>
-    <% if @recipe.subrecipe? %>
-      <span class="badge-sous-recette">Sous-recette</span>
-    <% end %>
-  </div>
-  <div class="d-flex gap-2">
-    <%= link_to safe_back_path(params[:back], recipes_path), class: "btn-outline-slate" do %>
-      <i class="bi bi-arrow-left"></i> Retour
-    <% end %>
-    <%= button_to duplicate_recipe_path(@recipe),
-          method: :post,
-          class: "btn-outline-slate",
-          form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
-      <i class="bi bi-copy"></i> Dupliquer
-    <% end %>
-    <div class="dropdown d-inline-block">
-      <button class="btn-outline-slate dropdown-toggle" data-bs-toggle="dropdown">
-        <i class="bi bi-file-earmark-spreadsheet"></i> Excel
-      </button>
-      <ul class="dropdown-menu">
-        <li><%= link_to "Sans coûts", export_excel_recipe_path(@recipe), class: "dropdown-item" %></li>
-        <li><%= link_to "Avec coûts", export_excel_recipe_path(@recipe, detailed: 1), class: "dropdown-item" %></li>
-      </ul>
-    </div>
-    <%= link_to edit_recipe_path(@recipe, back: params[:back]), class: "btn-outline-slate" do %>
-      <i class="bi bi-pencil"></i> Modifier
-    <% end %>
-    <%# TODO: Réactiver les boutons convertir recette/sous-recette %>
-    <% if false # masqué temporairement %>
+<% content_for :title, @recipe.name %>
+<% list_path = recipes_path(tab: @recipe.subrecipe? ? "subrecipes" : "recipes") %>
+<% back_label = params[:back].present? ? "Retour" : (@recipe.subrecipe? ? "Sous-recettes" : "Recettes") %>
+
+<%= breadcrumb([back_label, safe_back_path(params[:back], list_path)], @recipe.name) %>
+
+<header class="page-header">
+  <div class="page-header__text">
+    <h1 class="text-display-lg"><%= @recipe.name %></h1>
+    <div class="cluster cluster--xs">
       <% if @recipe.subrecipe? %>
-        <%= button_to recipe_path(@recipe),
-              method: :patch,
-              params: { recipe: { sellable_as_component: false } },
-              class: "btn-slate",
-              form: { data: { turbo_confirm: "Convertir en recette ?" } } do %>
-          <i class="bi bi-arrow-up-circle"></i> Convertir en recette
-        <% end %>
+        <%= chip("Sous-recette", tone: :brand) %>
       <% else %>
-        <%= button_to recipe_path(@recipe),
-              method: :patch,
-              params: { recipe: { sellable_as_component: true, has_tray: false, tray_size_id: "" } },
-              class: "btn-slate",
-              form: { data: { turbo_confirm: "Convertir en sous-recette ?" } } do %>
-          <i class="bi bi-arrow-down-circle"></i> Convertir en sous-recette
+        <%= chip("Recette finale") %>
+        <% if @recipe.sold_by_unit? && @recipe.unit_reference_weight_kg.present? %>
+          <%= chip("Vendue à l’unité · #{weight_label(@recipe.unit_reference_weight_kg)}") %>
+        <% end %>
+        <% if @recipe.has_tray? %>
+          <%= @recipe.tray_size ? chip(@recipe.tray_size.name) : chip("Barquette sans taille", tone: :warning, dot: :warning) %>
         <% end %>
       <% end %>
+      <%= chip("Mise à jour le #{short_date(@recipe.updated_at.to_date)}") %>
+    </div>
+  </div>
+  <div class="page-header__actions">
+    <%= button_to duplicate_recipe_path(@recipe), method: :post, class: "btn btn--outline",
+                  form: { data: { turbo_confirm: "Dupliquer cette recette ?" } } do %>
+      <%= icon("copy") %> Dupliquer
+    <% end %>
+    <details class="menu" data-controller="menu">
+      <summary class="btn btn--outline"><%= icon("download") %> Exporter <%= icon("chevron-down") %></summary>
+      <div class="menu__panel">
+        <%= link_to export_excel_recipe_path(@recipe), class: "menu__item" do %>
+          <%= icon("file-earmark-excel") %> <span>Excel sans coûts <span class="menu__hint">La composition seule</span></span>
+        <% end %>
+        <%= link_to export_excel_recipe_path(@recipe, detailed: 1), class: "menu__item" do %>
+          <%= icon("file-earmark-excel") %> <span>Excel avec coûts <span class="menu__hint">Composition, coûts et prix</span></span>
+        <% end %>
+      </div>
+    </details>
+    <%= link_to edit_recipe_path(@recipe, back: params[:back]), class: "btn btn--outline" do %>
+      <%= icon("pencil") %> Modifier
     <% end %>
   </div>
-</div>
+</header>
 
-<%# Two-column layout %>
-<div class="recipe-layout">
-  <%# Main column %>
-  <div class="recipe-main">
-    <%# Components section %>
-    <div class="section-card">
-      <div class="section-header">
-        <h2 class="section-title">Composants</h2>
-      </div>
-      <div>
-        <%= render "recipes/components_list", recipe: @recipe %>
-      </div>
-    </div>
-
-    <%# Add component section %>
-    <div class="section-card">
-      <div class="section-header">
-        <h2 class="section-title">Ajouter un composant</h2>
-      </div>
-      <div style="padding: 16px;">
-        <%= render "recipe_components/form",
-              recipe: @recipe,
-              component: @recipe.recipe_components.build,
-              available_products: current_user.products.order(:name),
-              available_subrecipes: current_user.recipes
-                                                .usable_as_subrecipe
-                                                .where.not(id: @recipe.id)
-                                                .order(:name) %>
-      </div>
-    </div>
-  </div>
-
-  <%# Sidebar %>
-  <div class="recipe-sidebar">
-    <%= render "recipes/recipe_summary", recipe: @recipe %>
-
-    <%# Informations section %>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Informations</div>
-
-      <% if @recipe.description.present? %>
-        <p style="font-size: 12px; color: var(--sl-600); margin-bottom: 12px;"><%= @recipe.description %></p>
-      <% end %>
-
-      <div class="info-grid">
-        <%= render "recipes/cooking_loss_form", recipe: @recipe %>
-
-        <div class="info-row">
-          <span class="info-label">Sous-recette</span>
-          <span class="info-value">
-            <% if @recipe.sellable_as_component? %>
-              <span class="badge-sous-recette">Oui</span>
-            <% else %>
-              Non
-            <% end %>
-          </span>
+<div class="split">
+  <div class="split__main">
+    <section class="card" aria-labelledby="composition-title">
+      <div class="card__header">
+        <div class="card__heading">
+          <h2 id="composition-title" class="card__title">Composition</h2>
+          <p class="card__subtitle">Les ingrédients sont classés du plus cher au moins cher.</p>
         </div>
-
-        <% unless @recipe.subrecipe? %>
-          <div class="info-row">
-            <span class="info-label">Barquette</span>
-            <span class="info-value">
-              <% if @recipe.has_tray? %>
-                Oui<% if @recipe.tray_size %> — <%= @recipe.tray_size.name %><% end %>
-              <% else %>
-                Non
-              <% end %>
-            </span>
-          </div>
-
-          <% if @recipe.sold_by_unit? && @recipe.unit_reference_weight_kg.present? %>
-            <div class="info-row">
-              <span class="info-label">Vendue à l'unité</span>
-              <span class="info-value">Oui — <%= (@recipe.unit_reference_weight_kg * 1000).round %> g</span>
-            </div>
-          <% end %>
-        <% end %>
       </div>
-    </div>
+      <div class="card__body">
+        <%= render "recipe_components/form",
+                   recipe: @recipe,
+                   component: RecipeComponent.new,
+                   available_products: current_user.products.order(:name),
+                   available_subrecipes: current_user.recipes.usable_as_subrecipe
+                                                     .where.not(id: @recipe.id).order(:name) %>
+      </div>
+      <%= render "recipes/components_list", recipe: @recipe %>
+    </section>
+
+    <%= render "recipes/cooking_loss_form", recipe: @recipe %>
+
+    <%= render "recipes/cost_breakdown", recipe: @recipe %>
+
+    <% if @recipe.description.present? %>
+      <section class="card card--pad stack stack--sm" aria-labelledby="description-title">
+        <h2 id="description-title" class="card__title">Description</h2>
+        <%= simple_format(@recipe.description, class: "text-secondary") %>
+      </section>
+    <% end %>
   </div>
+
+  <aside class="split__aside" aria-label="Prix de vente">
+    <%= render "recipes/recipe_summary", recipe: @recipe %>
+  </aside>
 </div>

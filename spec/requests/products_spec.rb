@@ -136,11 +136,11 @@ RSpec.describe 'Products', type: :request do
       expect(response.body).to include('Farine T55')
     end
 
-    it 'affiche les prix PON et MOY quand des achats existent' do
+    it 'affiche le prix moyen pondéré quand des achats existent' do
       product = create(:product, name: 'Farine T55', user: user, avg_price_per_kg: 2.50)
       get product_path(product)
-      expect(response.body).to include('PON')
-      expect(response.body).to include('2.50')
+      expect(response.body).to include('Prix moyen pondéré')
+      expect(response.body).to include('2,50')
     end
 
     it 'affiche "Prix non défini" sans achats' do
@@ -178,6 +178,13 @@ RSpec.describe 'Products', type: :request do
 
   describe 'POST /products' do
     before { sign_in user }
+
+    it 'convertit le poids saisi en grammes (input_unit=g)' do
+      post products_path, params: { input_unit: 'g', product: { name: 'Oeuf', base_unit: 'piece', unit_weight_kg: '52.5' } }
+      expect(user.products.find_by(name: 'Oeuf').unit_weight_kg).to eq(BigDecimal('0.0525'))
+      post products_path, params: { input_unit: 'g', product: { name: 'Farine', base_unit: 'kg', unit_weight_kg: '' } }
+      expect(user.products.find_by(name: 'Farine').unit_weight_kg).to be_nil
+    end
 
     context 'base_unit kg, nom valide' do
       it 'crée le produit et redirige avec notice' do

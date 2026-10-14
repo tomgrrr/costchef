@@ -1,0 +1,27 @@
+<%# Signed-out screens (login, invitation signup, password reset, unlock,
+    inactive subscription). Usage: render layout: "shared/auth", locals: { title:, subtitle: } do … end %>
+<% content_for :flash_inline, "1" %>
+<div class="auth">
+  <aside class="auth__aside" aria-hidden="true">
+    <span class="sidebar__brand">
+      <svg class="sidebar__mark" viewBox="0 0 30 30">
+        <rect class="mark__bg" width="30" height="30" rx="9"></rect>
+        <circle class="mark__ring" cx="15" cy="15" r="8"></circle>
+        <circle class="mark__dot" cx="15" cy="15" r="2.6"></circle>
+      </svg>
+      <span>CostChef</span>
+    </span>
+    <p class="auth__tagline">Le coût de vos recettes, au centime près.</p>
+    <div class="auth__plates"><span></span><span></span><span></span><span></span></div>
+  </aside>
+  <div class="auth__main">
+    <div class="auth__panel">
+      <div class="stack stack--sm">
+        <h1 class="text-display-lg"><%= title %></h1>
+        <% if local_assigns[:subtitle] %><p class="text-secondary"><%= subtitle %></p><% end %>
+      </div>
+      <%= render "layouts/flash" unless local_assigns[:hide_flash] %>
+      <%= yield %>
+    </div>
+  </div>
+</div>

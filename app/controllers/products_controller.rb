@@ -6,14 +6,10 @@ class ProductsController < ApplicationController
   before_action :set_product, only: %i[show edit update destroy]
 
   def index
-    scope = current_user.products
-                        .includes(product_purchases: :supplier)
-                        .order(:name)
-                        .then { |s| params[:search].present? ? s.where("name ILIKE ?", "%#{params[:search]}%") : s }
-                        .then { |s| params[:zero_price] == "1" ? s.where(avg_price_per_kg: 0) : s }
+    scope = products_scope
 
     respond_to do |format|
-      format.html { @pagy, @products = pagy(scope, limit: items_per_page) }
+      format.html { load_products_page(scope) }
       format.csv { send_products_csv(scope) }
     end
   end
@@ -30,6 +26,7 @@ class ProductsController < ApplicationController
   end
 
   def create
+    convert_unit_weight_from_grams if params[:input_unit] == "g"
     @product = current_user.products.build(product_params)
 
     if @product.save
@@ -79,6 +76,25 @@ class ProductsController < ApplicationController
     return unless weight_g.present?
 
     params[:product][:unit_weight_kg] = weight_g.to_f / 1000
+  end
+
+  def products_scope
+    current_user.products
+                .includes(product_purchases: :supplier)
+                .order(:name)
+                .then { |s| params[:search].present? ? s.where("name ILIKE ?", "%#{params[:search]}%") : s }
+                .then { |s| params[:zero_price] == "1" ? s.where(avg_price_per_kg: 0) : s }
+  end
+
+  def load_products_page(scope)
+    @pagy, @products = pagy(scope, limit: items_per_page)
+    @usage_counts = recipe_usage_counts(@products)
+  end
+
+  # Recipes using each product on the page, in one query.
+  def recipe_usage_counts(products)
+    RecipeComponent.where(component_type: 'Product', component_id: products.map(&:id))
+                   .group(:component_id).count
   end
 
   def update_redirect_path

@@ -10,7 +10,7 @@ class RecipeComponentsController < ApplicationController
 
     if @component.save
       Recalculations::Dispatcher.recipe_component_changed(@recipe)
-      @recipe.reload
+      reload_recipe
       respond_to do |format|
         format.turbo_stream { render_success_streams }
         format.html { redirect_to @recipe, notice: 'Composant ajouté.' }
@@ -29,7 +29,7 @@ class RecipeComponentsController < ApplicationController
 
     if @component.save
       Recalculations::Dispatcher.recipe_component_changed(@recipe)
-      @recipe.reload
+      reload_recipe
       respond_to do |format|
         format.turbo_stream { render_success_streams }
         format.html { redirect_to @recipe, notice: 'Composant mis à jour.' }
@@ -45,7 +45,7 @@ class RecipeComponentsController < ApplicationController
   def destroy
     @component.destroy!
     Recalculations::Dispatcher.recipe_component_changed(@recipe)
-    @recipe.reload
+    reload_recipe
 
     respond_to do |format|
       format.turbo_stream { render_success_streams }
@@ -83,23 +83,42 @@ class RecipeComponentsController < ApplicationController
     current_user.products.find(@component.component_id)
   end
 
+  # Reload the recalculated totals and preload what the partials read,
+  # so the stream response doesn't query once per ingredient.
+  def reload_recipe
+    @recipe.reload
+    ActiveRecord::Associations::Preloader.new(
+      records: [@recipe], associations: [:user, { recipe_components: :component }]
+    ).call
+  end
+
   def render_success_streams
     render turbo_stream: [
-      turbo_stream.replace(
-        "components_#{@recipe.id}",
-        partial: 'recipes/components_list',
-        locals: { recipe: @recipe }
-      ),
-      turbo_stream.replace(
-        "summary_#{@recipe.id}",
-        partial: 'recipes/recipe_summary',
-        locals: { recipe: @recipe }
-      ),
-      turbo_stream.replace(
-        "component_form_#{@recipe.id}",
-        partial: 'recipe_components/form',
-        locals: form_locals(@recipe.recipe_components.build)
-      )
+      turbo_stream.replace("components_#{@recipe.id}",
+                           partial: 'recipes/components_list', locals: { recipe: @recipe }),
+      turbo_stream.replace("summary_#{@recipe.id}",
+                           partial: 'recipes/recipe_summary', locals: { recipe: @recipe }),
+      *new_form_stream,
+      *recipe_detail_streams
+    ]
+  end
+
+  # A fresh add form after an add only: inline edits and deletes keep
+  # whatever the user is typing in it.
+  def new_form_stream
+    return [] unless action_name == 'create'
+
+    [turbo_stream.replace("component_form_#{@recipe.id}", partial: 'recipe_components/form',
+                                                          locals: form_locals(RecipeComponent.new).merge(autofocus: true))]
+  end
+
+  # Raw weight and cost shares change with the components.
+  def recipe_detail_streams
+    [
+      turbo_stream.replace("cooking_loss_form_#{@recipe.id}",
+                           partial: 'recipes/cooking_loss_form', locals: { recipe: @recipe }),
+      turbo_stream.replace("cost_breakdown_#{@recipe.id}",
+                           partial: 'recipes/cost_breakdown', locals: { recipe: @recipe })
     ]
   end
 

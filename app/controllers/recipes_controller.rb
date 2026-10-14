@@ -69,12 +69,16 @@ class RecipesController < ApplicationController
       recalculate_if_needed
       alert_msg = @recipe.demotion_alert_message
       respond_to do |format|
-        format.turbo_stream { @recipe.reload }
+        # Only the recipe page's inline forms (cooking loss, VAT) get streams;
+        # the full edit form gets a normal redirect.
+        format.turbo_stream { @recipe.reload } if params[:inline].present?
         format.html { redirect_to recipe_path(@recipe, back: helpers.safe_back_path(params[:back], nil)), notice: "Recette mise à jour.", alert: alert_msg }
       end
     else
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("cooking_loss_form_#{@recipe.id}", partial: "recipes/cooking_loss_form", locals: { recipe: @recipe }) }
+        if params[:inline].present?
+          format.turbo_stream { render turbo_stream: turbo_stream.replace("cooking_loss_form_#{@recipe.id}", partial: "recipes/cooking_loss_form", locals: { recipe: @recipe }) }
+        end
         format.html do
           @tray_sizes = current_user.tray_sizes.order(:name)
           render :edit, status: :unprocessable_entity

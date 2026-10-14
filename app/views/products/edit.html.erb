@@ -1,14 +1,7 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Modifier <%= @product.name %></h4>
-  <%= link_to "← Retour", product_path(@product), class: "btn-outline-slate" %>
-</div>
+<% content_for :title, "Modifier #{@product.name}" %>
+<% content_for :content_class, "app__content--narrow" %>
 
-<div class="row">
-  <div class="col-md-6 mx-auto">
-    <div class="card">
-      <div class="card-body">
-        <%= render "form", product: @product %>
-      </div>
-    </div>
-  </div>
-</div>
+<%= breadcrumb(["Produits", products_path], [@product.name, product_path(@product)], "Modifier") %>
+<%= page_header("Modifier #{@product.name}",
+                subtitle: "Changer l’unité ou la déshydratation recalcule les recettes qui l’utilisent.") %>
+<%= render "form", product: @product %>

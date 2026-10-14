@@ -1,14 +1,9 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Nouvelle recette</h4>
-  <%= link_to "← Retour", recipes_path %>
-</div>
+<% subrecipe = @recipe.subrecipe? %>
+<% content_for :title, subrecipe ? "Nouvelle sous-recette" : "Nouvelle recette" %>
+<% content_for :content_class, "app__content--narrow" %>
 
-<div class="row">
-  <div class="col-md-6 mx-auto">
-    <div class="card">
-      <div class="card-body">
-        <%= render "form", recipe: @recipe %>
-      </div>
-    </div>
-  </div>
-</div>
+<%= breadcrumb([subrecipe ? "Sous-recettes" : "Recettes", recipes_path(tab: subrecipe ? "subrecipes" : "recipes")],
+               subrecipe ? "Nouvelle sous-recette" : "Nouvelle recette") %>
+<%= page_header(subrecipe ? "Nouvelle sous-recette" : "Nouvelle recette",
+                subtitle: "Commencez par l’essentiel. Vous ajouterez les ingrédients juste après.") %>
+<%= render "form", recipe: @recipe %>

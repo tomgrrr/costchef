@@ -1,0 +1,7 @@
+<% if resource.errors.any? %>
+  <%= notice_box(tone: :danger, css: "notice--top") do %>
+    <ul class="notice__list">
+      <% resource.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+    </ul>
+  <% end %>
+<% end %>

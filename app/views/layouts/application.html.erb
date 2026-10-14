@@ -2,47 +2,41 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8">
-    <title>CostChef</title>
+    <title><%= content_for?(:title) ? "#{yield(:title)} · CostChef" : "CostChef" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=Geist+Mono:wght@500&family=Hanken+Grotesk:wght@400;500;600&display=swap">
 
     <%= stylesheet_link_tag "application.css", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="d-flex flex-column min-vh-100">
-    <% if user_signed_in? && current_user.subscription_active? %>
-      <%= render "layouts/navbar" %>
-    <% end %>
-
-    <div class="container-fluid mt-2">
-      <% if flash[:notice] %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= flash[:notice] %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-        </div>
-      <% end %>
-
-      <% if flash[:alert] %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <%= flash[:alert] %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-        </div>
-      <% end %>
-    </div>
-
-    <main>
-      <%= yield %>
-    </main>
-
-    <footer class="footer mt-auto py-2 bg-light border-top">
-      <div class="container-fluid">
-        <small class="text-muted">CostChef © <%= Date.current.year %></small>
+  <body>
+    <% if app_shell? %>
+      <div class="app">
+        <%= render "layouts/sidebar" %>
+        <main class="app__main" id="main">
+          <% body = yield %>
+          <div class="app__content <%= yield(:content_class) %>">
+            <% unless content_for?(:flash_inline) %><%= render "layouts/flash" %><% end %>
+            <%= body %>
+          </div>
+        </main>
       </div>
-    </footer>
+    <% else %>
+      <main id="main">
+        <%# Auth views place the flash inside their panel; other signed-out
+            pages (Devise password reset, unlock…) get it at the top. %>
+        <% body = yield %>
+        <% unless content_for?(:flash_inline) %><div class="auth-flash"><%= render "layouts/flash" %></div><% end %>
+        <%= body %>
+      </main>
+    <% end %>
   </body>
 </html>

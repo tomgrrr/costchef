@@ -1,31 +1,34 @@
-<div class="section-card">
-  <div style="padding: 20px;">
-    <%= form_with(model: tray_size) do |f| %>
-      <% if tray_size.errors.any? %>
-        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--cc-danger);">
-          <% tray_size.errors.full_messages.each do |message| %>
-            <div><%= message %></div>
-          <% end %>
-        </div>
+<%= form_with model: tray_size, class: "card" do |f| %>
+  <% if tray_size.errors.any? %>
+    <div class="form-section">
+      <%= notice_box(tone: :danger, css: "notice--top") do %>
+        <ul class="notice__list">
+          <% tray_size.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+        </ul>
       <% end %>
-
-      <div style="margin-bottom: 14px;">
-        <label class="form-label-xs">Nom</label>
-        <%= f.text_field :name, class: 'form-control form-control-sm', style: 'font-size: 12px;', required: true, autofocus: true %>
+    </div>
+  <% end %>
+  <div class="form-section">
+    <div class="form-row">
+      <div class="field">
+        <%= f.label :name, "Nom de la barquette" %>
+        <%= f.text_field :name, class: "input", required: true, autofocus: true, placeholder: "Barquette 1 kg",
+                         "aria-invalid": tray_size.errors[:name].any? || nil %>
       </div>
-
-      <div style="margin-bottom: 16px;">
-        <label class="form-label-xs">Prix</label>
-        <div class="tray-price-group">
-          <%= f.number_field :price, class: 'form-control form-control-sm mono', style: 'font-size: 12px;', min: 0, step: 0.01 %>
-          <span class="mono" style="color: var(--sl-400); font-size: 12px;">€</span>
-        </div>
+      <div class="field field--md">
+        <%= f.label :price, "Prix" %>
+        <span class="affix">
+          <%= f.number_field :price, class: "input input--num", min: 0, step: 0.01,
+                             "aria-invalid": tray_size.errors[:price].any? || nil %>
+          <span class="affix__suffix" aria-hidden="true">€</span>
+        </span>
       </div>
-
-      <div style="display: flex; gap: 8px;">
-        <%= f.submit class: 'btn-slate' %>
-        <%= link_to 'Annuler', tray_sizes_path, class: 'btn-outline-slate' %>
-      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <%= link_to "Annuler", tray_sizes_path, class: "btn btn--outline" %>
+    <%= f.button type: "submit", class: "btn btn--primary" do %>
+      <%= tray_size.persisted? ? "Enregistrer" : "Créer la barquette" %>
     <% end %>
   </div>
-</div>
+<% end %>
