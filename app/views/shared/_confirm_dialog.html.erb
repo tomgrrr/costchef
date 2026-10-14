@@ -1,0 +1,15 @@
+<%# Branded replacement for the browser's confirm(): every data-turbo-confirm
+    opens this dialog (app/javascript/confirm_dialog.js fills and opens it). %>
+<dialog id="confirm-dialog" class="dialog dialog--confirm"
+        aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-body">
+  <form method="dialog">
+    <div class="dialog__header">
+      <h2 id="confirm-dialog-title" class="card__title" data-confirm-title></h2>
+    </div>
+    <p id="confirm-dialog-body" class="dialog__body text-secondary" data-confirm-body hidden></p>
+    <div class="dialog__footer">
+      <button type="submit" value="cancel" class="btn btn--outline" data-confirm-cancel>Annuler</button>
+      <button type="submit" value="accept" class="btn btn--primary" data-confirm-accept>Confirmer</button>
+    </div>
+  </form>
+</dialog>

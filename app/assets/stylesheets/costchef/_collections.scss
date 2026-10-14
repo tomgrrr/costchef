@@ -267,6 +267,14 @@ nav.pagy {
   border-top: 1px solid var(--border);
 }
 
+// Confirmation dialog: replaces the browser's confirm() (shared/_confirm_dialog).
+.dialog--confirm {
+  width: min(440px, calc(100vw - 32px));
+
+  .dialog__header { padding-bottom: var(--space-4); }
+  .dialog__body { padding-top: 0; }
+}
+
 // ── Search results popover (supplier / ingredient pickers) ──
 .picker { position: relative; }
 
